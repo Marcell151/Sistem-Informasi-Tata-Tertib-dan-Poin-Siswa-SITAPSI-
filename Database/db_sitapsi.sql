@@ -79,7 +79,7 @@ CREATE TABLE tb_anggota_kelas (
     poin_kerapian INT DEFAULT 0,
     
     total_poin_umum INT DEFAULT 0, -- Total Gabungan Tahunan
-    status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3') DEFAULT 'Aman',
+    status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     
     -- Penanda Reward (Baru ditambahkan untuk logika hadiah)
     status_reward ENUM('None', 'Kandidat Sertifikat') DEFAULT 'None',
@@ -191,7 +191,7 @@ CREATE TABLE tb_pelanggaran_sanksi (
 CREATE TABLE tb_riwayat_sp (
     id_sp INT AUTO_INCREMENT PRIMARY KEY,
     id_anggota BIGINT NOT NULL,
-    tingkat_sp ENUM('SP1', 'SP2', 'SP3') NOT NULL,
+    tingkat_sp ENUM('SP1', 'SP2', 'SP3', 'Dikeluarkan') NOT NULL,
     kategori_pemicu VARCHAR(50), 
     tanggal_terbit DATE NOT NULL,
     tanggal_validasi DATE, 
