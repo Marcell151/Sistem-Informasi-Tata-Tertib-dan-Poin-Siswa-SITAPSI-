@@ -14,10 +14,11 @@ if (!$id_guru) {
 }
 
 try {
+    // PERBAIKAN: Sesuaikan dengan ENUM yang benar (Aktif, Non-Aktif)
     executeQuery("
         UPDATE tb_guru 
         SET status = CASE 
-            WHEN status = 'Aktif' THEN 'Nonaktif' 
+            WHEN status = 'Aktif' THEN 'Non-Aktif' 
             ELSE 'Aktif' 
         END 
         WHERE id_guru = :id

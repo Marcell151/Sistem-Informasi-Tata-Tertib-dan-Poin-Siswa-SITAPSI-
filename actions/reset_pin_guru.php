@@ -15,7 +15,8 @@ if (!$id_guru || !$new_pin) {
 }
 
 try {
-    executeQuery("UPDATE tb_guru SET pin = :pin WHERE id_guru = :id", [
+    // PERBAIKAN: Gunakan kolom pin_validasi
+    executeQuery("UPDATE tb_guru SET pin_validasi = :pin WHERE id_guru = :id", [
         'pin' => $new_pin,
         'id' => $id_guru
     ]);

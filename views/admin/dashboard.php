@@ -1,6 +1,7 @@
 <?php
 /**
- * SITAPSI - Dashboard Admin (Fixed Layout & Database)
+ * SITAPSI - Dashboard Admin (REVISED)
+ * Aktivitas Terbaru: 1 Bulan Terakhir (bukan hanya hari ini)
  */
 
 session_start();
@@ -50,7 +51,7 @@ $total_siswa = fetchOne("
     WHERE id_tahun = :id_tahun
 ", ['id_tahun' => $id_tahun])['total'] ?? 0;
 
-// 5. Aktivitas Terbaru (10 terakhir) - Sesuai kolom id_transaksi, tanggal, waktu
+// 5. PERBAIKAN: Aktivitas Terbaru (1 BULAN TERAKHIR)
 $aktivitas_terbaru = fetchAll("
     SELECT 
         h.tanggal,
@@ -68,12 +69,13 @@ $aktivitas_terbaru = fetchAll("
     LEFT JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
     LEFT JOIN tb_jenis_pelanggaran jp ON d.id_jenis = jp.id_jenis
     WHERE h.id_tahun = :id_tahun
+    AND h.tanggal >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
     GROUP BY h.id_transaksi
     ORDER BY h.tanggal DESC, h.waktu DESC
-    LIMIT 10
+    LIMIT 15
 ", ['id_tahun' => $id_tahun]);
 
-// 6. Data Chart Mingguan
+// 6. Data Chart Mingguan (7 hari terakhir)
 $tren_mingguan = fetchAll("
     SELECT 
         DATE(tanggal) as tgl,
@@ -172,7 +174,9 @@ $proporsi_kategori = fetchAll("
             </div>
 
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b font-bold text-gray-700">🕐 Aktivitas Pelaporan Terbaru</div>
+                <div class="p-4 border-b font-bold text-gray-700">
+                    🕐 Aktivitas Pelaporan Terbaru (1 Bulan Terakhir)
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -184,14 +188,20 @@ $proporsi_kategori = fetchAll("
                             </tr>
                         </thead>
                         <tbody class="text-sm divide-y">
+                            <?php if (empty($aktivitas_terbaru)): ?>
+                            <tr>
+                                <td colspan="4" class="p-12 text-center text-gray-500">Belum ada aktivitas dalam 1 bulan terakhir</td>
+                            </tr>
+                            <?php else: ?>
                             <?php foreach($aktivitas_terbaru as $a): ?>
                             <tr>
                                 <td class="p-4"><?= date('d/m', strtotime($a['tanggal'])) ?> - <?= substr($a['waktu'], 0, 5) ?></td>
-                                <td class="p-4 font-bold text-navy"><?= $a['nama_siswa'] ?> <br><span class="text-xs font-normal text-gray-400"><?= $a['nama_kelas'] ?></span></td>
-                                <td class="p-4 text-gray-600"><?= $a['pelanggaran_list'] ?></td>
-                                <td class="p-4"><?= $a['nama_guru'] ?> <span class="text-xs text-blue-500">(<?= $a['tipe_form'] ?>)</span></td>
+                                <td class="p-4 font-bold text-navy"><?= htmlspecialchars($a['nama_siswa']) ?> <br><span class="text-xs font-normal text-gray-400"><?= $a['nama_kelas'] ?></span></td>
+                                <td class="p-4 text-gray-600"><?= htmlspecialchars($a['pelanggaran_list']) ?></td>
+                                <td class="p-4"><?= htmlspecialchars($a['nama_guru']) ?> <span class="text-xs text-blue-500">(<?= $a['tipe_form'] ?>)</span></td>
                             </tr>
                             <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>

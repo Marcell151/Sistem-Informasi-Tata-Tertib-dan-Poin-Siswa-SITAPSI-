@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
+    $id_guru = $_POST['id_guru'];
     $nama_guru = trim($_POST['nama_guru']);
     $nip = trim($_POST['nip']) ?: NULL;
     $pin_validasi = trim($_POST['pin_validasi']);
@@ -23,20 +24,23 @@ try {
         throw new Exception('PIN harus 6 digit angka');
     }
     
-    // PERBAIKAN: Gunakan kolom pin_validasi
     executeQuery("
-        INSERT INTO tb_guru (nama_guru, nip, pin_validasi, status)
-        VALUES (:nama_guru, :nip, :pin_validasi, 'Aktif')
+        UPDATE tb_guru 
+        SET nama_guru = :nama_guru,
+            nip = :nip,
+            pin_validasi = :pin_validasi
+        WHERE id_guru = :id_guru
     ", [
         'nama_guru' => $nama_guru,
         'nip' => $nip,
-        'pin_validasi' => $pin_validasi
+        'pin_validasi' => $pin_validasi,
+        'id_guru' => $id_guru
     ]);
     
-    $_SESSION['success_message'] = '✅ Guru berhasil ditambahkan!';
+    $_SESSION['success_message'] = '✅ Data guru berhasil diupdate!';
     
 } catch (Exception $e) {
-    $_SESSION['error_message'] = '❌ Gagal menambah guru: ' . $e->getMessage();
+    $_SESSION['error_message'] = '❌ Gagal mengupdate: ' . $e->getMessage();
 }
 
 header('Location: ../views/admin/data_guru.php');
