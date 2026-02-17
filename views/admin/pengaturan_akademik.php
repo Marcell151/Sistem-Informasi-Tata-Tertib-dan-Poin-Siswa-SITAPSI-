@@ -1,7 +1,7 @@
 <?php
 /**
- * SITAPSI - Pengaturan Akademik
- * Tutup Tahun, Kenaikan Kelas, Kelulusan
+ * SITAPSI - Pengaturan Akademik (COMPLETE)
+ * Tambah: Menu Manajemen Kelas
  */
 
 session_start();
@@ -25,6 +25,9 @@ $stats = fetchOne("
     FROM tb_anggota_kelas a
     WHERE a.id_tahun = :id_tahun
 ", ['id_tahun' => $tahun_aktif['id_tahun']]);
+
+// Hitung total kelas
+$total_kelas = fetchOne("SELECT COUNT(*) as total FROM tb_kelas")['total'] ?? 0;
 
 $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
@@ -57,7 +60,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         
         <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30">
             <h1 class="text-2xl font-bold text-gray-800">Pengaturan Akademik</h1>
-            <p class="text-sm text-gray-500">Tutup tahun, kenaikan kelas, & kelulusan</p>
+            <p class="text-sm text-gray-500">Kelola tahun ajaran, semester, kelas, kelulusan & kenaikan kelas</p>
         </div>
 
         <div class="p-6 space-y-6">
@@ -83,7 +86,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <p class="text-blue-200">Semester: <?= $tahun_aktif['semester_aktif'] ?></p>
                     </div>
                     <div class="text-right">
-                        <div class="grid grid-cols-3 gap-4">
+                        <div class="grid grid-cols-4 gap-4">
                             <div class="bg-white/10 backdrop-blur rounded-lg p-3">
                                 <p class="text-xs text-blue-200">Total Siswa</p>
                                 <p class="text-2xl font-bold"><?= $stats['total_siswa'] ?></p>
@@ -96,16 +99,20 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                 <p class="text-xs text-blue-200">Total Poin</p>
                                 <p class="text-2xl font-bold"><?= number_format($stats['total_poin']) ?></p>
                             </div>
+                            <div class="bg-white/10 backdrop-blur rounded-lg p-3">
+                                <p class="text-xs text-blue-200">Total Kelas</p>
+                                <p class="text-2xl font-bold"><?= $total_kelas ?></p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Aksi Utama -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 <!-- Ganti Semester -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-blue-100 rounded-full p-3 mr-4">
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,10 +121,10 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </div>
                         <div>
                             <h3 class="font-bold text-gray-800">Ganti Semester</h3>
-                            <p class="text-sm text-gray-600">Pindah dari Ganjil ke Genap (atau sebaliknya)</p>
+                            <p class="text-sm text-gray-600">Pindah semester</p>
                         </div>
                     </div>
-                    <form action="../../actions/ganti_semester.php" method="POST" onsubmit="return confirm('⚠️ Yakin ganti semester?\n\nPoin akan tetap akumulasi, hanya tampilan yang direset.')">
+                    <form action="../../actions/ganti_semester.php" method="POST" onsubmit="return confirm('⚠️ Yakin ganti semester?\n\nPoin akan tetap akumulasi.')">
                         <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
                             🔄 Ganti ke Semester <?= $tahun_aktif['semester_aktif'] === 'Ganjil' ? 'Genap' : 'Ganjil' ?>
                         </button>
@@ -125,7 +132,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
 
                 <!-- Tutup Tahun Ajaran -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-yellow-100 rounded-full p-3 mr-4">
                             <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +141,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </div>
                         <div>
                             <h3 class="font-bold text-gray-800">Tutup Tahun Ajaran</h3>
-                            <p class="text-sm text-gray-600">Arsipkan tahun ini & buat tahun baru</p>
+                            <p class="text-sm text-gray-600">Arsip & buat tahun baru</p>
                         </div>
                     </div>
                     <button onclick="document.getElementById('modal-tutup-tahun').classList.remove('hidden')" 
@@ -144,7 +151,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
 
                 <!-- Proses Kelulusan -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-green-100 rounded-full p-3 mr-4">
                             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +160,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </div>
                         <div>
                             <h3 class="font-bold text-gray-800">Proses Kelulusan</h3>
-                            <p class="text-sm text-gray-600">Set status siswa kelas 9 jadi Lulus</p>
+                            <p class="text-sm text-gray-600">Set siswa kelas 9 lulus</p>
                         </div>
                     </div>
                     <form action="../../actions/proses_kelulusan.php" method="POST" onsubmit="return confirm('⚠️ Yakin proses kelulusan?\n\nSiswa kelas 9 akan di-set status Lulus.')">
@@ -164,7 +171,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
 
                 <!-- Kenaikan Kelas -->
-                <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-purple-100 rounded-full p-3 mr-4">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,13 +180,48 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </div>
                         <div>
                             <h3 class="font-bold text-gray-800">Kenaikan Kelas</h3>
-                            <p class="text-sm text-gray-600">Naikkan kelas 7→8, 8→9</p>
+                            <p class="text-sm text-gray-600">Naik kelas 7→8, 8→9</p>
                         </div>
                     </div>
-                    <button onclick="alert('Fitur kenaikan kelas akan dikembangkan lebih lanjut')" 
-                            class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+                    <a href="kenaikan_kelas.php" class="block w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center">
                         📈 Proses Kenaikan Kelas
-                    </button>
+                    </a>
+                </div>
+
+                <!-- BARU: Manajemen Kelas -->
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-indigo-100 rounded-full p-3 mr-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Manajemen Kelas</h3>
+                            <p class="text-sm text-gray-600">Tambah, edit, hapus kelas</p>
+                        </div>
+                    </div>
+                    <a href="manajemen_kelas.php" class="block w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center">
+                        🏫 Kelola Kelas
+                    </a>
+                </div>
+
+                <!-- Lihat Arsip -->
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-gray-100 rounded-full p-3 mr-4">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">Lihat Arsip</h3>
+                            <p class="text-sm text-gray-600">Data tahun lampau</p>
+                        </div>
+                    </div>
+                    <a href="arsip_tahun.php" class="block w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center">
+                        📦 Buka Arsip
+                    </a>
                 </div>
 
             </div>
@@ -196,6 +238,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                 <th class="p-4">Tahun Ajaran</th>
                                 <th class="p-4">Semester Terakhir</th>
                                 <th class="p-4">Status</th>
+                                <th class="p-4">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -207,6 +250,20 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                     <span class="px-3 py-1 rounded-full text-xs font-medium <?= $t['status'] === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' ?>">
                                         <?= $t['status'] ?>
                                     </span>
+                                </td>
+                                <td class="p-4">
+                                    <?php if ($t['status'] === 'Arsip'): ?>
+                                    <a href="arsip_tahun.php?tahun=<?= $t['id_tahun'] ?>" 
+                                       class="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Lihat Data
+                                    </a>
+                                    <?php else: ?>
+                                    <span class="text-gray-400 text-sm">Tahun Aktif</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -243,7 +300,8 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     <strong>⚠️ Peringatan:</strong><br>
                     • Tahun <?= $tahun_aktif['nama_tahun'] ?> akan diarsipkan<br>
                     • Tahun baru akan dibuat & diaktifkan<br>
-                    • Data poin akan direset untuk tahun baru
+                    • Data poin akan direset untuk tahun baru<br>
+                    • Siswa kelas 9 akan otomatis lulus
                 </p>
             </div>
             <div class="flex space-x-2">

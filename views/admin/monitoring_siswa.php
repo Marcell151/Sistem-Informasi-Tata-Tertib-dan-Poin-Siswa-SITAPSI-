@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Monitoring Siswa
- * Pencarian siswa dan melihat detail riwayat pelanggaran
+ * Flow: Pilih Kelas → Pilih Siswa → Detail dengan 3 Tabel Kategori
  */
 
 session_start();
@@ -10,61 +10,14 @@ require_once '../../includes/session_check.php';
 
 requireAdmin();
 
-// Ambil tahun ajaran aktif
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 
-// Search
-$search = $_GET['search'] ?? '';
-$filter_kelas = $_GET['kelas'] ?? 'all';
-$filter_status = $_GET['status'] ?? 'all';
+// Ambil daftar kelas
+$kelas_list = fetchAll("SELECT id_kelas, nama_kelas, tingkat FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
-// Ambil daftar kelas untuk filter
-$kelas_list = fetchAll("SELECT id_kelas, nama_kelas FROM tb_kelas ORDER BY nama_kelas");
-
-// Query siswa
-$sql = "
-    SELECT 
-        s.nis,
-        s.nama_siswa,
-        s.jenis_kelamin,
-        s.foto_profil,
-        k.nama_kelas,
-        a.id_anggota,
-        a.poin_kelakuan,
-        a.poin_kerajinan,
-        a.poin_kerapian,
-        a.total_poin_umum,
-        a.status_sp_terakhir
-    FROM tb_siswa s
-    JOIN tb_anggota_kelas a ON s.nis = a.nis
-    JOIN tb_kelas k ON a.id_kelas = k.id_kelas
-    WHERE s.status_aktif = 'Aktif' 
-    AND a.id_tahun = :id_tahun
-";
-
-$params = ['id_tahun' => $tahun_aktif['id_tahun']];
-
-if (!empty($search)) {
-    $sql .= " AND (s.nama_siswa LIKE :search OR s.nis LIKE :search)";
-    $params['search'] = "%$search%";
-}
-
-if ($filter_kelas !== 'all') {
-    $sql .= " AND k.id_kelas = :kelas";
-    $params['kelas'] = $filter_kelas;
-}
-
-if ($filter_status !== 'all') {
-    if ($filter_status === 'aman') {
-        $sql .= " AND a.status_sp_terakhir = 'Aman'";
-    } else {
-        $sql .= " AND a.status_sp_terakhir != 'Aman'";
-    }
-}
-
-$sql .= " ORDER BY s.nama_siswa";
-
-$siswa_list = fetchAll($sql, $params);
+$success = $_SESSION['success_message'] ?? '';
+$error = $_SESSION['error_message'] ?? '';
+unset($_SESSION['success_message'], $_SESSION['error_message']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -77,12 +30,7 @@ $siswa_list = fetchAll($sql, $params);
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        'navy': '#000080',
-                        'kelakuan': '#DC2626',
-                        'kerajinan': '#2563EB',
-                        'kerapian': '#D97706'
-                    }
+                    colors: { 'navy': '#000080' }
                 }
             }
         }
@@ -94,140 +42,99 @@ $siswa_list = fetchAll($sql, $params);
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto">
+    <div class="flex-1 overflow-auto bg-gray-100">
         
-        <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-            <div class="px-6 py-4">
-                <h1 class="text-2xl font-bold text-gray-800">Monitoring Siswa</h1>
-                <p class="text-sm text-gray-600 mt-1">Pencarian & detail riwayat siswa</p>
-            </div>
+        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30">
+            <h1 class="text-2xl font-bold text-gray-800">Monitoring Siswa</h1>
+            <p class="text-sm text-gray-500">Pilih kelas untuk melihat daftar siswa dan detail pelanggaran</p>
         </div>
 
-        <div class="p-6">
+        <div class="p-6 space-y-6">
 
-            <!-- Filter & Search -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    
+            <?php if ($success): ?>
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($error): ?>
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+            </div>
+            <?php endif; ?>
+
+            <!-- Info Header -->
+            <div class="bg-gradient-to-r from-navy to-blue-800 text-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cari Nama/NIS</label>
-                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" 
-                               placeholder="Ketik nama atau NIS..."
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <h2 class="text-2xl font-bold mb-2">Pilih Kelas</h2>
+                        <p class="text-blue-200">Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?></p>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
-                        <select name="kelas" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <option value="all">Semua Kelas</option>
-                            <?php foreach ($kelas_list as $k): ?>
-                            <option value="<?= $k['id_kelas'] ?>" <?= $filter_kelas == $k['id_kelas'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($k['nama_kelas']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="text-right">
+                        <p class="text-blue-200 text-sm">Total Kelas</p>
+                        <p class="text-4xl font-bold"><?= count($kelas_list) ?></p>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status SP</label>
-                        <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <option value="all">Semua Status</option>
-                            <option value="aman" <?= $filter_status === 'aman' ? 'selected' : '' ?>>Aman</option>
-                            <option value="sp" <?= $filter_status === 'sp' ? 'selected' : '' ?>>Kena SP</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full bg-navy hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                            🔍 Filter
-                        </button>
-                    </div>
-
-                </form>
+                </div>
             </div>
 
-            <!-- Results -->
-            <div class="bg-white rounded-lg shadow-md">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg font-bold text-gray-800">Hasil Pencarian</h3>
-                    <p class="text-sm text-gray-600 mt-1">Ditemukan: <?= count($siswa_list) ?> siswa</p>
-                </div>
-
-                <div class="divide-y divide-gray-200">
-                    <?php if (empty($siswa_list)): ?>
-                    <div class="p-12 text-center">
-                        <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        <p class="text-gray-600 font-medium">Tidak ada data siswa ditemukan</p>
-                        <p class="text-sm text-gray-500 mt-1">Coba ubah filter pencarian</p>
-                    </div>
-                    <?php else: ?>
-                    <?php foreach ($siswa_list as $siswa): 
-                        $border_color = 'border-gray-200';
-                        if ($siswa['total_poin_umum'] > 200) $border_color = 'border-red-500';
-                        elseif ($siswa['total_poin_umum'] > 100) $border_color = 'border-yellow-500';
-                        elseif ($siswa['total_poin_umum'] > 0) $border_color = 'border-blue-300';
-                    ?>
-                    <div class="p-6 hover:bg-gray-50 transition-colors border-l-4 <?= $border_color ?>">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow">
-                                    <?php if($siswa['foto_profil']): ?>
-                                        <img src="../../assets/uploads/siswa/<?= $siswa['foto_profil'] ?>" class="w-full h-full object-cover">
-                                    <?php else: ?>
-                                        <span class="text-gray-500 font-bold text-xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-800"><?= htmlspecialchars($siswa['nama_siswa']) ?></h4>
-                                    <p class="text-sm text-gray-600">NIS: <?= $siswa['nis'] ?> • <?= $siswa['nama_kelas'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? '👦 Laki-laki' : '👧 Perempuan' ?></p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center space-x-4">
-                                <div class="text-right">
-                                    <div class="flex space-x-2 mb-2">
-                                        <div class="text-center bg-red-50 px-3 py-1 rounded">
-                                            <p class="text-[10px] text-red-600 font-bold">Kelakuan</p>
-                                            <p class="text-lg font-bold text-red-700"><?= $siswa['poin_kelakuan'] ?></p>
-                                        </div>
-                                        <div class="text-center bg-blue-50 px-3 py-1 rounded">
-                                            <p class="text-[10px] text-blue-600 font-bold">Kerajinan</p>
-                                            <p class="text-lg font-bold text-blue-700"><?= $siswa['poin_kerajinan'] ?></p>
-                                        </div>
-                                        <div class="text-center bg-yellow-50 px-3 py-1 rounded">
-                                            <p class="text-[10px] text-yellow-600 font-bold">Kerapian</p>
-                                            <p class="text-lg font-bold text-yellow-700"><?= $siswa['poin_kerapian'] ?></p>
-                                        </div>
-                                    </div>
-                                    <?php if ($siswa['status_sp_terakhir'] !== 'Aman'): ?>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        🚨 <?= $siswa['status_sp_terakhir'] ?>
-                                    </span>
-                                    <?php else: ?>
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        ✅ Aman
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-
-                                <div class="text-center bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-                                    <p class="text-xs text-gray-500 font-medium">Total Poin</p>
-                                    <p class="text-3xl font-bold text-gray-800"><?= $siswa['total_poin_umum'] ?></p>
-                                </div>
-
-                                <a href="detail_siswa.php?id=<?= $siswa['id_anggota'] ?>" 
-                                   class="px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 transition-colors font-medium text-sm">
-                                    Lihat Detail →
-                                </a>
+            <!-- Grid Kelas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <?php 
+                $colors = [
+                    7 => ['bg' => 'bg-blue-500', 'hover' => 'hover:bg-blue-600', 'icon' => '🎒'],
+                    8 => ['bg' => 'bg-green-500', 'hover' => 'hover:bg-green-600', 'icon' => '📚'],
+                    9 => ['bg' => 'bg-purple-500', 'hover' => 'hover:bg-purple-600', 'icon' => '🎓']
+                ];
+                
+                foreach ($kelas_list as $kelas): 
+                    $color = $colors[$kelas['tingkat']] ?? ['bg' => 'bg-gray-500', 'hover' => 'hover:bg-gray-600', 'icon' => '📖'];
+                    
+                    // Hitung jumlah siswa per kelas
+                    $jumlah_siswa = fetchOne("
+                        SELECT COUNT(*) as total 
+                        FROM tb_anggota_kelas 
+                        WHERE id_kelas = :id_kelas 
+                        AND id_tahun = :id_tahun
+                    ", [
+                        'id_kelas' => $kelas['id_kelas'],
+                        'id_tahun' => $tahun_aktif['id_tahun']
+                    ])['total'] ?? 0;
+                ?>
+                <a href="monitoring_siswa_list.php?kelas=<?= $kelas['id_kelas'] ?>" 
+                   class="block group">
+                    <div class="<?= $color['bg'] ?> <?= $color['hover'] ?> text-white rounded-xl shadow-lg p-6 transition-all transform group-hover:scale-105 group-hover:shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="text-5xl"><?= $color['icon'] ?></div>
+                            <div class="text-right">
+                                <p class="text-white/80 text-xs font-medium">Kelas</p>
+                                <p class="text-3xl font-bold"><?= $kelas['tingkat'] ?></p>
                             </div>
                         </div>
+                        <h3 class="text-2xl font-bold mb-2"><?= $kelas['nama_kelas'] ?></h3>
+                        <div class="flex items-center justify-between">
+                            <p class="text-white/90 text-sm">
+                                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                                </svg>
+                                <?= $jumlah_siswa ?> Siswa
+                            </p>
+                            <svg class="w-6 h-6 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </div>
                     </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+                </a>
+                <?php endforeach; ?>
             </div>
+
+            <?php if (empty($kelas_list)): ?>
+            <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <p class="text-gray-500 font-medium">Belum ada kelas yang terdaftar</p>
+            </div>
+            <?php endif; ?>
 
         </div>
 
