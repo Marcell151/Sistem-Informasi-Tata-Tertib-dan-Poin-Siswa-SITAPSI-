@@ -11,10 +11,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    $tahun_aktif = fetchOne("SELECT id_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+    $tahun_aktif = fetchOne("
+        SELECT id_tahun, semester_aktif 
+        FROM tb_tahun_ajaran 
+        WHERE status = 'Aktif' 
+        LIMIT 1
+    ");
     
     $semester_baru = $tahun_aktif['semester_aktif'] === 'Ganjil' ? 'Genap' : 'Ganjil';
     
+    // Update semester di tb_tahun_ajaran
     executeQuery("
         UPDATE tb_tahun_ajaran 
         SET semester_aktif = :semester 
@@ -24,7 +30,7 @@ try {
         'id' => $tahun_aktif['id_tahun']
     ]);
     
-    $_SESSION['success_message'] = "✅ Semester berhasil diganti ke $semester_baru!";
+    $_SESSION['success_message'] = "✅ Semester berhasil diganti ke $semester_baru! Tampilan pelanggaran siswa kini menampilkan lembaran semester baru.";
     
 } catch (Exception $e) {
     $_SESSION['error_message'] = '❌ Gagal ganti semester: ' . $e->getMessage();

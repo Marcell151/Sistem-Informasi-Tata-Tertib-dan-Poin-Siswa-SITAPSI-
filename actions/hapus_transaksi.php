@@ -1,17 +1,14 @@
 <?php
-/**
- * SITAPSI - Hapus Transaksi
- * Menghapus transaksi pelanggaran dan rollback poin otomatis
- */
-
 session_start();
 require_once '../config/database.php';
 require_once '../includes/session_check.php';
+require_once '../includes/sp_helper.php'; // TAMBAH INI
 
 requireAdmin();
 
 $id_transaksi = $_GET['id'] ?? null;
 $redirect = $_GET['redirect'] ?? 'audit';
+$id_anggota_redirect = $_GET['anggota'] ?? null;
 
 if (!$id_transaksi) {
     $_SESSION['error_message'] = '❌ ID transaksi tidak valid';
@@ -48,23 +45,36 @@ try {
         $poin = $detail['poin'];
         
         if ($kategori == 1) {
-            executeQuery("UPDATE tb_anggota_kelas SET poin_kelakuan = GREATEST(0, poin_kelakuan - :poin), total_poin_umum = GREATEST(0, total_poin_umum - :poin) WHERE id_anggota = :id", 
+            executeQuery("UPDATE tb_anggota_kelas 
+                SET poin_kelakuan = GREATEST(0, poin_kelakuan - :poin), 
+                    total_poin_umum = GREATEST(0, total_poin_umum - :poin) 
+                WHERE id_anggota = :id", 
                 ['poin' => $poin, 'id' => $id_anggota]);
         } elseif ($kategori == 2) {
-            executeQuery("UPDATE tb_anggota_kelas SET poin_kerajinan = GREATEST(0, poin_kerajinan - :poin), total_poin_umum = GREATEST(0, total_poin_umum - :poin) WHERE id_anggota = :id", 
+            executeQuery("UPDATE tb_anggota_kelas 
+                SET poin_kerajinan = GREATEST(0, poin_kerajinan - :poin), 
+                    total_poin_umum = GREATEST(0, total_poin_umum - :poin) 
+                WHERE id_anggota = :id", 
                 ['poin' => $poin, 'id' => $id_anggota]);
         } elseif ($kategori == 3) {
-            executeQuery("UPDATE tb_anggota_kelas SET poin_kerapian = GREATEST(0, poin_kerapian - :poin), total_poin_umum = GREATEST(0, total_poin_umum - :poin) WHERE id_anggota = :id", 
+            executeQuery("UPDATE tb_anggota_kelas 
+                SET poin_kerapian = GREATEST(0, poin_kerapian - :poin), 
+                    total_poin_umum = GREATEST(0, total_poin_umum - :poin) 
+                WHERE id_anggota = :id", 
                 ['poin' => $poin, 'id' => $id_anggota]);
         }
     }
     
-    // 3. Hapus header (CASCADE akan handle detail & sanksi)
-    executeQuery("DELETE FROM tb_pelanggaran_header WHERE id_transaksi = :id", ['id' => $id_transaksi]);
+    // 3. Hapus header (CASCADE handle detail & sanksi)
+    executeQuery("DELETE FROM tb_pelanggaran_header WHERE id_transaksi = :id", 
+        ['id' => $id_transaksi]);
     
     $pdo->commit();
     
-    $_SESSION['success_message'] = '✅ Transaksi berhasil dihapus dan poin telah dikurangi';
+    // 4. RECALCULATE SP OTOMATIS (FIX BUG 3)
+    recalculateStatusSP($id_anggota);
+    
+    $_SESSION['success_message'] = '✅ Transaksi berhasil dihapus, poin dikurangi & status SP diperbarui';
     
 } catch (Exception $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
@@ -73,11 +83,10 @@ try {
     $_SESSION['error_message'] = '❌ Gagal menghapus: ' . $e->getMessage();
 }
 
-// Redirect
-if ($redirect === 'audit') {
-    header('Location: ../views/admin/audit_harian.php');
+if ($redirect === 'monitoring' && $id_anggota_redirect) {
+    header("Location: ../views/admin/detail_siswa.php?id=$id_anggota_redirect");
 } else {
-    header('Location: ../views/admin/monitoring_siswa.php');
+    header('Location: ../views/admin/audit_harian.php');
 }
 exit;
 ?>

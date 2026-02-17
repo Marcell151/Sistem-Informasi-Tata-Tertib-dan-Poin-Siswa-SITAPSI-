@@ -1,12 +1,8 @@
 <?php
-/**
- * SITAPSI - Update Pelanggaran
- * Update pelanggaran dengan sinkronisasi poin otomatis
- */
-
 session_start();
 require_once '../config/database.php';
 require_once '../includes/session_check.php';
+require_once '../includes/sp_helper.php'; // TAMBAH INI
 
 requireAdmin();
 
@@ -41,16 +37,12 @@ try {
         GROUP BY jp.id_kategori
     ", ['id' => $id_transaksi]);
     
-    $old_kelakuan = 0;
-    $old_kerajinan = 0;
-    $old_kerapian = 0;
-    
+    $old_kelakuan = 0; $old_kerajinan = 0; $old_kerapian = 0;
     foreach ($old_poin as $op) {
         if ($op['id_kategori'] == 1) $old_kelakuan = $op['total'];
         elseif ($op['id_kategori'] == 2) $old_kerajinan = $op['total'];
         elseif ($op['id_kategori'] == 3) $old_kerapian = $op['total'];
     }
-    
     $old_total = $old_kelakuan + $old_kerajinan + $old_kerapian;
     
     // 2. Hapus detail dan sanksi lama
@@ -58,9 +50,7 @@ try {
     executeQuery("DELETE FROM tb_pelanggaran_sanksi WHERE id_transaksi = :id", ['id' => $id_transaksi]);
     
     // 3. Insert detail BARU dan hitung poin baru
-    $new_kelakuan = 0;
-    $new_kerajinan = 0;
-    $new_kerapian = 0;
+    $new_kelakuan = 0; $new_kerajinan = 0; $new_kerapian = 0;
     
     $stmtD = $pdo->prepare("INSERT INTO tb_pelanggaran_detail (id_transaksi, id_jenis, poin_saat_itu) VALUES (?, ?, ?)");
     $stmtI = $pdo->prepare("SELECT poin_default, id_kategori FROM tb_jenis_pelanggaran WHERE id_jenis = ?");
@@ -70,7 +60,6 @@ try {
         $info = $stmtI->fetch();
         if ($info) {
             $stmtD->execute([$id_transaksi, $id_jenis, $info['poin_default']]);
-            
             if ($info['id_kategori'] == 1) $new_kelakuan += $info['poin_default'];
             elseif ($info['id_kategori'] == 2) $new_kerajinan += $info['poin_default'];
             elseif ($info['id_kategori'] == 3) $new_kerapian += $info['poin_default'];
@@ -87,8 +76,7 @@ try {
         }
     }
     
-    // 5. SINKRONISASI POIN di tb_anggota_kelas
-    // Kurangi poin lama, tambah poin baru
+    // 5. SINKRONISASI POIN
     $diff_kelakuan = $new_kelakuan - $old_kelakuan;
     $diff_kerajinan = $new_kerajinan - $old_kerajinan;
     $diff_kerapian = $new_kerapian - $old_kerapian;
@@ -109,20 +97,13 @@ try {
         'id' => $id_anggota
     ]);
     
-    // 6. Re-check SP jika ada perubahan poin
-    if ($diff_kelakuan != 0 || $diff_kerajinan != 0 || $diff_kerapian != 0) {
-        $siswa = fetchOne("SELECT poin_kelakuan, poin_kerajinan, poin_kerapian, status_sp_terakhir FROM tb_anggota_kelas WHERE id_anggota = :id", ['id' => $id_anggota]);
-        
-        if ($siswa) {
-            // Fungsi checkAndTriggerSP sudah ada di simpan_pelanggaran.php
-            // Kita bisa include atau copy function-nya
-            // Untuk sementara kita skip re-check SP (bisa ditambahkan nanti jika diperlukan)
-        }
-    }
-    
     $pdo->commit();
     
-    $_SESSION['success_message'] = "✅ Pelanggaran berhasil diupdate! Poin disesuaikan: " . ($diff_total >= 0 ? '+' : '') . $diff_total;
+    // 6. RECALCULATE SP OTOMATIS (FIX BUG 3)
+    recalculateStatusSP($id_anggota);
+    
+    $diff_info = $diff_total >= 0 ? "+$diff_total" : "$diff_total";
+    $_SESSION['success_message'] = "✅ Pelanggaran berhasil diupdate! Selisih poin: $diff_info. Status SP diperbarui.";
     
 } catch (Exception $e) {
     if (isset($pdo) && $pdo->inTransaction()) {

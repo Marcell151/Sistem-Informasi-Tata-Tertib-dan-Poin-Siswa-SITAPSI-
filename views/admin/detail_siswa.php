@@ -1,7 +1,8 @@
 <?php
 /**
- * SITAPSI - Detail Siswa (COMPLETE)
- * Menampilkan 3 Tabel Kategori dengan List Pelanggaran + Aksi Edit/Hapus
+ * SITAPSI - Detail Siswa (REVISED)
+ * FIX: Filter pelanggaran berdasarkan semester aktif (Lembar Kosong Genap)
+ * Poin total tetap akumulasi tahunan, tapi LIST pelanggaran di-filter per semester
  */
 
 session_start();
@@ -18,7 +19,15 @@ if (!$id_anggota) {
     exit;
 }
 
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("
+    SELECT id_tahun, nama_tahun, semester_aktif 
+    FROM tb_tahun_ajaran 
+    WHERE status = 'Aktif' 
+    LIMIT 1
+");
+
+// Filter semester: default tampilkan semester aktif (LOGIKA LEMBAR KOSONG)
+$filter_semester = $_GET['semester'] ?? $tahun_aktif['semester_aktif'];
 
 // Ambil data siswa
 $siswa = fetchOne("
@@ -44,73 +53,77 @@ if (!$siswa) {
     exit;
 }
 
-// Ambil pelanggaran KELAKUAN
-$pelanggaran_kelakuan = fetchAll("
+// LOGIKA LEMBAR KOSONG:
+// - Poin yg ditampilkan di kartu = AKUMULASI TAHUNAN (poin_kelakuan dll di tb_anggota_kelas)
+// - LIST pelanggaran = difilter by semester aktif
+// - Poin semester ganjil di kartu kecil = hanya semester ganjil
+// - Poin semester genap di kartu kecil = poin genap saja
+
+// Hitung poin per semester untuk info
+$poin_ganjil = fetchOne("
     SELECT 
-        h.id_transaksi,
-        h.tanggal,
-        h.waktu,
-        jp.nama_pelanggaran,
-        d.poin_saat_itu,
-        GROUP_CONCAT(DISTINCT sr.deskripsi SEPARATOR '; ') as sanksi,
-        g.nama_guru
+        COALESCE(SUM(CASE WHEN jp.id_kategori = 1 THEN d.poin_saat_itu ELSE 0 END), 0) as kelakuan,
+        COALESCE(SUM(CASE WHEN jp.id_kategori = 2 THEN d.poin_saat_itu ELSE 0 END), 0) as kerajinan,
+        COALESCE(SUM(CASE WHEN jp.id_kategori = 3 THEN d.poin_saat_itu ELSE 0 END), 0) as kerapian
     FROM tb_pelanggaran_header h
     JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
     JOIN tb_jenis_pelanggaran jp ON d.id_jenis = jp.id_jenis
-    JOIN tb_guru g ON h.id_guru = g.id_guru
-    LEFT JOIN tb_pelanggaran_sanksi ps ON h.id_transaksi = ps.id_transaksi
-    LEFT JOIN tb_sanksi_ref sr ON ps.id_sanksi_ref = sr.id_sanksi_ref
     WHERE h.id_anggota = :id
-    AND jp.id_kategori = 1
-    GROUP BY h.id_transaksi, d.id_detail
-    ORDER BY h.tanggal DESC, h.waktu DESC
-", ['id' => $id_anggota]);
+    AND h.id_tahun = :id_tahun
+    AND h.semester = 'Ganjil'
+", ['id' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
 
-// Ambil pelanggaran KERAJINAN
-$pelanggaran_kerajinan = fetchAll("
+$poin_genap = fetchOne("
     SELECT 
-        h.id_transaksi,
-        h.tanggal,
-        h.waktu,
-        jp.nama_pelanggaran,
-        d.poin_saat_itu,
-        GROUP_CONCAT(DISTINCT sr.deskripsi SEPARATOR '; ') as sanksi,
-        g.nama_guru
+        COALESCE(SUM(CASE WHEN jp.id_kategori = 1 THEN d.poin_saat_itu ELSE 0 END), 0) as kelakuan,
+        COALESCE(SUM(CASE WHEN jp.id_kategori = 2 THEN d.poin_saat_itu ELSE 0 END), 0) as kerajinan,
+        COALESCE(SUM(CASE WHEN jp.id_kategori = 3 THEN d.poin_saat_itu ELSE 0 END), 0) as kerapian
     FROM tb_pelanggaran_header h
     JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
     JOIN tb_jenis_pelanggaran jp ON d.id_jenis = jp.id_jenis
-    JOIN tb_guru g ON h.id_guru = g.id_guru
-    LEFT JOIN tb_pelanggaran_sanksi ps ON h.id_transaksi = ps.id_transaksi
-    LEFT JOIN tb_sanksi_ref sr ON ps.id_sanksi_ref = sr.id_sanksi_ref
     WHERE h.id_anggota = :id
-    AND jp.id_kategori = 2
-    GROUP BY h.id_transaksi, d.id_detail
-    ORDER BY h.tanggal DESC, h.waktu DESC
-", ['id' => $id_anggota]);
+    AND h.id_tahun = :id_tahun
+    AND h.semester = 'Genap'
+", ['id' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
 
-// Ambil pelanggaran KERAPIAN
-$pelanggaran_kerapian = fetchAll("
-    SELECT 
-        h.id_transaksi,
-        h.tanggal,
-        h.waktu,
-        jp.nama_pelanggaran,
-        d.poin_saat_itu,
-        GROUP_CONCAT(DISTINCT sr.deskripsi SEPARATOR '; ') as sanksi,
-        g.nama_guru
-    FROM tb_pelanggaran_header h
-    JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
-    JOIN tb_jenis_pelanggaran jp ON d.id_jenis = jp.id_jenis
-    JOIN tb_guru g ON h.id_guru = g.id_guru
-    LEFT JOIN tb_pelanggaran_sanksi ps ON h.id_transaksi = ps.id_transaksi
-    LEFT JOIN tb_sanksi_ref sr ON ps.id_sanksi_ref = sr.id_sanksi_ref
-    WHERE h.id_anggota = :id
-    AND jp.id_kategori = 3
-    GROUP BY h.id_transaksi, d.id_detail
-    ORDER BY h.tanggal DESC, h.waktu DESC
-", ['id' => $id_anggota]);
+// Helper query untuk get pelanggaran per kategori + filter semester
+function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
+    $sql = "
+        SELECT 
+            h.id_transaksi,
+            h.tanggal,
+            h.waktu,
+            h.semester,
+            jp.nama_pelanggaran,
+            d.poin_saat_itu,
+            GROUP_CONCAT(DISTINCT sr.deskripsi SEPARATOR '; ') as sanksi,
+            g.nama_guru
+        FROM tb_pelanggaran_header h
+        JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
+        JOIN tb_jenis_pelanggaran jp ON d.id_jenis = jp.id_jenis
+        JOIN tb_guru g ON h.id_guru = g.id_guru
+        LEFT JOIN tb_pelanggaran_sanksi ps ON h.id_transaksi = ps.id_transaksi
+        LEFT JOIN tb_sanksi_ref sr ON ps.id_sanksi_ref = sr.id_sanksi_ref
+        WHERE h.id_anggota = :id
+        AND jp.id_kategori = :id_kategori
+        AND h.id_tahun = :id_tahun
+        AND h.semester = :semester
+        GROUP BY h.id_transaksi, d.id_detail
+        ORDER BY h.tanggal DESC, h.waktu DESC
+    ";
+    
+    return fetchAll($sql, [
+        'id' => $id_anggota,
+        'id_kategori' => $id_kategori,
+        'id_tahun' => $id_tahun,
+        'semester' => $filter_semester
+    ]);
+}
 
-// Ambil riwayat SP
+$pelanggaran_kelakuan = getPelanggaranByKategori($id_anggota, 1, $tahun_aktif['id_tahun'], $filter_semester);
+$pelanggaran_kerajinan = getPelanggaranByKategori($id_anggota, 2, $tahun_aktif['id_tahun'], $filter_semester);
+$pelanggaran_kerapian = getPelanggaranByKategori($id_anggota, 3, $tahun_aktif['id_tahun'], $filter_semester);
+
 $riwayat_sp = fetchAll("
     SELECT * FROM tb_riwayat_sp 
     WHERE id_anggota = :id 
@@ -131,15 +144,12 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     <script>
         tailwind.config = {
             theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
+                extend: { colors: { 'navy': '#000080' } }
             }
         }
     </script>
 </head>
 <body class="bg-gray-50">
-
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
@@ -205,7 +215,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             </div>
 
-            <!-- 3 Silo Cards -->
+            <!-- POIN CARDS: Akumulasi Tahunan + Breakdown Semester -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- KELAKUAN -->
                 <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-6">
@@ -213,8 +223,16 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <h3 class="text-lg font-bold text-gray-800">🚨 KELAKUAN</h3>
                         <span class="text-3xl font-bold text-red-600"><?= $siswa['poin_kelakuan'] ?></span>
                     </div>
-                    <div class="text-center">
-                        <p class="text-xs text-gray-500">Total Poin</p>
+                    <p class="text-xs text-gray-400 font-medium mb-3">Total Akumulasi Tahunan</p>
+                    <div class="grid grid-cols-2 gap-2 mt-2 pt-3 border-t border-gray-100">
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-500">Ganjil</p>
+                            <p class="text-sm font-bold text-gray-700"><?= $poin_ganjil['kelakuan'] ?></p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-500">Genap</p>
+                            <p class="text-sm font-bold text-gray-700"><?= $poin_genap['kelakuan'] ?></p>
+                        </div>
                     </div>
                 </div>
 
@@ -224,8 +242,16 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <h3 class="text-lg font-bold text-gray-800">📘 KERAJINAN</h3>
                         <span class="text-3xl font-bold text-blue-600"><?= $siswa['poin_kerajinan'] ?></span>
                     </div>
-                    <div class="text-center">
-                        <p class="text-xs text-gray-500">Total Poin</p>
+                    <p class="text-xs text-gray-400 font-medium mb-3">Total Akumulasi Tahunan</p>
+                    <div class="grid grid-cols-2 gap-2 mt-2 pt-3 border-t border-gray-100">
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-500">Ganjil</p>
+                            <p class="text-sm font-bold text-gray-700"><?= $poin_ganjil['kerajinan'] ?></p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-500">Genap</p>
+                            <p class="text-sm font-bold text-gray-700"><?= $poin_genap['kerajinan'] ?></p>
+                        </div>
                     </div>
                 </div>
 
@@ -235,13 +261,50 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <h3 class="text-lg font-bold text-gray-800">👔 KERAPIAN</h3>
                         <span class="text-3xl font-bold text-yellow-600"><?= $siswa['poin_kerapian'] ?></span>
                     </div>
-                    <div class="text-center">
-                        <p class="text-xs text-gray-500">Total Poin</p>
+                    <p class="text-xs text-gray-400 font-medium mb-3">Total Akumulasi Tahunan</p>
+                    <div class="grid grid-cols-2 gap-2 mt-2 pt-3 border-t border-gray-100">
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-500">Ganjil</p>
+                            <p class="text-sm font-bold text-gray-700"><?= $poin_ganjil['kerapian'] ?></p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-500">Genap</p>
+                            <p class="text-sm font-bold text-gray-700"><?= $poin_genap['kerapian'] ?></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab System untuk 3 Tabel Kategori -->
+            <!-- Filter Semester (TOMBOL LEMBAR) -->
+            <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm font-medium text-gray-700">Tampilkan pelanggaran semester:</span>
+                    <a href="?id=<?= $id_anggota ?>&semester=Ganjil"
+                       class="px-4 py-2 rounded-lg font-medium transition-colors text-sm <?= $filter_semester === 'Ganjil' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+                        📄 Ganjil
+                    </a>
+                    <a href="?id=<?= $id_anggota ?>&semester=Genap"
+                       class="px-4 py-2 rounded-lg font-medium transition-colors text-sm <?= $filter_semester === 'Genap' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
+                        📄 Genap
+                    </a>
+                </div>
+                <div class="flex items-center space-x-2 text-sm">
+                    <?php if ($filter_semester === $tahun_aktif['semester_aktif']): ?>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                        ● Semester Aktif
+                    </span>
+                    <?php else: ?>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full font-medium">
+                        Semester Lampau
+                    </span>
+                    <?php endif; ?>
+                    <span class="text-gray-500">
+                        Menampilkan: <strong><?= $filter_semester ?></strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 3 Tabel Kategori - DIFILTER BY SEMESTER -->
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="flex border-b border-gray-200 overflow-x-auto">
                     <button onclick="switchTab('kelakuan')" id="tab-kelakuan" 
@@ -258,71 +321,42 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </button>
                 </div>
 
-                <!-- Content KELAKUAN -->
-                <div id="content-kelakuan" class="tab-content p-6">
-                    <h4 class="font-bold text-gray-800 mb-4">Riwayat Pelanggaran Kelakuan</h4>
-                    <?php if (empty($pelanggaran_kelakuan)): ?>
-                    <div class="text-center py-8 text-gray-500">
-                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p class="font-medium">Tidak ada pelanggaran kelakuan</p>
+                <?php 
+                $kategori_data = [
+                    'kelakuan' => ['data' => $pelanggaran_kelakuan, 'color' => 'red', 'label' => 'Kelakuan'],
+                    'kerajinan' => ['data' => $pelanggaran_kerajinan, 'color' => 'blue', 'label' => 'Kerajinan'],
+                    'kerapian' => ['data' => $pelanggaran_kerapian, 'color' => 'yellow', 'label' => 'Kerapian'],
+                ];
+                
+                foreach ($kategori_data as $key => $kat):
+                    $color = $kat['color'];
+                ?>
+                <div id="content-<?= $key ?>" class="tab-content p-6 <?= $key !== 'kelakuan' ? 'hidden' : '' ?>">
+                    
+                    <!-- Info semester untuk tab ini -->
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-gray-800">Pelanggaran <?= $kat['label'] ?> - Semester <?= $filter_semester ?></h4>
+                        <?php if (empty($kat['data'])): ?>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                            ✅ Bersih semester ini
+                        </span>
+                        <?php endif; ?>
                     </div>
-                    <?php else: ?>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-red-50 text-xs text-red-700 uppercase">
-                                <tr>
-                                    <th class="p-3 text-left">Tanggal</th>
-                                    <th class="p-3 text-left">Pelanggaran</th>
-                                    <th class="p-3 text-left">Poin</th>
-                                    <th class="p-3 text-left">Sanksi</th>
-                                    <th class="p-3 text-left">Pelapor</th>
-                                    <th class="p-3 text-left">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($pelanggaran_kelakuan as $p): ?>
-                                <tr class="hover:bg-red-50">
-                                    <td class="p-3 whitespace-nowrap"><?= date('d/m/Y', strtotime($p['tanggal'])) ?><br><span class="text-xs text-gray-500"><?= substr($p['waktu'], 0, 5) ?></span></td>
-                                    <td class="p-3"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
-                                    <td class="p-3"><span class="px-2 py-1 bg-red-100 text-red-800 rounded-full font-bold text-xs">+<?= $p['poin_saat_itu'] ?></span></td>
-                                    <td class="p-3 text-xs text-gray-600"><?= $p['sanksi'] ?: '-' ?></td>
-                                    <td class="p-3 text-xs"><?= htmlspecialchars($p['nama_guru']) ?></td>
-                                    <td class="p-3 whitespace-nowrap">
-                                        <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 mr-1" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </button>
-                                        <button onclick="hapusPelanggaran(<?= $p['id_transaksi'] ?>)" class="p-1 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php endif; ?>
-                </div>
 
-                <!-- Content KERAJINAN -->
-                <div id="content-kerajinan" class="tab-content p-6 hidden">
-                    <h4 class="font-bold text-gray-800 mb-4">Riwayat Pelanggaran Kerajinan</h4>
-                    <?php if (empty($pelanggaran_kerajinan)): ?>
+                    <?php if (empty($kat['data'])): ?>
                     <div class="text-center py-8 text-gray-500">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <p class="font-medium">Tidak ada pelanggaran kerajinan</p>
+                        <p class="font-medium">Tidak ada pelanggaran <?= strtolower($kat['label']) ?> di semester <?= $filter_semester ?></p>
+                        <?php if ($filter_semester !== $tahun_aktif['semester_aktif']): ?>
+                        <p class="text-xs text-gray-400 mt-1">Data semester lain tersedia</p>
+                        <?php endif; ?>
                     </div>
                     <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
-                            <thead class="bg-blue-50 text-xs text-blue-700 uppercase">
+                            <thead class="bg-<?= $color ?>-50 text-xs text-<?= $color ?>-700 uppercase">
                                 <tr>
                                     <th class="p-3 text-left">Tanggal</th>
                                     <th class="p-3 text-left">Pelanggaran</th>
@@ -333,20 +367,29 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($pelanggaran_kerajinan as $p): ?>
-                                <tr class="hover:bg-blue-50">
-                                    <td class="p-3 whitespace-nowrap"><?= date('d/m/Y', strtotime($p['tanggal'])) ?><br><span class="text-xs text-gray-500"><?= substr($p['waktu'], 0, 5) ?></span></td>
+                                <?php foreach ($kat['data'] as $p): ?>
+                                <tr class="hover:bg-<?= $color ?>-50">
+                                    <td class="p-3 whitespace-nowrap">
+                                        <?= date('d/m/Y', strtotime($p['tanggal'])) ?><br>
+                                        <span class="text-xs text-gray-500"><?= substr($p['waktu'], 0, 5) ?></span>
+                                    </td>
                                     <td class="p-3"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
-                                    <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full font-bold text-xs">+<?= $p['poin_saat_itu'] ?></span></td>
+                                    <td class="p-3">
+                                        <span class="px-2 py-1 bg-<?= $color ?>-100 text-<?= $color ?>-800 rounded-full font-bold text-xs">
+                                            +<?= $p['poin_saat_itu'] ?>
+                                        </span>
+                                    </td>
                                     <td class="p-3 text-xs text-gray-600"><?= $p['sanksi'] ?: '-' ?></td>
                                     <td class="p-3 text-xs"><?= htmlspecialchars($p['nama_guru']) ?></td>
                                     <td class="p-3 whitespace-nowrap">
-                                        <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 mr-1" title="Edit">
+                                        <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" 
+                                                class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 mr-1" title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button onclick="hapusPelanggaran(<?= $p['id_transaksi'] ?>)" class="p-1 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Hapus">
+                                        <button onclick="hapusPelanggaran(<?= $p['id_transaksi'] ?>)" 
+                                                class="p-1 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Hapus">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
@@ -359,57 +402,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </div>
                     <?php endif; ?>
                 </div>
-
-                <!-- Content KERAPIAN -->
-                <div id="content-kerapian" class="tab-content p-6 hidden">
-                    <h4 class="font-bold text-gray-800 mb-4">Riwayat Pelanggaran Kerapian</h4>
-                    <?php if (empty($pelanggaran_kerapian)): ?>
-                    <div class="text-center py-8 text-gray-500">
-                        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p class="font-medium">Tidak ada pelanggaran kerapian</p>
-                    </div>
-                    <?php else: ?>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-yellow-50 text-xs text-yellow-700 uppercase">
-                                <tr>
-                                    <th class="p-3 text-left">Tanggal</th>
-                                    <th class="p-3 text-left">Pelanggaran</th>
-                                    <th class="p-3 text-left">Poin</th>
-                                    <th class="p-3 text-left">Sanksi</th>
-                                    <th class="p-3 text-left">Pelapor</th>
-                                    <th class="p-3 text-left">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($pelanggaran_kerapian as $p): ?>
-                                <tr class="hover:bg-yellow-50">
-                                    <td class="p-3 whitespace-nowrap"><?= date('d/m/Y', strtotime($p['tanggal'])) ?><br><span class="text-xs text-gray-500"><?= substr($p['waktu'], 0, 5) ?></span></td>
-                                    <td class="p-3"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
-                                    <td class="p-3"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full font-bold text-xs">+<?= $p['poin_saat_itu'] ?></span></td>
-                                    <td class="p-3 text-xs text-gray-600"><?= $p['sanksi'] ?: '-' ?></td>
-                                    <td class="p-3 text-xs"><?= htmlspecialchars($p['nama_guru']) ?></td>
-                                    <td class="p-3 whitespace-nowrap">
-                                        <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 mr-1" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </button>
-                                        <button onclick="hapusPelanggaran(<?= $p['id_transaksi'] ?>)" class="p-1 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php endif; ?>
-                </div>
+                <?php endforeach; ?>
             </div>
 
             <!-- Riwayat SP -->
@@ -429,7 +422,11 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <tbody class="divide-y divide-gray-200">
                             <?php foreach($riwayat_sp as $sp): ?>
                             <tr>
-                                <td class="p-4"><span class="px-3 py-1 bg-red-100 text-red-800 rounded-full font-bold text-xs"><?= $sp['tingkat_sp'] ?></span></td>
+                                <td class="p-4">
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full font-bold text-xs">
+                                        <?= $sp['tingkat_sp'] ?>
+                                    </span>
+                                </td>
                                 <td class="p-4"><?= $sp['kategori_pemicu'] ?></td>
                                 <td class="p-4"><?= date('d/m/Y', strtotime($sp['tanggal_terbit'])) ?></td>
                                 <td class="p-4">
@@ -446,30 +443,20 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             <?php endif; ?>
 
         </div>
-
     </div>
-
 </div>
 
 <script>
 function switchTab(tab) {
-    // Hide all content
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-    
-    // Reset all tabs
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('bg-red-600', 'bg-blue-600', 'bg-yellow-600', 'text-white');
-        button.classList.add('bg-gray-100', 'text-gray-600');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(b => {
+        b.classList.remove('bg-red-600', 'bg-blue-600', 'bg-yellow-600', 'text-white');
+        b.classList.add('bg-gray-100', 'text-gray-600');
     });
-    
-    // Show selected content
     document.getElementById('content-' + tab).classList.remove('hidden');
-    
-    // Highlight active tab
     const activeTab = document.getElementById('tab-' + tab);
     activeTab.classList.remove('bg-gray-100', 'text-gray-600');
     activeTab.classList.add('text-white');
-    
     if (tab === 'kelakuan') activeTab.classList.add('bg-red-600');
     else if (tab === 'kerajinan') activeTab.classList.add('bg-blue-600');
     else activeTab.classList.add('bg-yellow-600');
@@ -480,11 +467,10 @@ function editPelanggaran(id) {
 }
 
 function hapusPelanggaran(id) {
-    if (confirm('⚠️ PERINGATAN!\n\nMenghapus pelanggaran akan mengurangi poin siswa secara otomatis.\n\nYakin ingin menghapus?')) {
-        window.location.href = `../../actions/hapus_transaksi.php?id=${id}&redirect=monitoring`;
+    if (confirm('⚠️ Menghapus pelanggaran akan mengurangi poin siswa secara otomatis.\n\nYakin ingin menghapus?')) {
+        window.location.href = `../../actions/hapus_transaksi.php?id=${id}&redirect=monitoring&anggota=<?= $id_anggota ?>`;
     }
 }
 </script>
-
 </body>
 </html>
