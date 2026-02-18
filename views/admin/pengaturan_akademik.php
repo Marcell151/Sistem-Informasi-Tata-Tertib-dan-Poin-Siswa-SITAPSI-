@@ -1,7 +1,10 @@
 <?php
 /**
- * SITAPSI - Pengaturan Akademik (COMPLETE)
- * Tambah: Menu Manajemen Kelas
+ * SITAPSI - Pengaturan Akademik (ENHANCED SAFETY)
+ * 
+ * FITUR BARU:
+ * 1. Proses Kelulusan: Tambah warning hanya untuk backup (otomatis di tutup tahun)
+ * 2. Kenaikan Kelas: Lock otomatis jika sudah ada transaksi (unlock dengan password darurat)
  */
 
 session_start();
@@ -11,10 +14,31 @@ require_once '../../includes/session_check.php';
 requireAdmin();
 
 // Ambil tahun ajaran aktif
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("
+    SELECT id_tahun, nama_tahun, semester_aktif 
+    FROM tb_tahun_ajaran 
+    WHERE status = 'Aktif' 
+    LIMIT 1
+");
+
+// Cek apakah ada transaksi pelanggaran di tahun ini
+$cek_transaksi = fetchOne("
+    SELECT COUNT(*) as total 
+    FROM tb_pelanggaran_header 
+    WHERE id_tahun = :id_tahun
+", ['id_tahun' => $tahun_aktif['id_tahun']]);
+
+$ada_transaksi = $cek_transaksi['total'] > 0;
+
+// Status kenaikan kelas: locked jika ada transaksi
+$kenaikan_kelas_locked = $ada_transaksi;
 
 // Ambil semua tahun ajaran
-$tahun_list = fetchAll("SELECT id_tahun, nama_tahun, semester_aktif, status FROM tb_tahun_ajaran ORDER BY id_tahun DESC");
+$tahun_list = fetchAll("
+    SELECT id_tahun, nama_tahun, semester_aktif, status 
+    FROM tb_tahun_ajaran 
+    ORDER BY id_tahun DESC
+");
 
 // Statistik tahun aktif
 $stats = fetchOne("
@@ -67,13 +91,13 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 
             <?php if ($success): ?>
             <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+                <p class="text-green-700 font-medium"><?= $success ?></p>
             </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
             <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+                <p class="text-red-700 font-medium"><?= $error ?></p>
             </div>
             <?php endif; ?>
 
@@ -150,7 +174,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </button>
                 </div>
 
-                <!-- Proses Kelulusan -->
+                <!-- Proses Kelulusan - DENGAN WARNING -->
                 <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-green-100 rounded-full p-3 mr-4">
@@ -163,15 +187,32 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <p class="text-sm text-gray-600">Set siswa kelas 9 lulus</p>
                         </div>
                     </div>
-                    <form action="../../actions/proses_kelulusan.php" method="POST" onsubmit="return confirm('⚠️ Yakin proses kelulusan?\n\nSiswa kelas 9 akan di-set status Lulus.')">
+                    
+                    <!-- WARNING TAMBAHAN -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-xs font-bold text-yellow-800 mb-1">⚠️ PERHATIAN</p>
+                                <p class="text-xs text-yellow-700">
+                                    Tombol ini <strong>hanya untuk backup</strong> jika sistem <u>tidak otomatis meluluskan</u> saat tutup tahun ajaran. 
+                                    Normalnya kelulusan kelas 9 sudah otomatis.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form action="../../actions/proses_kelulusan.php" method="POST" onsubmit="return confirmKelulusan()">
                         <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
                             🎓 Proses Kelulusan Kelas 9
                         </button>
                     </form>
                 </div>
 
-                <!-- Kenaikan Kelas -->
-                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+                <!-- Kenaikan Kelas - DENGAN LOCK SYSTEM -->
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow <?= $kenaikan_kelas_locked ? 'opacity-75' : '' ?>">
                     <div class="flex items-center mb-4">
                         <div class="bg-purple-100 rounded-full p-3 mr-4">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,16 +220,66 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             </svg>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-800">Kenaikan Kelas</h3>
+                            <h3 class="font-bold text-gray-800 flex items-center">
+                                Kenaikan Kelas
+                                <?php if ($kenaikan_kelas_locked): ?>
+                                <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full font-bold">
+                                    🔒 LOCKED
+                                </span>
+                                <?php endif; ?>
+                            </h3>
                             <p class="text-sm text-gray-600">Naik kelas 7→8, 8→9</p>
                         </div>
                     </div>
+
+                    <?php if ($kenaikan_kelas_locked): ?>
+                    <!-- STATUS LOCKED -->
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-3">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-bold text-red-800 mb-1">Fitur Terkunci</p>
+                                <p class="text-xs text-red-700 mb-2">
+                                    Kenaikan kelas hanya bisa diakses <strong>di awal tahun ajaran baru</strong> (sebelum ada transaksi pelanggaran).
+                                    <br>Saat ini sudah ada <strong><?= $cek_transaksi['total'] ?> transaksi</strong> di tahun ajaran ini.
+                                </p>
+                                <p class="text-xs text-red-600 font-semibold">
+                                    💡 Untuk membuka: Klik tombol "Unlock Darurat" di bawah
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="unlockKenaikanKelas()" 
+                            class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors mb-2">
+                        🔓 Unlock Darurat (Password)
+                    </button>
+
+                    <?php else: ?>
+                    <!-- STATUS UNLOCKED -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-green-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-xs font-bold text-green-800 mb-1">✅ Tersedia</p>
+                                <p class="text-xs text-green-700">
+                                    Tahun ajaran baru. Belum ada transaksi pelanggaran. Kenaikan kelas dapat diakses.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <a href="kenaikan_kelas.php" class="block w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors text-center">
                         📈 Proses Kenaikan Kelas
                     </a>
+                    <?php endif; ?>
                 </div>
 
-                <!-- BARU: Manajemen Kelas -->
+                <!-- Manajemen Kelas -->
                 <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-indigo-100 rounded-full p-3 mr-4">
@@ -293,7 +384,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nama Tahun Ajaran Baru *</label>
                 <input type="text" name="nama_tahun_baru" required placeholder="Contoh: 2025/2026"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
             </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
                 <p class="text-sm text-yellow-700">
@@ -317,6 +408,37 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         </form>
     </div>
 </div>
+
+<script>
+// Konfirmasi kelulusan dengan warning tambahan
+function confirmKelulusan() {
+    return confirm('⚠️ PERHATIAN\n\n' +
+        'Fitur ini adalah BACKUP jika sistem tidak otomatis meluluskan saat tutup tahun.\n\n' +
+        'Siswa kelas 9 akan diubah statusnya menjadi "Lulus".\n\n' +
+        'Lanjutkan?');
+}
+
+// Unlock kenaikan kelas dengan password darurat
+function unlockKenaikanKelas() {
+    const password = prompt('🔐 UNLOCK DARURAT - KENAIKAN KELAS\n\n' +
+        'Fitur ini terkunci untuk menghindari error saat tahun ajaran sedang berjalan.\n\n' +
+        'Masukkan password darurat untuk unlock:\n' +
+        '(Password: NAIKKELAS2025)');
+    
+    if (password === 'NAIKKELAS2025') {
+        if (confirm('✅ Password benar!\n\nKenaikan kelas akan dibuka.\n\n⚠️ PERINGATAN:\n' +
+            'Pastikan Anda paham konsekuensinya. Kenaikan kelas di tengah tahun ajaran dapat menyebabkan:\n' +
+            '- Poin siswa tetap terbawa\n' +
+            '- Data pelanggaran tetap tercatat di kelas lama\n' +
+            '- Laporan mungkin tidak konsisten\n\n' +
+            'Lanjutkan?')) {
+            window.location.href = 'kenaikan_kelas.php?unlock=1';
+        }
+    } else if (password !== null) {
+        alert('❌ Password salah!\n\nKenaikan kelas tetap terkunci.');
+    }
+}
+</script>
 
 </body>
 </html>

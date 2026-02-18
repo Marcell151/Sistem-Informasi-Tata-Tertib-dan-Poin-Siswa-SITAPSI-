@@ -16,11 +16,11 @@ CREATE TABLE tb_admin (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabel Tahun Ajaran (Update: Status Arsip)
+-- Tabel Tahun Ajaran
 CREATE TABLE tb_tahun_ajaran (
     id_tahun INT AUTO_INCREMENT PRIMARY KEY,
     nama_tahun VARCHAR(20) NOT NULL, -- Contoh: "2024/2025"
-    status ENUM('Aktif', 'Arsip') DEFAULT 'Aktif', -- 'Arsip' menggantikan 'Non-Aktif' untuk logika penyimpanan data
+    status ENUM('Aktif', 'Arsip') DEFAULT 'Aktif', 
     semester_aktif ENUM('Ganjil', 'Genap') DEFAULT 'Ganjil'
 );
 
@@ -64,7 +64,6 @@ CREATE TABLE tb_kelas (
 -- ================================================================
 
 -- Tabel Anggota Kelas (Jantung Sistem - Per Tahun)
--- Tabel ini mencatat sejarah siswa di setiap tahun (Kelas 7, lalu 8, lalu 9)
 CREATE TABLE tb_anggota_kelas (
     id_anggota BIGINT AUTO_INCREMENT PRIMARY KEY,
     nis VARCHAR(20) NOT NULL,
@@ -72,16 +71,21 @@ CREATE TABLE tb_anggota_kelas (
     id_tahun INT NOT NULL,
     
     -- Akumulasi Poin Tahunan (Untuk perhitungan SP)
-    -- Poin ini TIDAK di-reset saat semester genap (Backend), 
-    -- tapi tampilan Dashboard yang di-reset (Frontend logic based on semester)
     poin_kelakuan INT DEFAULT 0,
     poin_kerajinan INT DEFAULT 0,
     poin_kerapian INT DEFAULT 0,
     
     total_poin_umum INT DEFAULT 0, -- Total Gabungan Tahunan
+    
+    -- [MODIFIKASI: 3 Silo Status SP Independen]
+    status_sp_kelakuan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
+    status_sp_kerajinan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
+    status_sp_kerapian ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
+    
+    -- [Summary Status Tertinggi]
     status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     
-    -- Penanda Reward (Baru ditambahkan untuk logika hadiah)
+    -- Penanda Reward
     status_reward ENUM('None', 'Kandidat Sertifikat') DEFAULT 'None',
     
     FOREIGN KEY (nis) REFERENCES tb_siswa(nis) ON DELETE CASCADE,
@@ -145,7 +149,6 @@ CREATE TABLE tb_predikat_nilai (
 -- ================================================================
 
 -- Header Transaksi
--- UPDATE PENTING: Penambahan id_tahun untuk penguncian arsip
 CREATE TABLE tb_pelanggaran_header (
     id_transaksi BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_anggota BIGINT NOT NULL,
@@ -203,7 +206,7 @@ CREATE TABLE tb_riwayat_sp (
 );
 
 -- ================================================================
--- INSERT DATA (DATA PENTING - TIDAK DIUBAH DARI VERSI SEBELUMNYA)
+-- INSERT DATA (DATA PENTING)
 -- ================================================================
 
 -- 1. Insert Kategori

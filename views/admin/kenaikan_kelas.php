@@ -1,7 +1,6 @@
 <?php
 /**
- * SITAPSI - Kenaikan Kelas
- * Pilih kelas asal → Pilih siswa → Tentukan kelas tujuan
+ * SITAPSI - Kenaikan Kelas (WITH LOCK CHECK)
  */
 
 session_start();
@@ -10,9 +9,36 @@ require_once '../../includes/session_check.php';
 
 requireAdmin();
 
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("
+    SELECT id_tahun, nama_tahun 
+    FROM tb_tahun_ajaran 
+    WHERE status = 'Aktif' 
+    LIMIT 1
+");
 
-// Ambil kelas yang ada
+// Cek apakah ada transaksi (untuk lock system)
+$cek_transaksi = fetchOne("
+    SELECT COUNT(*) as total 
+    FROM tb_pelanggaran_header 
+    WHERE id_tahun = :id_tahun
+", ['id_tahun' => $tahun_aktif['id_tahun']]);
+
+$ada_transaksi = $cek_transaksi['total'] > 0;
+$unlock_manual = isset($_GET['unlock']) && $_GET['unlock'] == '1';
+
+// Jika locked dan tidak ada unlock manual, redirect
+if ($ada_transaksi && !$unlock_manual) {
+    $_SESSION['error_message'] = '❌ Kenaikan kelas terkunci! Fitur ini hanya bisa diakses di awal tahun ajaran (sebelum ada transaksi pelanggaran). Gunakan tombol Unlock Darurat jika benar-benar diperlukan.';
+    header('Location: pengaturan_akademik.php');
+    exit;
+}
+
+// Jika unlock manual, tampilkan warning
+if ($unlock_manual) {
+    $_SESSION['info_message'] = '⚠️ Mode Unlock Darurat Aktif! Pastikan Anda memahami konsekuensi kenaikan kelas di tengah tahun ajaran.';
+}
+
+// Ambil kelas
 $kelas_list = fetchAll("SELECT * FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
 // Group by tingkat

@@ -192,6 +192,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <span class="text-navy font-bold text-4xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
                         <?php endif; ?>
                     </div>
+                    <!-- Di bagian header profil siswa -->
                     <div class="flex-1">
                         <h2 class="text-3xl font-bold mb-2"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
                         <div class="grid grid-cols-2 gap-2 text-sm">
@@ -202,15 +203,40 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </div>
                     </div>
                     <div class="text-right">
-                        <?php if ($siswa['status_sp_terakhir'] !== 'Aman'): ?>
-                        <span class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-full">
+                        <!-- STATUS SP PER KATEGORI -->
+                        <div class="grid grid-cols-3 gap-2 mb-2">
+                            <?php
+                            $sp_kelakuan = $siswa['status_sp_kelakuan'] ?? 'Aman';
+                            $sp_kerajinan = $siswa['status_sp_kerajinan'] ?? 'Aman';
+                            $sp_kerapian = $siswa['status_sp_kerapian'] ?? 'Aman';
+                            
+                            $badge_color = function($sp) {
+                                return $sp === 'Aman' ? 'bg-green-500' : 'bg-red-500';
+                            };
+                            ?>
+                            <div class="bg-white/10 backdrop-blur rounded-lg p-2">
+                                <p class="text-xs text-blue-200">Kelakuan</p>
+                                <span class="<?= $badge_color($sp_kelakuan) ?> px-2 py-1 rounded text-xs font-bold text-white">
+                                    <?= $sp_kelakuan ?>
+                                </span>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur rounded-lg p-2">
+                                <p class="text-xs text-blue-200">Kerajinan</p>
+                                <span class="<?= $badge_color($sp_kerajinan) ?> px-2 py-1 rounded text-xs font-bold text-white">
+                                    <?= $sp_kerajinan ?>
+                                </span>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur rounded-lg p-2">
+                                <p class="text-xs text-blue-200">Kerapian</p>
+                                <span class="<?= $badge_color($sp_kerapian) ?> px-2 py-1 rounded text-xs font-bold text-white">
+                                    <?= $sp_kerapian ?>
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-blue-200">Status Tertinggi:</p>
+                        <span class="px-4 py-2 <?= $siswa['status_sp_terakhir'] !== 'Aman' ? 'bg-red-500' : 'bg-green-500' ?> text-white text-sm font-bold rounded-full">
                             <?= $siswa['status_sp_terakhir'] ?>
                         </span>
-                        <?php else: ?>
-                        <span class="px-4 py-2 bg-green-500 text-white text-sm font-bold rounded-full">
-                            Aman
-                        </span>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
