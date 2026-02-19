@@ -1,7 +1,6 @@
 <?php
 /**
- * SITAPSI - List Siswa di Kelas
- * Menampilkan daftar siswa dalam kelas yang dipilih
+ * SITAPSI - Monitoring Siswa List (COMPLETE - SP PER KATEGORI)
  */
 
 session_start();
@@ -13,23 +12,23 @@ requireAdmin();
 $id_kelas = $_GET['kelas'] ?? null;
 
 if (!$id_kelas) {
-    $_SESSION['error_message'] = '❌ Kelas tidak valid';
+    $_SESSION['error_message'] = '❌ Kelas tidak dipilih';
     header('Location: monitoring_siswa.php');
     exit;
 }
 
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("
+    SELECT id_tahun, nama_tahun 
+    FROM tb_tahun_ajaran 
+    WHERE status = 'Aktif' 
+    LIMIT 1
+");
 
-// Info kelas
-$kelas = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
+$kelas_info = fetchOne("
+    SELECT * FROM tb_kelas WHERE id_kelas = :id
+", ['id' => $id_kelas]);
 
-if (!$kelas) {
-    $_SESSION['error_message'] = '❌ Kelas tidak ditemukan';
-    header('Location: monitoring_siswa.php');
-    exit;
-}
-
-// Ambil siswa dalam kelas
+// Query siswa dengan SP per kategori
 $siswa_list = fetchAll("
     SELECT 
         s.nis,
@@ -41,7 +40,10 @@ $siswa_list = fetchAll("
         a.poin_kerajinan,
         a.poin_kerapian,
         a.total_poin_umum,
-        a.status_sp_terakhir
+        a.status_sp_terakhir,
+        a.status_sp_kelakuan,
+        a.status_sp_kerajinan,
+        a.status_sp_kerapian
     FROM tb_anggota_kelas a
     JOIN tb_siswa s ON a.nis = s.nis
     WHERE a.id_kelas = :id_kelas
@@ -52,20 +54,22 @@ $siswa_list = fetchAll("
     'id_kelas' => $id_kelas,
     'id_tahun' => $tahun_aktif['id_tahun']
 ]);
+
+$success = $_SESSION['success_message'] ?? '';
+$error = $_SESSION['error_message'] ?? '';
+unset($_SESSION['success_message'], $_SESSION['error_message']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siswa Kelas <?= $kelas['nama_kelas'] ?> - SITAPSI</title>
+    <title>Monitoring Siswa - Kelas <?= $kelas_info['nama_kelas'] ?> - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
+                extend: { colors: { 'navy': '#000080' } }
             }
         }
     </script>
@@ -85,112 +89,121 @@ $siswa_list = fetchAll("
                 </svg>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Siswa Kelas <?= $kelas['nama_kelas'] ?></h1>
-                <p class="text-sm text-gray-500">Pilih siswa untuk melihat detail pelanggaran</p>
+                <h1 class="text-2xl font-bold text-gray-800">Kelas <?= htmlspecialchars($kelas_info['nama_kelas']) ?></h1>
+                <p class="text-sm text-gray-500">Monitoring siswa per individu</p>
             </div>
         </div>
 
         <div class="p-6 space-y-6">
 
+            <?php if ($success): ?>
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($error): ?>
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+            </div>
+            <?php endif; ?>
+
             <!-- Header Info -->
             <div class="bg-gradient-to-r from-navy to-blue-800 text-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold mb-2">Kelas <?= $kelas['nama_kelas'] ?></h2>
-                        <p class="text-blue-200">Tingkat <?= $kelas['tingkat'] ?> • Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?></p>
+                        <h2 class="text-2xl font-bold mb-2">📊 Monitoring Kelas <?= $kelas_info['nama_kelas'] ?></h2>
+                        <p class="text-blue-200">Total Siswa: <?= count($siswa_list) ?> orang</p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-blue-200 text-sm">Total Siswa</p>
-                        <p class="text-4xl font-bold"><?= count($siswa_list) ?></p>
-                    </div>
+                    <div class="text-6xl">👥</div>
                 </div>
             </div>
 
-            <!-- Grid Siswa -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Grid Siswa dengan SP Per Kategori -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <?php if (empty($siswa_list)): ?>
                 <div class="col-span-full bg-white rounded-xl shadow-sm p-12 text-center">
                     <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
-                    <p class="text-gray-500 font-medium">Belum ada siswa di kelas ini</p>
+                    <p class="text-gray-500 font-medium">Tidak ada siswa di kelas ini</p>
                 </div>
                 <?php else: ?>
-                <?php foreach ($siswa_list as $siswa): 
-                    // Tentukan border color berdasarkan total poin
-                    $border_color = 'border-blue-500';
-                    if ($siswa['total_poin_umum'] > 200) {
-                        $border_color = 'border-red-500';
-                    } elseif ($siswa['total_poin_umum'] > 100) {
-                        $border_color = 'border-yellow-500';
-                    }
-                ?>
+                <?php foreach ($siswa_list as $siswa): ?>
                 <a href="detail_siswa.php?id=<?= $siswa['id_anggota'] ?>" 
-                   class="block group">
-                    <div class="bg-white rounded-xl shadow-sm border-l-4 <?= $border_color ?> p-6 transition-all hover:shadow-lg transform hover:-translate-y-1">
-                        
-                        <!-- Foto & Nama -->
-                        <div class="flex items-center space-x-4 mb-4">
-                            <div class="w-16 h-16 bg-navy rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                   class="block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 overflow-hidden">
+                    
+                    <!-- Header Card dengan Foto -->
+                    <div class="bg-gradient-to-br from-navy to-blue-800 p-4 text-white">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                                 <?php if($siswa['foto_profil']): ?>
                                     <img src="../../assets/uploads/siswa/<?= $siswa['foto_profil'] ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
-                                    <span class="text-white font-bold text-2xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
+                                    <span class="text-navy font-bold text-2xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
                                 <?php endif; ?>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-bold text-gray-800 truncate group-hover:text-navy transition-colors">
-                                    <?= htmlspecialchars($siswa['nama_siswa']) ?>
-                                </h3>
-                                <p class="text-sm text-gray-500"><?= $siswa['nis'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? '👦' : '👧' ?></p>
+                                <h3 class="font-bold text-white truncate"><?= htmlspecialchars($siswa['nama_siswa']) ?></h3>
+                                <p class="text-xs text-blue-200">NIS: <?= $siswa['nis'] ?></p>
+                                <p class="text-xs text-blue-200"><?= $siswa['jenis_kelamin'] === 'L' ? '👦 Laki-laki' : '👧 Perempuan' ?></p>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Poin Cards -->
-                        <div class="grid grid-cols-3 gap-2 mb-4">
-                            <div class="bg-red-50 p-3 rounded-lg text-center">
-                                <p class="text-xs text-red-600 font-medium">Kelakuan</p>
+                    <!-- Body Card - Poin per Kategori -->
+                    <div class="p-4">
+                        <div class="grid grid-cols-3 gap-2 mb-3">
+                            <div class="text-center bg-red-50 rounded-lg p-2">
+                                <p class="text-xs text-red-600 font-medium mb-1">🚨 Kelakuan</p>
                                 <p class="text-xl font-bold text-red-700"><?= $siswa['poin_kelakuan'] ?></p>
                             </div>
-                            <div class="bg-blue-50 p-3 rounded-lg text-center">
-                                <p class="text-xs text-blue-600 font-medium">Kerajinan</p>
+                            <div class="text-center bg-blue-50 rounded-lg p-2">
+                                <p class="text-xs text-blue-600 font-medium mb-1">📘 Kerajinan</p>
                                 <p class="text-xl font-bold text-blue-700"><?= $siswa['poin_kerajinan'] ?></p>
                             </div>
-                            <div class="bg-yellow-50 p-3 rounded-lg text-center">
-                                <p class="text-xs text-yellow-600 font-medium">Kerapian</p>
+                            <div class="text-center bg-yellow-50 rounded-lg p-2">
+                                <p class="text-xs text-yellow-600 font-medium mb-1">👔 Kerapian</p>
                                 <p class="text-xl font-bold text-yellow-700"><?= $siswa['poin_kerapian'] ?></p>
                             </div>
                         </div>
 
-                        <!-- Total Poin & Status -->
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                            <div>
-                                <p class="text-xs text-gray-500 font-medium">Total Poin</p>
-                                <p class="text-2xl font-bold text-gray-800"><?= $siswa['total_poin_umum'] ?></p>
-                            </div>
-                            <div>
-                                <?php if ($siswa['status_sp_terakhir'] !== 'Aman'): ?>
-                                <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-full">
-                                    <?= $siswa['status_sp_terakhir'] ?>
-                                </span>
-                                <?php else: ?>
-                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                                    Aman
-                                </span>
-                                <?php endif; ?>
+                        <!-- Total Poin -->
+                        <div class="bg-gray-800 rounded-lg p-2 mb-3 text-center">
+                            <p class="text-xs text-gray-300 mb-1">Total Poin</p>
+                            <p class="text-2xl font-bold text-white"><?= $siswa['total_poin_umum'] ?></p>
+                        </div>
+
+                        <!-- Status SP per Kategori -->
+                        <div class="border-t pt-3">
+                            <p class="text-xs text-gray-500 mb-2 font-medium">Status SP Per Kategori:</p>
+                            <div class="grid grid-cols-3 gap-1">
+                                <?php
+                                $sp_badges = [
+                                    ['label' => 'K', 'status' => $siswa['status_sp_kelakuan'], 'color' => 'red', 'title' => 'Kelakuan'],
+                                    ['label' => 'Rj', 'status' => $siswa['status_sp_kerajinan'], 'color' => 'blue', 'title' => 'Kerajinan'],
+                                    ['label' => 'Rp', 'status' => $siswa['status_sp_kerapian'], 'color' => 'yellow', 'title' => 'Kerapian']
+                                ];
+                                foreach ($sp_badges as $badge):
+                                    $is_aman = $badge['status'] === 'Aman';
+                                ?>
+                                <div class="text-center" title="<?= $badge['title'] ?>: <?= $badge['status'] ?>">
+                                    <p class="text-xs text-gray-500 mb-1"><?= $badge['label'] ?></p>
+                                    <span class="px-2 py-1 rounded text-xs font-bold block <?= $is_aman ? 'bg-green-100 text-green-800' : "bg-{$badge['color']}-100 text-{$badge['color']}-800" ?>">
+                                        <?= $badge['status'] ?>
+                                    </span>
+                                </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
 
-                        <!-- Lihat Detail Button -->
-                        <div class="mt-4">
-                            <div class="w-full bg-navy text-white text-center py-2 rounded-lg font-medium group-hover:bg-blue-900 transition-colors flex items-center justify-center">
-                                <span>Lihat Detail</span>
-                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </div>
+                        <!-- Status SP Tertinggi -->
+                        <div class="mt-3 pt-3 border-t text-center">
+                            <p class="text-xs text-gray-500 mb-1">Status Tertinggi:</p>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold <?= $siswa['status_sp_terakhir'] === 'Aman' ? 'bg-green-100 text-green-800' : 'bg-red-600 text-white' ?>">
+                                <?= $siswa['status_sp_terakhir'] ?>
+                            </span>
                         </div>
-
                     </div>
                 </a>
                 <?php endforeach; ?>
@@ -198,9 +211,7 @@ $siswa_list = fetchAll("
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 </body>

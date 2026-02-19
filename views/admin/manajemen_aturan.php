@@ -389,7 +389,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </svg>
             </button>
         </div>
-        <form action="../../actions/tambah_pelanggaran.php" method="POST" class="p-6 space-y-4">
+        <form action="../../actions/tambah_aturan.php" method="POST" class="p-6 space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategori *</label>
@@ -668,7 +668,7 @@ function editPelanggaran(data) {
 
 function hapusPelanggaran(id) {
     if (confirm('⚠️ Yakin ingin menghapus jenis pelanggaran ini?\n\nData transaksi yang menggunakan pelanggaran ini akan tetap tersimpan.')) {
-        window.location.href = `../../actions/hapus_pelanggaran.php?id=${id}`;
+        window.location.href = `../../actions/hapus_aturan.php?id=${id}`;
     }
 }
 

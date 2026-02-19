@@ -1,8 +1,7 @@
 <?php
 /**
- * SITAPSI - Detail Siswa (REVISED)
- * FIX: Filter pelanggaran berdasarkan semester aktif (Lembar Kosong Genap)
- * Poin total tetap akumulasi tahunan, tapi LIST pelanggaran di-filter per semester
+ * SITAPSI - Detail Siswa (COMPLETE - SP PER KATEGORI)
+ * Menampilkan 3 SP terpisah per kategori
  */
 
 session_start();
@@ -26,10 +25,9 @@ $tahun_aktif = fetchOne("
     LIMIT 1
 ");
 
-// Filter semester: default tampilkan semester aktif (LOGIKA LEMBAR KOSONG)
 $filter_semester = $_GET['semester'] ?? $tahun_aktif['semester_aktif'];
 
-// Ambil data siswa
+// Query siswa dengan SP per kategori
 $siswa = fetchOne("
     SELECT 
         s.*,
@@ -39,6 +37,9 @@ $siswa = fetchOne("
         a.poin_kerapian,
         a.total_poin_umum,
         a.status_sp_terakhir,
+        a.status_sp_kelakuan,
+        a.status_sp_kerajinan,
+        a.status_sp_kerapian,
         k.nama_kelas,
         k.id_kelas
     FROM tb_anggota_kelas a
@@ -53,13 +54,7 @@ if (!$siswa) {
     exit;
 }
 
-// LOGIKA LEMBAR KOSONG:
-// - Poin yg ditampilkan di kartu = AKUMULASI TAHUNAN (poin_kelakuan dll di tb_anggota_kelas)
-// - LIST pelanggaran = difilter by semester aktif
-// - Poin semester ganjil di kartu kecil = hanya semester ganjil
-// - Poin semester genap di kartu kecil = poin genap saja
-
-// Hitung poin per semester untuk info
+// Hitung poin per semester
 $poin_ganjil = fetchOne("
     SELECT 
         COALESCE(SUM(CASE WHEN jp.id_kategori = 1 THEN d.poin_saat_itu ELSE 0 END), 0) as kelakuan,
@@ -86,7 +81,7 @@ $poin_genap = fetchOne("
     AND h.semester = 'Genap'
 ", ['id' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
 
-// Helper query untuk get pelanggaran per kategori + filter semester
+// Helper query pelanggaran per kategori
 function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
     $sql = "
         SELECT 
@@ -182,7 +177,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             </div>
             <?php endif; ?>
 
-            <!-- Profil Siswa -->
+            <!-- Profil Siswa dengan SP Per Kategori -->
             <div class="bg-gradient-to-r from-navy to-blue-800 text-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center space-x-6">
                     <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -192,7 +187,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <span class="text-navy font-bold text-4xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
                         <?php endif; ?>
                     </div>
-                    <!-- Di bagian header profil siswa -->
                     <div class="flex-1">
                         <h2 class="text-3xl font-bold mb-2"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
                         <div class="grid grid-cols-2 gap-2 text-sm">
@@ -204,36 +198,28 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </div>
                     <div class="text-right">
                         <!-- STATUS SP PER KATEGORI -->
-                        <div class="grid grid-cols-3 gap-2 mb-2">
+                        <p class="text-blue-200 text-xs mb-2">Status SP Per Kategori:</p>
+                        <div class="grid grid-cols-3 gap-2 mb-3">
                             <?php
-                            $sp_kelakuan = $siswa['status_sp_kelakuan'] ?? 'Aman';
-                            $sp_kerajinan = $siswa['status_sp_kerajinan'] ?? 'Aman';
-                            $sp_kerapian = $siswa['status_sp_kerapian'] ?? 'Aman';
+                            $sp_data = [
+                                ['nama' => 'Kelakuan', 'status' => $siswa['status_sp_kelakuan'], 'icon' => '🚨'],
+                                ['nama' => 'Kerajinan', 'status' => $siswa['status_sp_kerajinan'], 'icon' => '📘'],
+                                ['nama' => 'Kerapian', 'status' => $siswa['status_sp_kerapian'], 'icon' => '👔']
+                            ];
                             
-                            $badge_color = function($sp) {
-                                return $sp === 'Aman' ? 'bg-green-500' : 'bg-red-500';
-                            };
+                            foreach ($sp_data as $sp):
+                                $is_aman = $sp['status'] === 'Aman';
                             ?>
                             <div class="bg-white/10 backdrop-blur rounded-lg p-2">
-                                <p class="text-xs text-blue-200">Kelakuan</p>
-                                <span class="<?= $badge_color($sp_kelakuan) ?> px-2 py-1 rounded text-xs font-bold text-white">
-                                    <?= $sp_kelakuan ?>
+                                <p class="text-xs text-blue-200 mb-1"><?= $sp['icon'] ?> <?= $sp['nama'] ?></p>
+                                <span class="px-2 py-1 rounded text-xs font-bold <?= $is_aman ? 'bg-green-500' : 'bg-red-500' ?> text-white block text-center">
+                                    <?= $sp['status'] ?>
                                 </span>
                             </div>
-                            <div class="bg-white/10 backdrop-blur rounded-lg p-2">
-                                <p class="text-xs text-blue-200">Kerajinan</p>
-                                <span class="<?= $badge_color($sp_kerajinan) ?> px-2 py-1 rounded text-xs font-bold text-white">
-                                    <?= $sp_kerajinan ?>
-                                </span>
-                            </div>
-                            <div class="bg-white/10 backdrop-blur rounded-lg p-2">
-                                <p class="text-xs text-blue-200">Kerapian</p>
-                                <span class="<?= $badge_color($sp_kerapian) ?> px-2 py-1 rounded text-xs font-bold text-white">
-                                    <?= $sp_kerapian ?>
-                                </span>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        <p class="text-xs text-blue-200">Status Tertinggi:</p>
+                        
+                        <p class="text-blue-200 text-xs mb-1">Status Tertinggi:</p>
                         <span class="px-4 py-2 <?= $siswa['status_sp_terakhir'] !== 'Aman' ? 'bg-red-500' : 'bg-green-500' ?> text-white text-sm font-bold rounded-full">
                             <?= $siswa['status_sp_terakhir'] ?>
                         </span>
@@ -241,7 +227,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             </div>
 
-            <!-- POIN CARDS: Akumulasi Tahunan + Breakdown Semester -->
+            <!-- POIN CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- KELAKUAN -->
                 <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-6">
@@ -301,7 +287,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             </div>
 
-            <!-- Filter Semester (TOMBOL LEMBAR) -->
+            <!-- Filter Semester -->
             <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <span class="text-sm font-medium text-gray-700">Tampilkan pelanggaran semester:</span>
@@ -330,7 +316,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             </div>
 
-            <!-- 3 Tabel Kategori - DIFILTER BY SEMESTER -->
+            <!-- 3 Tabel Kategori -->
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="flex border-b border-gray-200 overflow-x-auto">
                     <button onclick="switchTab('kelakuan')" id="tab-kelakuan" 
@@ -359,7 +345,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 ?>
                 <div id="content-<?= $key ?>" class="tab-content p-6 <?= $key !== 'kelakuan' ? 'hidden' : '' ?>">
                     
-                    <!-- Info semester untuk tab ini -->
                     <div class="flex items-center justify-between mb-4">
                         <h4 class="font-bold text-gray-800">Pelanggaran <?= $kat['label'] ?> - Semester <?= $filter_semester ?></h4>
                         <?php if (empty($kat['data'])): ?>
@@ -375,9 +360,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <p class="font-medium">Tidak ada pelanggaran <?= strtolower($kat['label']) ?> di semester <?= $filter_semester ?></p>
-                        <?php if ($filter_semester !== $tahun_aktif['semester_aktif']): ?>
-                        <p class="text-xs text-gray-400 mt-1">Data semester lain tersedia</p>
-                        <?php endif; ?>
                     </div>
                     <?php else: ?>
                     <div class="overflow-x-auto">
@@ -453,7 +435,14 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                         <?= $sp['tingkat_sp'] ?>
                                     </span>
                                 </td>
-                                <td class="p-4"><?= $sp['kategori_pemicu'] ?></td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 rounded text-xs font-medium
+                                        <?= $sp['kategori_pemicu'] === 'KELAKUAN' ? 'bg-red-100 text-red-700' : '' ?>
+                                        <?= $sp['kategori_pemicu'] === 'KERAJINAN' ? 'bg-blue-100 text-blue-700' : '' ?>
+                                        <?= $sp['kategori_pemicu'] === 'KERAPIAN' ? 'bg-yellow-100 text-yellow-700' : '' ?>">
+                                        <?= $sp['kategori_pemicu'] ?>
+                                    </span>
+                                </td>
                                 <td class="p-4"><?= date('d/m/Y', strtotime($sp['tanggal_terbit'])) ?></td>
                                 <td class="p-4">
                                     <span class="px-2 py-1 rounded-full text-xs font-medium <?= $sp['status'] === 'Selesai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' ?>">

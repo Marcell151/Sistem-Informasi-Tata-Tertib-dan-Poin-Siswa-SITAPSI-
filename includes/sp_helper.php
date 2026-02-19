@@ -1,11 +1,6 @@
 <?php
 /**
- * SITAPSI - SP Helper (REVISED - PER KATEGORI)
- * 
- * PERUBAHAN UTAMA:
- * - SP dihitung PER KATEGORI (3 kolom terpisah)
- * - status_sp_terakhir = MAX dari 3 kategori (untuk backward compatibility)
- * - Riwayat SP diinsert PER KATEGORI (bisa dapat 3 SP sekaligus)
+ * SITAPSI - SP Helper (FIXED - Insert per Kategori)
  */
 
 function recalculateStatusSP($id_anggota) {
@@ -78,7 +73,6 @@ function recalculateStatusSP($id_anggota) {
         }
         
         $status_baru_per_kategori[$id_kategori] = $status_baru;
-        
         $status_lama = $status_lama_by_kategori[$id_kategori];
         
         // Update field SP kategori ini
@@ -91,21 +85,40 @@ function recalculateStatusSP($id_anggota) {
             'id' => $id_anggota
         ]);
         
-        // Jika ada peningkatan SP di kategori ini, catat di riwayat
+        // ============================================
+        // CRITICAL FIX: Insert riwayat UNTUK SETIAP KATEGORI yang naik
+        // ============================================
         if (($level_order[$status_baru] ?? 0) > ($level_order[$status_lama] ?? 0)) {
-            executeQuery("
-                INSERT INTO tb_riwayat_sp (id_anggota, tingkat_sp, kategori_pemicu, tanggal_terbit, status)
-                VALUES (:id_anggota, :tingkat_sp, :kategori_pemicu, CURDATE(), 'Pending')
+            
+            // CEK: Apakah sudah ada riwayat SP dengan tingkat dan kategori yang sama?
+            $existing = fetchOne("
+                SELECT id_sp 
+                FROM tb_riwayat_sp 
+                WHERE id_anggota = :id_anggota 
+                AND tingkat_sp = :tingkat_sp 
+                AND kategori_pemicu = :kategori
+                AND status = 'Pending'
             ", [
                 'id_anggota' => $id_anggota,
                 'tingkat_sp' => $status_baru,
-                'kategori_pemicu' => $nama_kategori[$id_kategori]
+                'kategori' => $nama_kategori[$id_kategori]
             ]);
+            
+            // Hanya insert jika belum ada
+            if (!$existing) {
+                executeQuery("
+                    INSERT INTO tb_riwayat_sp (id_anggota, tingkat_sp, kategori_pemicu, tanggal_terbit, status)
+                    VALUES (:id_anggota, :tingkat_sp, :kategori_pemicu, CURDATE(), 'Pending')
+                ", [
+                    'id_anggota' => $id_anggota,
+                    'tingkat_sp' => $status_baru,
+                    'kategori_pemicu' => $nama_kategori[$id_kategori]
+                ]);
+            }
         }
         
         // Jika SP turun di kategori ini, hapus riwayat SP Pending yang tidak relevan
         if (($level_order[$status_baru] ?? 0) < ($level_order[$status_lama] ?? 0)) {
-            // Hapus riwayat SP kategori ini yang level-nya lebih tinggi dari status baru
             $levels_to_remove = [];
             foreach ($level_order as $level => $order) {
                 if ($order > ($level_order[$status_baru] ?? 0)) {
@@ -129,7 +142,7 @@ function recalculateStatusSP($id_anggota) {
         }
     }
     
-    // UPDATE status_sp_terakhir = MAX dari 3 kategori (untuk backward compatibility)
+    // UPDATE status_sp_terakhir = MAX dari 3 kategori
     $status_tertinggi = 'Aman';
     $max_order = 0;
     foreach ($status_baru_per_kategori as $id_kat => $status) {
@@ -156,3 +169,4 @@ function recalculateStatusSP($id_anggota) {
         'tertinggi' => $status_tertinggi
     ];
 }
+?>
