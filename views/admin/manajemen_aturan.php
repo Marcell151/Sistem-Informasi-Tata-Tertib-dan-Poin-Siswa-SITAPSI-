@@ -403,7 +403,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Sub Kategori *</label>
                     <input type="text" name="sub_kategori" required 
-                           placeholder="Contoh: Sikap & Moral"
+                           placeholder="Contoh: 02. Sikap & Moral"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
                 </div>
             </div>
@@ -442,7 +442,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     </div>
 </div>
 
-<!-- Modal Edit Pelanggaran -->
+<!-- Modal Edit Pelanggaran - FIXED ACTION -->
 <div id="modal-edit-pelanggaran" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-lg max-w-2xl w-full my-8">
         <div class="p-6 border-b flex items-center justify-between">
@@ -453,7 +453,8 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </svg>
             </button>
         </div>
-        <form action="../../actions/edit_pelanggaran.php" method="POST" class="p-6 space-y-4">
+        <!-- PERBAIKAN: Ganti action ke edit_aturan_pelanggaran.php (bukan edit_pelanggaran.php) -->
+        <form action="../../actions/edit_aturan_pelanggaran.php" method="POST" class="p-6 space-y-4">
             <input type="hidden" name="id_jenis" id="edit-id-jenis">
             <div class="grid grid-cols-2 gap-4">
                 <div>

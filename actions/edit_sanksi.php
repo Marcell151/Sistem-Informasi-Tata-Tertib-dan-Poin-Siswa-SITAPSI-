@@ -1,4 +1,9 @@
 <?php
+/**
+ * SITAPSI - Edit Sanksi
+ * Update data sanksi di master data
+ */
+
 session_start();
 require_once '../config/database.php';
 require_once '../includes/session_check.php';
@@ -15,34 +20,21 @@ try {
     $kode_sanksi = trim($_POST['kode_sanksi']);
     $deskripsi = trim($_POST['deskripsi']);
     
+    // Validasi
     if (empty($id_sanksi_ref) || empty($kode_sanksi) || empty($deskripsi)) {
-        throw new Exception('Semua field wajib diisi');
+        throw new Exception('Data tidak lengkap');
     }
     
-    // Cek duplikasi kode (kecuali diri sendiri)
-    $check = fetchOne("
-        SELECT id_sanksi_ref 
-        FROM tb_sanksi_ref 
-        WHERE kode_sanksi = :kode 
-        AND id_sanksi_ref != :id
-    ", [
-        'kode' => $kode_sanksi,
-        'id' => $id_sanksi_ref
-    ]);
-    
-    if ($check) {
-        throw new Exception('Kode sanksi sudah digunakan oleh sanksi lain!');
-    }
-    
+    // Update sanksi
     executeQuery("
         UPDATE tb_sanksi_ref 
         SET kode_sanksi = :kode_sanksi,
             deskripsi = :deskripsi
-        WHERE id_sanksi_ref = :id
+        WHERE id_sanksi_ref = :id_sanksi_ref
     ", [
         'kode_sanksi' => $kode_sanksi,
         'deskripsi' => $deskripsi,
-        'id' => $id_sanksi_ref
+        'id_sanksi_ref' => $id_sanksi_ref
     ]);
     
     $_SESSION['success_message'] = '✅ Sanksi berhasil diupdate!';
