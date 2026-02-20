@@ -180,9 +180,9 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <div class="grid grid-cols-3 gap-1">
                                 <?php
                                 $sp_badges = [
-                                    ['label' => 'K', 'status' => $siswa['status_sp_kelakuan'], 'color' => 'red', 'title' => 'Kelakuan'],
-                                    ['label' => 'Rj', 'status' => $siswa['status_sp_kerajinan'], 'color' => 'blue', 'title' => 'Kerajinan'],
-                                    ['label' => 'Rp', 'status' => $siswa['status_sp_kerapian'], 'color' => 'yellow', 'title' => 'Kerapian']
+                                    ['label' => 'KL', 'status' => $siswa['status_sp_kelakuan'], 'color' => 'red', 'title' => 'Kelakuan'],
+                                    ['label' => 'KJ', 'status' => $siswa['status_sp_kerajinan'], 'color' => 'blue', 'title' => 'Kerajinan'],
+                                    ['label' => 'KP', 'status' => $siswa['status_sp_kerapian'], 'color' => 'yellow', 'title' => 'Kerapian']
                                 ];
                                 foreach ($sp_badges as $badge):
                                     $is_aman = $badge['status'] === 'Aman';

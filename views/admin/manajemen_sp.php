@@ -230,9 +230,9 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                     <div class="flex gap-1 justify-center">
                                         <?php
                                         $sp_kategori = [
-                                            ['label' => 'K', 'status' => $sp['status_sp_kelakuan'], 'title' => 'Kelakuan', 'color' => 'red'],
-                                            ['label' => 'Rj', 'status' => $sp['status_sp_kerajinan'], 'title' => 'Kerajinan', 'color' => 'blue'],
-                                            ['label' => 'Rp', 'status' => $sp['status_sp_kerapian'], 'title' => 'Kerapian', 'color' => 'yellow']
+                                            ['label' => 'KL', 'status' => $sp['status_sp_kelakuan'], 'title' => 'Kelakuan', 'color' => 'red'],
+                                            ['label' => 'KJ', 'status' => $sp['status_sp_kerajinan'], 'title' => 'Kerajinan', 'color' => 'blue'],
+                                            ['label' => 'KP', 'status' => $sp['status_sp_kerapian'], 'title' => 'Kerapian', 'color' => 'yellow']
                                         ];
                                         foreach ($sp_kategori as $kat):
                                             if ($kat['status'] !== 'Aman'):
