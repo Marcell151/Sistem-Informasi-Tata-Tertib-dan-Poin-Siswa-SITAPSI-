@@ -3,6 +3,7 @@
  * SITAPSI - Database Configuration
  * Koneksi PDO Aman dengan Error Handling
  */
+date_default_timezone_set('Asia/Jakarta');
 
 // Konfigurasi Database
 define('DB_HOST', 'localhost');

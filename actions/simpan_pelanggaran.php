@@ -1,12 +1,12 @@
 <?php
 /**
- * SITAPSI - Simpan Pelanggaran (FIX - Call recalculateStatusSP)
+ * SITAPSI - Simpan Pelanggaran (FIX - ID Guru Null)
  */
 
 session_start();
 require_once '../config/database.php';
 require_once '../includes/session_check.php';
-require_once '../includes/sp_helper.php'; // TAMBAH INI
+require_once '../includes/sp_helper.php'; // Helper 3 Silo SP
 
 requireGuru();
 
@@ -15,18 +15,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = getDBConnection();
         $pdo->beginTransaction();
 
-        // Ambil data POST
-        $id_anggota = $_POST['id_anggota'];
+        // 1. Ambil data POST dengan aman (Gunakan Null Coalescing '??')
+        $id_anggota = $_POST['id_anggota'] ?? '';
         $pelanggaran_ids = $_POST['pelanggaran'] ?? [];
         $sanksi_ids = $_POST['sanksi'] ?? [];
-        $tanggal = $_POST['tanggal'];
-        $waktu = $_POST['waktu'];
-        $tipe_form = $_POST['tipe_form'];
-        $id_guru = getCurrentUser()['id_guru'];
+        $tipe_form = $_POST['tipe_form'] ?? 'Piket';
+        
+        // ========================================================
+        // FIX ID GURU: Ambil dari session standard
+        // ========================================================
+        $id_guru = $_SESSION['user_id'] ?? null;
 
-        // Validasi
-        if (empty($id_anggota) || empty($pelanggaran_ids) || empty($tanggal) || empty($waktu)) {
-            throw new Exception('Data tidak lengkap');
+        // 2. AUTO-FALLBACK TANGGAL & WAKTU
+        $tanggal = !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d');
+        $waktu = !empty($_POST['waktu']) ? $_POST['waktu'] : date('H:i:s');
+
+        // 3. Validasi dengan pesan error yang spesifik
+        if (empty($id_guru)) {
+            throw new Exception('Sesi login Guru tidak terdeteksi. Silakan logout dan login kembali.');
+        }
+        if (empty($id_anggota)) {
+            throw new Exception('Siswa belum dipilih! Silakan pilih siswa terlebih dahulu.');
+        }
+        if (empty($pelanggaran_ids)) {
+            throw new Exception('Minimal pilih satu jenis pelanggaran!');
         }
 
         // Ambil tahun dan semester aktif
@@ -36,6 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE status = 'Aktif' 
             LIMIT 1
         ");
+
+        if (!$tahun_aktif) {
+            throw new Exception('Tahun ajaran aktif tidak ditemukan di sistem.');
+        }
 
         // Insert header
         $stmtHeader = $pdo->prepare("
@@ -120,11 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->commit();
 
         // ============================================
-        // CRITICAL FIX: RECALCULATE SP AFTER COMMIT
+        // RECALCULATE SP AFTER COMMIT
         // ============================================
         recalculateStatusSP($id_anggota);
 
-        // Ambil nama siswa
+        // Ambil nama siswa untuk pesan sukses
         $siswa = fetchOne("
             SELECT s.nama_siswa 
             FROM tb_anggota_kelas a
@@ -132,7 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE a.id_anggota = :id
         ", ['id' => $id_anggota]);
 
-        $_SESSION['success_message'] = "✅ Pelanggaran berhasil disimpan untuk " . $siswa['nama_siswa'] . " (+{$total_poin} Poin)";
+        $_SESSION['success_message'] = "✅ Pelanggaran berhasil disimpan untuk " . htmlspecialchars($siswa['nama_siswa']) . " (+{$total_poin} Poin)";
+        
         header("Location: ../views/guru/input_pelanggaran.php?mode=" . strtolower($tipe_form));
         exit;
 
