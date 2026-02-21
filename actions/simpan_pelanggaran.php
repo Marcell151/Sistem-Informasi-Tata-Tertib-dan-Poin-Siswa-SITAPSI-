@@ -1,63 +1,78 @@
 <?php
 /**
- * SITAPSI - Simpan Pelanggaran (FIX - ID Guru Null)
+ * SITAPSI - Simpan Pelanggaran (FIX - Upload Foto Bukti)
  */
+
+date_default_timezone_set('Asia/Jakarta');
 
 session_start();
 require_once '../config/database.php';
 require_once '../includes/session_check.php';
-require_once '../includes/sp_helper.php'; // Helper 3 Silo SP
+require_once '../includes/sp_helper.php';
 
 requireGuru();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Siapkan array untuk menampung nama file jika error agar bisa dihapus (rollback file)
+    $foto_filenames = []; 
+    
     try {
         $pdo = getDBConnection();
         $pdo->beginTransaction();
 
-        // 1. Ambil data POST dengan aman (Gunakan Null Coalescing '??')
         $id_anggota = $_POST['id_anggota'] ?? '';
         $pelanggaran_ids = $_POST['pelanggaran'] ?? [];
         $sanksi_ids = $_POST['sanksi'] ?? [];
         $tipe_form = $_POST['tipe_form'] ?? 'Piket';
         
-        // ========================================================
-        // FIX ID GURU: Ambil dari session standard
-        // ========================================================
         $id_guru = $_SESSION['user_id'] ?? null;
 
-        // 2. AUTO-FALLBACK TANGGAL & WAKTU
         $tanggal = !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d');
         $waktu = !empty($_POST['waktu']) ? $_POST['waktu'] : date('H:i:s');
 
-        // 3. Validasi dengan pesan error yang spesifik
-        if (empty($id_guru)) {
-            throw new Exception('Sesi login Guru tidak terdeteksi. Silakan logout dan login kembali.');
-        }
-        if (empty($id_anggota)) {
-            throw new Exception('Siswa belum dipilih! Silakan pilih siswa terlebih dahulu.');
-        }
-        if (empty($pelanggaran_ids)) {
-            throw new Exception('Minimal pilih satu jenis pelanggaran!');
-        }
+        // Validasi
+        if (empty($id_guru)) throw new Exception('Sesi login Guru tidak terdeteksi.');
+        if (empty($id_anggota)) throw new Exception('Siswa belum dipilih!');
+        if (empty($pelanggaran_ids)) throw new Exception('Minimal pilih satu jenis pelanggaran!');
 
-        // Ambil tahun dan semester aktif
-        $tahun_aktif = fetchOne("
-            SELECT id_tahun, semester_aktif 
-            FROM tb_tahun_ajaran 
-            WHERE status = 'Aktif' 
-            LIMIT 1
-        ");
+        $tahun_aktif = fetchOne("SELECT id_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+        if (!$tahun_aktif) throw new Exception('Tahun ajaran aktif tidak ditemukan di sistem.');
 
-        if (!$tahun_aktif) {
-            throw new Exception('Tahun ajaran aktif tidak ditemukan di sistem.');
+        // ========================================================
+        // BLOK BARU: PROSES UPLOAD FOTO (MULTI UPLOAD)
+        // ========================================================
+        if (isset($_FILES['bukti_foto']) && is_array($_FILES['bukti_foto']['name'])) {
+            $upload_dir = '../assets/uploads/bukti/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true); // Buat folder jika belum ada
+            
+            $allowed_ext = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
+
+            foreach ($_FILES['bukti_foto']['name'] as $key => $name) {
+                if ($_FILES['bukti_foto']['error'][$key] === UPLOAD_ERR_OK) {
+                    $tmp_name = $_FILES['bukti_foto']['tmp_name'][$key];
+                    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                    
+                    if (in_array($ext, $allowed_ext)) {
+                        // Generate nama unik
+                        $new_name = "bukti_" . time() . "_" . uniqid() . "_" . $key . "." . $ext;
+                        
+                        if (move_uploaded_file($tmp_name, $upload_dir . $new_name)) {
+                            $foto_filenames[] = $new_name; // Simpan ke array
+                        }
+                    }
+                }
+            }
         }
+        
+        // Ubah array jadi format JSON (misal: '["foto1.jpg", "foto2.png"]') atau NULL jika kosong
+        $json_foto = !empty($foto_filenames) ? json_encode($foto_filenames) : null;
+        // ========================================================
 
-        // Insert header
+        // Insert header (FIX: Tambahkan kolom bukti_foto ke query)
         $stmtHeader = $pdo->prepare("
             INSERT INTO tb_pelanggaran_header 
-            (id_anggota, id_guru, id_tahun, tanggal, waktu, semester, tipe_form) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (id_anggota, id_guru, id_tahun, tanggal, waktu, semester, tipe_form, bukti_foto) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmtHeader->execute([
             $id_anggota,
@@ -66,7 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $tanggal,
             $waktu,
             $tahun_aktif['semester_aktif'],
-            $tipe_form
+            $tipe_form,
+            $json_foto // Parameter baru masuk ke sini
         ]);
 
         $id_transaksi = $pdo->lastInsertId();
@@ -74,40 +90,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insert detail & hitung poin per kategori
         $poin_per_kategori = [1 => 0, 2 => 0, 3 => 0];
 
-        $stmtDetail = $pdo->prepare("
-            INSERT INTO tb_pelanggaran_detail 
-            (id_transaksi, id_jenis, poin_saat_itu) 
-            VALUES (?, ?, ?)
-        ");
-
-        $stmtGetPoin = $pdo->prepare("
-            SELECT poin_default, id_kategori 
-            FROM tb_jenis_pelanggaran 
-            WHERE id_jenis = ?
-        ");
+        $stmtDetail = $pdo->prepare("INSERT INTO tb_pelanggaran_detail (id_transaksi, id_jenis, poin_saat_itu) VALUES (?, ?, ?)");
+        $stmtGetPoin = $pdo->prepare("SELECT poin_default, id_kategori FROM tb_jenis_pelanggaran WHERE id_jenis = ?");
 
         foreach ($pelanggaran_ids as $id_jenis) {
             $stmtGetPoin->execute([$id_jenis]);
             $pelanggaran = $stmtGetPoin->fetch(PDO::FETCH_ASSOC);
             
             if ($pelanggaran) {
-                $stmtDetail->execute([
-                    $id_transaksi,
-                    $id_jenis,
-                    $pelanggaran['poin_default']
-                ]);
-                
+                $stmtDetail->execute([$id_transaksi, $id_jenis, $pelanggaran['poin_default']]);
                 $poin_per_kategori[$pelanggaran['id_kategori']] += $pelanggaran['poin_default'];
             }
         }
 
         // Insert sanksi
         if (!empty($sanksi_ids)) {
-            $stmtSanksi = $pdo->prepare("
-                INSERT INTO tb_pelanggaran_sanksi 
-                (id_transaksi, id_sanksi_ref) 
-                VALUES (?, ?)
-            ");
+            $stmtSanksi = $pdo->prepare("INSERT INTO tb_pelanggaran_sanksi (id_transaksi, id_sanksi_ref) VALUES (?, ?)");
             foreach ($sanksi_ids as $id_sanksi) {
                 $stmtSanksi->execute([$id_transaksi, $id_sanksi]);
             }
@@ -124,7 +122,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ";
 
         $total_poin = array_sum($poin_per_kategori);
-
         executeQuery($sql_update, [
             'kelakuan' => $poin_per_kategori[1],
             'kerajinan' => $poin_per_kategori[2],
@@ -135,21 +132,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $pdo->commit();
 
-        // ============================================
-        // RECALCULATE SP AFTER COMMIT
-        // ============================================
+        // Recalculate SP
         recalculateStatusSP($id_anggota);
 
-        // Ambil nama siswa untuk pesan sukses
-        $siswa = fetchOne("
-            SELECT s.nama_siswa 
-            FROM tb_anggota_kelas a
-            JOIN tb_siswa s ON a.nis = s.nis
-            WHERE a.id_anggota = :id
-        ", ['id' => $id_anggota]);
+        $siswa = fetchOne("SELECT s.nama_siswa FROM tb_anggota_kelas a JOIN tb_siswa s ON a.nis = s.nis WHERE a.id_anggota = :id", ['id' => $id_anggota]);
 
         $_SESSION['success_message'] = "✅ Pelanggaran berhasil disimpan untuk " . htmlspecialchars($siswa['nama_siswa']) . " (+{$total_poin} Poin)";
-        
         header("Location: ../views/guru/input_pelanggaran.php?mode=" . strtolower($tipe_form));
         exit;
 
@@ -157,6 +145,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($pdo) && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
+        
+        // CLEANUP: Hapus foto fisik jika database gagal disimpan agar tidak menumpuk sampah
+        if (!empty($foto_filenames)) {
+            foreach ($foto_filenames as $f) {
+                $path = '../assets/uploads/bukti/' . $f;
+                if (file_exists($path)) unlink($path);
+            }
+        }
+
         $_SESSION['error_message'] = "❌ Gagal: " . $e->getMessage();
         header("Location: ../views/guru/input_pelanggaran.php");
         exit;

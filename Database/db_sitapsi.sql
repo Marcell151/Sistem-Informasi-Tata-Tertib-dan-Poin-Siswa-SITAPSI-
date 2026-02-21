@@ -28,13 +28,23 @@ CREATE TABLE tb_tahun_ajaran (
 -- 2. GROUP: MASTER DATA UTAMA (MANUSIA)
 -- ================================================================
 
--- Tabel Guru (Login SSO dengan PIN)
+-- Tabel Kelas (Dipindah ke atas agar bisa di-referensikan oleh Wali Kelas)
+CREATE TABLE tb_kelas (
+    id_kelas INT AUTO_INCREMENT PRIMARY KEY,
+    nama_kelas VARCHAR(10) NOT NULL, -- 7A, 8B
+    tingkat INT NOT NULL -- 7, 8, 9
+);
+
+-- Tabel Guru (Login SSO dengan PIN) + Fitur Wali Kelas
 CREATE TABLE tb_guru (
     id_guru INT AUTO_INCREMENT PRIMARY KEY,
     nama_guru VARCHAR(100) NOT NULL,
     nip VARCHAR(30),
+    id_kelas INT NULL, -- [MODIFIKASI: Jika berisi ID Kelas, maka dia Wali Kelas. Jika NULL, guru biasa]
     pin_validasi VARCHAR(6) NOT NULL, -- PIN 6 Digit
-    status ENUM('Aktif', 'Non-Aktif') DEFAULT 'Aktif'
+    status ENUM('Aktif', 'Non-Aktif') DEFAULT 'Aktif',
+    
+    FOREIGN KEY (id_kelas) REFERENCES tb_kelas(id_kelas) ON DELETE SET NULL
 );
 
 -- Tabel Siswa (Data Statis / Induk)
@@ -50,13 +60,6 @@ CREATE TABLE tb_siswa (
     foto_profil VARCHAR(255),
     -- Status 'Lulus' ditambahkan untuk alumni (Arsip 3 Tahun)
     status_aktif ENUM('Aktif', 'Lulus', 'Keluar', 'Dikeluarkan') DEFAULT 'Aktif'
-);
-
--- Tabel Kelas
-CREATE TABLE tb_kelas (
-    id_kelas INT AUTO_INCREMENT PRIMARY KEY,
-    nama_kelas VARCHAR(10) NOT NULL, -- 7A, 8B
-    tingkat INT NOT NULL -- 7, 8, 9
 );
 
 -- ================================================================
@@ -86,7 +89,7 @@ CREATE TABLE tb_anggota_kelas (
     status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     
     -- Penanda Reward
-    status_reward ENUM('None', 'Kandidat Sertifikat') DEFAULT 'None',
+    status_reward ENUM('None', 'Kandidat Reward Ganjil','Kandidat Sertifikat') DEFAULT 'None',
     
     FOREIGN KEY (nis) REFERENCES tb_siswa(nis) ON DELETE CASCADE,
     FOREIGN KEY (id_kelas) REFERENCES tb_kelas(id_kelas),
@@ -159,6 +162,10 @@ CREATE TABLE tb_pelanggaran_header (
     semester ENUM('Ganjil', 'Genap') NOT NULL, -- Kunci logika "Lembar Kosong" Genap
     tipe_form ENUM('Piket', 'Kelas') NOT NULL,
     bukti_foto VARCHAR(255),
+    
+    -- [MODIFIKASI: Fitur Laporan/Revisi Wali Kelas]
+    status_revisi ENUM('None', 'Pending', 'Disetujui', 'Ditolak') DEFAULT 'None',
+    alasan_revisi TEXT NULL,
     
     FOREIGN KEY (id_anggota) REFERENCES tb_anggota_kelas(id_anggota),
     FOREIGN KEY (id_guru) REFERENCES tb_guru(id_guru),
@@ -328,14 +335,15 @@ INSERT INTO tb_predikat_nilai (id_kategori, huruf_mutu, batas_bawah, batas_atas,
 INSERT INTO tb_admin (username, password, nama_lengkap, role) VALUES 
 ('admin', 'admin123', 'Super Admin Tatib', 'SuperAdmin');
 
-INSERT INTO tb_guru (nama_guru, nip, pin_validasi) VALUES 
-('Budi Santoso, S.Pd', '198501012010011001', '123456');
-
--- Tahun Aktif
+-- Insert Data Tahun & Kelas DULU agar Foreign Key Guru aman
 INSERT INTO tb_tahun_ajaran (nama_tahun, status, semester_aktif) VALUES 
 ('2024/2025', 'Aktif', 'Ganjil');
 
 INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('7A', 7), ('7B', 7);
+
+-- Insert Guru (Kolom id_kelas dibiarkan NULL dulu, atau bisa diisi '1' jika jadi wali kelas 7A)
+INSERT INTO tb_guru (nama_guru, nip, id_kelas, pin_validasi) VALUES 
+('Budi Santoso, S.Pd', '198501012010011001', NULL, '123456');
 
 INSERT INTO tb_siswa (nis, nama_siswa, jenis_kelamin, nama_ortu, no_hp_ortu) VALUES 
 ('2024001', 'Ahmad Dani', 'L', 'Bpk. Dani', '081234567890');

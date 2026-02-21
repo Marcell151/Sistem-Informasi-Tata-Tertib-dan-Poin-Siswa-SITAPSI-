@@ -1,10 +1,17 @@
 <?php
 /**
- * SITAPSI - Sidebar Admin (FIXED LAYOUT)
+ * SITAPSI - Sidebar Admin (FIXED LAYOUT + KELOLA REPORT)
  * Perbaikan: Sidebar tidak lagi menimpa konten pada mode Desktop
  */
 
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
+
+// Menghitung jumlah report/revisi yang berstatus Pending
+$count_report = 0;
+if (function_exists('fetchOne')) {
+    $report_data = fetchOne("SELECT COUNT(*) as total FROM tb_pelanggaran_header WHERE status_revisi = 'Pending'");
+    $count_report = $report_data['total'] ?? 0;
+}
 ?>
 
 <div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-navy transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col h-screen">
@@ -29,6 +36,18 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
         <a href="audit_harian.php" class="flex items-center px-4 py-3 mb-2 rounded-lg transition-colors <?= $current_page === 'audit_harian' ? 'bg-blue-800 text-white shadow-md' : 'text-blue-100 hover:bg-blue-800 hover:text-white' ?>">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             <span class="font-medium">Audit Harian</span>
+        </a>
+
+        <a href="kelola_report.php" class="flex items-center px-4 py-3 mb-2 rounded-lg transition-colors <?= $current_page === 'kelola_report' ? 'bg-blue-800 text-white shadow-md' : 'text-blue-100 hover:bg-blue-800 hover:text-white' ?>">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+            </svg>
+            <span class="font-medium flex-1">Kelola Report</span>
+            <?php if ($count_report > 0): ?>
+            <span class="px-2 py-0.5 bg-red-500 text-white rounded-full text-xs font-bold shadow-sm">
+                <?= $count_report ?>
+            </span>
+            <?php endif; ?>
         </a>
 
         <a href="monitoring_siswa.php" class="flex items-center px-4 py-3 mb-2 rounded-lg transition-colors <?= in_array($current_page, ['monitoring_siswa', 'monitoring_siswa_list', 'detail_siswa']) ? 'bg-blue-800 text-white shadow-md' : 'text-blue-100 hover:bg-blue-800 hover:text-white' ?>">

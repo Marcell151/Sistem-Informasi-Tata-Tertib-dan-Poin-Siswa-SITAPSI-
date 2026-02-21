@@ -1,7 +1,6 @@
 <?php
 /**
- * SITAPSI - Detail Siswa (COMPLETE - SP PER KATEGORI)
- * Menampilkan 3 SP terpisah per kategori
+ * SITAPSI - Detail Siswa (FIX LOGIKA REWARD 1 TAHUN PENUH)
  */
 
 session_start();
@@ -54,7 +53,7 @@ if (!$siswa) {
     exit;
 }
 
-// Hitung poin per semester
+// Hitung poin per semester untuk tampilan detail
 $poin_ganjil = fetchOne("
     SELECT 
         COALESCE(SUM(CASE WHEN jp.id_kategori = 1 THEN d.poin_saat_itu ELSE 0 END), 0) as kelakuan,
@@ -83,6 +82,7 @@ $poin_genap = fetchOne("
 
 // Helper query pelanggaran per kategori
 function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
+    global $pdo;
     $sql = "
         SELECT 
             h.id_transaksi,
@@ -128,6 +128,13 @@ $riwayat_sp = fetchAll("
 $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+// ==========================================
+// CEK KANDIDAT REWARD (0 PELANGGARAN 1 TAHUN)
+// ==========================================
+// PERBAIKAN: Kita langsung cek 'total_poin_umum' dari tabel tb_anggota_kelas
+// Karena poin ini mengakumulasi dari Ganjil + Genap. Jika ada pelanggaran di Ganjil, totalnya tidak akan 0 di Genap.
+$is_bersih = ($siswa['total_poin_umum'] == 0);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -177,7 +184,24 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             </div>
             <?php endif; ?>
 
-            <!-- Profil Siswa dengan SP Per Kategori -->
+            <?php if ($is_bersih): ?>
+            <div class="bg-gradient-to-r from-yellow-100 to-yellow-50 border border-yellow-300 rounded-xl p-4 shadow-sm flex items-center animate-pulse">
+                <div class="flex-shrink-0 bg-yellow-200 p-3 rounded-full mr-4 shadow-inner">
+                    <span class="text-3xl">🏆</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-yellow-800 text-lg">Kandidat Siswa Teladan</h4>
+                    <p class="text-sm text-yellow-700">
+                        <?php if ($tahun_aktif['semester_aktif'] === 'Ganjil'): ?>
+                            Siswa ini memiliki <strong>0 Poin Pelanggaran</strong> di Semester Ganjil. Kandidat penerima reward alat tulis! 🎁
+                        <?php else: ?>
+                            Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong> (Ganjil & Genap bersih). Kandidat penerima Sertifikat Bebas Pelanggaran! 🎓
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <div class="bg-gradient-to-r from-navy to-blue-800 text-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center space-x-6">
                     <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -197,7 +221,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </div>
                     </div>
                     <div class="text-right">
-                        <!-- STATUS SP PER KATEGORI -->
                         <p class="text-blue-200 text-xs mb-2">Status SP Per Kategori:</p>
                         <div class="grid grid-cols-3 gap-2 mb-3">
                             <?php
@@ -219,17 +242,15 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <?php endforeach; ?>
                         </div>
                         
-                        <p class="text-blue-200 text-xs mb-1">Status Tertinggi:</p>
-                        <span class="px-4 py-2 <?= $siswa['status_sp_terakhir'] !== 'Aman' ? 'bg-red-500' : 'bg-green-500' ?> text-white text-sm font-bold rounded-full">
+                        <p class="text-blue-200 text-xs mb-1">Status Tertinggi (Summary):</p>
+                        <span class="px-4 py-2 <?= $siswa['status_sp_terakhir'] !== 'Aman' ? 'bg-red-500' : 'bg-green-500' ?> text-white text-sm font-bold rounded-full shadow-md">
                             <?= $siswa['status_sp_terakhir'] ?>
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- POIN CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- KELAKUAN -->
                 <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-800">🚨 KELAKUAN</h3>
@@ -248,7 +269,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </div>
                 </div>
 
-                <!-- KERAJINAN -->
                 <div class="bg-white rounded-xl shadow-sm border-l-4 border-blue-500 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-800">📘 KERAJINAN</h3>
@@ -267,7 +287,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </div>
                 </div>
 
-                <!-- KERAPIAN -->
                 <div class="bg-white rounded-xl shadow-sm border-l-4 border-yellow-500 p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-800">👔 KERAPIAN</h3>
@@ -287,10 +306,9 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             </div>
 
-            <!-- Filter Semester -->
             <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <span class="text-sm font-medium text-gray-700">Tampilkan pelanggaran semester:</span>
+                    <span class="text-sm font-medium text-gray-700">Tampilkan riwayat pelanggaran di semester:</span>
                     <a href="?id=<?= $id_anggota ?>&semester=Ganjil"
                        class="px-4 py-2 rounded-lg font-medium transition-colors text-sm <?= $filter_semester === 'Ganjil' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
                         📄 Ganjil
@@ -303,20 +321,16 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 <div class="flex items-center space-x-2 text-sm">
                     <?php if ($filter_semester === $tahun_aktif['semester_aktif']): ?>
                     <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">
-                        ● Semester Aktif
+                        ● Sedang Berjalan
                     </span>
                     <?php else: ?>
                     <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full font-medium">
                         Semester Lampau
                     </span>
                     <?php endif; ?>
-                    <span class="text-gray-500">
-                        Menampilkan: <strong><?= $filter_semester ?></strong>
-                    </span>
                 </div>
             </div>
 
-            <!-- 3 Tabel Kategori -->
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="flex border-b border-gray-200 overflow-x-auto">
                     <button onclick="switchTab('kelakuan')" id="tab-kelakuan" 
@@ -346,12 +360,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 <div id="content-<?= $key ?>" class="tab-content p-6 <?= $key !== 'kelakuan' ? 'hidden' : '' ?>">
                     
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="font-bold text-gray-800">Pelanggaran <?= $kat['label'] ?> - Semester <?= $filter_semester ?></h4>
-                        <?php if (empty($kat['data'])): ?>
-                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                            ✅ Bersih semester ini
-                        </span>
-                        <?php endif; ?>
+                        <h4 class="font-bold text-gray-800">Daftar Kejadian <?= $kat['label'] ?> - Semester <?= $filter_semester ?></h4>
                     </div>
 
                     <?php if (empty($kat['data'])): ?>
@@ -359,7 +368,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <p class="font-medium">Tidak ada pelanggaran <?= strtolower($kat['label']) ?> di semester <?= $filter_semester ?></p>
+                        <p class="font-medium">Siswa tidak memiliki riwayat pelanggaran <?= strtolower($kat['label']) ?> di semester ini.</p>
                     </div>
                     <?php else: ?>
                     <div class="overflow-x-auto">
@@ -379,9 +388,9 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                 <tr class="hover:bg-<?= $color ?>-50">
                                     <td class="p-3 whitespace-nowrap">
                                         <?= date('d/m/Y', strtotime($p['tanggal'])) ?><br>
-                                        <span class="text-xs text-gray-500"><?= substr($p['waktu'], 0, 5) ?></span>
+                                        <span class="text-xs text-gray-500"><?= substr($p['waktu'], 0, 5) ?> WIB</span>
                                     </td>
-                                    <td class="p-3"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
+                                    <td class="p-3 font-medium text-gray-800"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
                                     <td class="p-3">
                                         <span class="px-2 py-1 bg-<?= $color ?>-100 text-<?= $color ?>-800 rounded-full font-bold text-xs">
                                             +<?= $p['poin_saat_itu'] ?>
@@ -390,18 +399,27 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                     <td class="p-3 text-xs text-gray-600"><?= $p['sanksi'] ?: '-' ?></td>
                                     <td class="p-3 text-xs"><?= htmlspecialchars($p['nama_guru']) ?></td>
                                     <td class="p-3 whitespace-nowrap">
-                                        <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" 
-                                                class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 mr-1" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </button>
-                                        <button onclick="hapusPelanggaran(<?= $p['id_transaksi'] ?>)" 
-                                                class="p-1 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
+                                        <div class="flex space-x-1">
+                                            <button onclick="viewDetail(<?= $p['id_transaksi'] ?>)" 
+                                                    class="p-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 border shadow-sm" title="Lihat Detail & Bukti Foto">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                            <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" 
+                                                    class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 border shadow-sm" title="Edit">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </button>
+                                            <button onclick="hapusPelanggaran(<?= $p['id_transaksi'] ?>)" 
+                                                    class="p-1 bg-red-50 text-red-600 rounded hover:bg-red-100 border shadow-sm" title="Hapus">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -413,7 +431,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 <?php endforeach; ?>
             </div>
 
-            <!-- Riwayat SP -->
             <?php if (!empty($riwayat_sp)): ?>
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-4 border-b font-bold text-gray-700">📜 Riwayat Surat Peringatan</div>
@@ -461,7 +478,26 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     </div>
 </div>
 
+<div id="modal-detail" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10 shadow-sm">
+            <h3 class="text-lg font-bold text-gray-800">Detail Pelanggaran & Bukti Foto</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-red-600 bg-gray-100 hover:bg-red-50 p-2 rounded-full transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="modal-content" class="p-6 bg-gray-50">
+            <div class="flex items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Logic Tab Kategori
 function switchTab(tab) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
     document.querySelectorAll('.tab-button').forEach(b => {
@@ -477,12 +513,45 @@ function switchTab(tab) {
     else activeTab.classList.add('bg-yellow-600');
 }
 
+// ==========================================
+// FUNGSI UNTUK MODAL DETAIL (SAMA SEPERTI AUDIT HARIAN)
+// ==========================================
+function viewDetail(id) {
+    document.getElementById('modal-detail').classList.remove('hidden');
+    document.getElementById('modal-content').innerHTML = `
+        <div class="flex flex-col items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-navy mb-4"></div>
+            <p class="text-gray-500 font-medium">Memuat data dan foto...</p>
+        </div>
+    `;
+    
+    // Fetch detail via AJAX ke file yang sama dengan Audit Harian
+    fetch(`detail_transaksi_ajax.php?id=${id}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('modal-content').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('modal-content').innerHTML = `
+                <div class="text-center text-red-600 py-8">
+                    <p class="font-bold text-lg">Error memuat data</p>
+                    <p class="text-sm">${error.message}</p>
+                </div>
+            `;
+        });
+}
+
+function closeModal() {
+    document.getElementById('modal-detail').classList.add('hidden');
+}
+
+// Logic Edit & Hapus
 function editPelanggaran(id) {
     window.location.href = `edit_pelanggaran.php?id=${id}`;
 }
 
 function hapusPelanggaran(id) {
-    if (confirm('⚠️ Menghapus pelanggaran akan mengurangi poin siswa secara otomatis.\n\nYakin ingin menghapus?')) {
+    if (confirm('⚠️ PERINGATAN!\n\nMenghapus pelanggaran akan mengurangi total poin siswa secara otomatis.\n\nYakin ingin menghapus?')) {
         window.location.href = `../../actions/hapus_transaksi.php?id=${id}&redirect=monitoring&anggota=<?= $id_anggota ?>`;
     }
 }
