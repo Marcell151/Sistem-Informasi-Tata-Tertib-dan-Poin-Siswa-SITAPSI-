@@ -1,7 +1,6 @@
 <?php
 /**
  * SITAPSI - Halaman Login (UI GLOBAL PORTAL)
- * Menggabungkan desain modern teman Anda dengan logika auth.php asli
  */
 session_start();
 require_once '../config/database.php';
