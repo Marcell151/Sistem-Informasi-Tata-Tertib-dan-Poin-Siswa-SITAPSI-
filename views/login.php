@@ -1,29 +1,27 @@
 <?php
 /**
- * SITAPSI - Login Page
- * Halaman login dengan tab Admin dan Guru
+ * SITAPSI - Halaman Login (UI GLOBAL PORTAL)
+ * Menggabungkan desain modern teman Anda dengan logika auth.php asli
  */
 session_start();
+require_once '../config/database.php';
 
-// Redirect jika sudah login
+// Cek jika sudah login, arahkan ke dashboard sesuai role
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'SuperAdmin') {
-        header('Location: views/admin/dashboard.php');
+        header('Location: admin/dashboard.php');
     } else {
-        header('Location: views/guru/input_pelanggaran.php');
+        header('Location: guru/input_pelanggaran.php');
     }
     exit;
 }
 
-// Include database untuk load data guru
-require_once '../config/database.php';
-
-// Ambil daftar guru aktif untuk dropdown
-$guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Aktif' ORDER BY nama_guru ASC");
-
-// Cek apakah ada pesan error
-$error = isset($_SESSION['login_error']) ? $_SESSION['login_error'] : '';
+// Ambil pesan error dari auth.php jika ada
+$error = $_SESSION['login_error'] ?? '';
 unset($_SESSION['login_error']);
+
+// Ambil daftar guru aktif untuk dropdown login guru
+$guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Aktif' ORDER BY nama_guru");
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -31,218 +29,144 @@ unset($_SESSION['login_error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SITAPSI</title>
-    
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Custom Tailwind Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'navy': '#000080',
-                        'kelakuan': '#DC2626',
-                        'kerajinan': '#2563EB',
-                        'kerapian': '#D97706',
-                        'reward': '#16A34A'
-                    }
-                }
-            }
-        }
-    </script>
-    
     <style>
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tab-button.active {
-            background-color: #000080;
-            color: white;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .tab-active { color: #000080; border-bottom: 2px solid #000080; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden">
     
-    <div class="w-full max-w-md">
-        <!-- Logo & Title -->
-        <div class="text-center mb-8">
-            <div class="bg-white rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center shadow-lg">
-                <svg class="w-12 h-12 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
+    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-900/5 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-blue-900/5 rounded-full blur-3xl"></div>
+
+    <div class="w-full max-w-md bg-white border border-slate-200 shadow-xl shadow-blue-900/5 rounded-2xl relative z-10 transition-all duration-300 overflow-hidden">
+        
+        <div class="p-8 text-center space-y-4 pb-4">
+            <div class="mx-auto w-16 h-16 bg-[#000080] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
             </div>
-            <h1 class="text-3xl font-bold text-navy mb-2">SITAPSI</h1>
-            <p class="text-gray-600">Sistem Informasi Tata Tertib & Poin Siswa</p>
-            <p class="text-sm text-gray-500 mt-1">SMP Katolik Santa Maria 2 Malang</p>
+            <div>
+                <h1 class="text-2xl font-extrabold text-[#000080] tracking-tight">SITAPSI</h1>
+                <p class="text-slate-500 font-medium text-sm">Selamat datang, silakan masuk ke akun Anda</p>
+            </div>
         </div>
 
-        <!-- Login Card -->
-        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
-            
-            <!-- Tab Navigation -->
-            <div class="flex border-b border-gray-200">
-                <button 
-                    onclick="switchTab('admin')" 
-                    id="tab-admin" 
-                    class="tab-button flex-1 py-4 px-6 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors active">
-                    Admin / TU
-                </button>
-                <button 
-                    onclick="switchTab('guru')" 
-                    id="tab-guru" 
-                    class="tab-button flex-1 py-4 px-6 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-                    Guru / Piket
-                </button>
-            </div>
+        <div class="flex border-b border-slate-100">
+            <button onclick="switchRole('guru')" id="btn-tab-guru" class="flex-1 py-3 text-sm font-bold transition-all tab-active">Portal Guru</button>
+            <button onclick="switchRole('admin')" id="btn-tab-admin" class="flex-1 py-3 text-sm font-bold text-slate-400 transition-all">Administrator</button>
+        </div>
 
-            <!-- Error Message -->
-            <?php if ($error): ?>
-            <div class="mx-6 mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <div class="flex">
-                    <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                    <p class="text-sm text-red-700"><?= htmlspecialchars($error) ?></p>
+        <div class="p-8 pt-6">
+            <form action="../actions/auth.php" method="POST" id="form-login" class="space-y-5">
+                <input type="hidden" name="login_type" id="login_type" value="guru">
+
+                <?php if ($error): ?>
+                <div class="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium text-center animate-in fade-in slide-in-from-top-1">
+                    <?= htmlspecialchars($error) ?>
                 </div>
-            </div>
-            <?php endif; ?>
+                <?php endif; ?>
 
-            <!-- Tab Content: Admin -->
-            <div id="content-admin" class="tab-content active p-6">
-                <form action="../actions/auth.php" method="POST" class="space-y-4">
-                    <input type="hidden" name="login_type" value="admin">
-                    
-                    <div>
-                        <label for="admin_username" class="block text-sm font-medium text-gray-700 mb-2">
-                            Username
-                        </label>
-                        <input 
-                            type="text" 
-                            id="admin_username" 
-                            name="username" 
-                            required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent"
-                            placeholder="Masukkan username">
-                    </div>
-
-                    <div>
-                        <label for="admin_password" class="block text-sm font-medium text-gray-700 mb-2">
-                            Password
-                        </label>
-                        <input 
-                            type="password" 
-                            id="admin_password" 
-                            name="password" 
-                            required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent"
-                            placeholder="Masukkan password">
-                    </div>
-
-                    <button 
-                        type="submit" 
-                        class="w-full bg-navy hover:bg-blue-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
-                        Login sebagai Admin
-                    </button>
-                </form>
-            </div>
-
-            <!-- Tab Content: Guru -->
-            <div id="content-guru" class="tab-content p-6">
-                <form action="../actions/auth.php" method="POST" class="space-y-4">
-                    <input type="hidden" name="login_type" value="guru">
-                    
-                    <div>
-                        <label for="guru_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Pilih Nama Guru
-                        </label>
-                        <select 
-                            id="guru_id" 
-                            name="guru_id" 
-                            required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                            <option value="">-- Pilih Guru --</option>
-                            <?php foreach ($guru_list as $guru): ?>
-                            <option value="<?= $guru['id_guru'] ?>">
-                                <?= htmlspecialchars($guru['nama_guru']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="pin" class="block text-sm font-medium text-gray-700 mb-2">
-                            PIN Validasi
-                        </label>
-                        <input 
-                            type="password" 
-                            id="pin" 
-                            name="pin" 
-                            required
-                            maxlength="6"
-                            pattern="[0-9]{6}"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent text-center text-2xl tracking-widest"
-                            placeholder="••••••"
-                            inputmode="numeric">
-                        <p class="text-xs text-gray-500 mt-1">Masukkan 6 digit PIN</p>
-                    </div>
-
-                    <div class="flex items-center">
-                        <input 
-                            type="checkbox" 
-                            id="remember_me" 
-                            name="remember_me" 
-                            value="1"
-                            class="w-4 h-4 text-navy border-gray-300 rounded focus:ring-navy">
-                        <label for="remember_me" class="ml-2 text-sm text-gray-700">
-                            Ingat Saya
+                <div id="dynamic-inputs" class="space-y-5">
+                    <div id="guru-fields" class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="text-slate-700 text-sm font-semibold ml-1">Pilih Nama Guru</label>
+                            <select name="guru_id" class="w-full bg-white border border-slate-200 text-slate-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 h-12 rounded-xl px-4 transition-all outline-none text-sm font-medium cursor-pointer">
+                                <option value="">-- Pilih Nama Anda --</option>
+                                <?php foreach($guru_list as $g): ?>
+                                    <option value="<?= $g['id_guru'] ?>"><?= htmlspecialchars($g['nama_guru']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-slate-700 text-sm font-semibold ml-1">PIN Akses (6 Digit)</label>
+                            <input type="password" name="pin" maxlength="6" placeholder="Masukkan 6 digit PIN"
+                                   class="w-full bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 h-12 rounded-xl px-4 transition-all outline-none font-mono tracking-widest">
+                        </div>
+                        <label class="flex items-center space-x-2 cursor-pointer group">
+                            <input type="checkbox" name="remember_me" class="w-4 h-4 rounded border-slate-300 text-[#000080] focus:ring-[#000080]">
+                            <span class="text-xs text-slate-500 font-medium group-hover:text-slate-700 transition-colors">Ingat Saya di Perangkat Ini</span>
                         </label>
                     </div>
 
-                    <button 
-                        type="submit" 
-                        class="w-full bg-navy hover:bg-blue-900 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
-                        Mulai Sesi Piket
-                    </button>
-                </form>
-            </div>
+                    <div id="admin-fields" class="space-y-5 hidden">
+                        <div class="space-y-2">
+                            <label class="text-slate-700 text-sm font-semibold ml-1">Username Admin</label>
+                            <input type="text" name="username" placeholder="Masukkan username"
+                                   class="w-full bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 h-12 rounded-xl px-4 transition-all outline-none">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-slate-700 text-sm font-semibold ml-1">Password</label>
+                            <div class="relative">
+                                <input type="password" name="password" id="pass-admin" placeholder="••••••••"
+                                       class="w-full bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 h-12 rounded-xl px-4 pr-11 transition-all outline-none">
+                                <button type="button" onclick="togglePass()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#000080]">
+                                    <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        </div>
+                <button type="submit" id="btn-submit" class="w-full h-12 bg-[#000080] hover:bg-blue-900 text-white font-bold rounded-xl shadow-lg shadow-blue-900/10 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center">
+                    <span id="text-submit">Masuk ke Portal</span>
+                    <svg id="spinner" class="hidden w-5 h-5 ml-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+                </button>
+            </form>
 
-        <!-- Footer -->
-        <div class="text-center mt-6 text-sm text-gray-600">
-            <p>&copy; 2025 SMP Katolik Santa Maria 2 Malang</p>
-            <p class="mt-1">Developed with ❤️ for Better Education</p>
+            <p class="mt-8 text-center text-xs text-slate-400 font-medium italic uppercase tracking-wider">
+                Sistem Informasi Tata Tertib Siswa (SITAPSI) v1.0
+            </p>
         </div>
     </div>
 
-    <!-- JavaScript untuk Tab Switching -->
     <script>
-        function switchTab(tabName) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Remove active class from all buttons
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            
-            // Show selected tab content
-            document.getElementById('content-' + tabName).classList.add('active');
-            
-            // Add active class to selected button
-            document.getElementById('tab-' + tabName).classList.add('active');
+        // Fungsi ganti Tab Role
+        function switchRole(role) {
+            const typeInput = document.getElementById('login_type');
+            const guruFields = document.getElementById('guru-fields');
+            const adminFields = document.getElementById('admin-fields');
+            const tabGuru = document.getElementById('btn-tab-guru');
+            const tabAdmin = document.getElementById('btn-tab-admin');
+
+            typeInput.value = role;
+
+            if (role === 'admin') {
+                adminFields.classList.remove('hidden');
+                guruFields.classList.add('hidden');
+                tabAdmin.classList.add('tab-active');
+                tabAdmin.classList.remove('text-slate-400');
+                tabGuru.classList.remove('tab-active');
+                tabGuru.classList.add('text-slate-400');
+            } else {
+                guruFields.classList.remove('hidden');
+                adminFields.classList.add('hidden');
+                tabGuru.classList.add('tab-active');
+                tabGuru.classList.remove('text-slate-400');
+                tabAdmin.classList.remove('tab-active');
+                tabAdmin.classList.add('text-slate-400');
+            }
         }
 
-        // Auto-focus input pertama sesuai tab aktif
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('admin_username').focus();
-        });
+        // Fungsi Tampilkan/Sembunyikan Password
+        function togglePass() {
+            const input = document.getElementById('pass-admin');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
 
-        // Validasi PIN hanya angka
-        document.getElementById('pin').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
+        // Animasi Submit
+        document.getElementById('form-login').addEventListener('submit', function() {
+            document.getElementById('text-submit').innerText = 'Memverifikasi...';
+            document.getElementById('spinner').classList.remove('hidden');
+            document.getElementById('btn-submit').classList.add('opacity-80', 'pointer-events-none');
         });
     </script>
 </body>
