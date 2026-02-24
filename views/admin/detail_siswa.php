@@ -298,7 +298,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     </a>
                 </div>
                 <div class="text-xs font-bold px-3 py-1.5 rounded-full <?= $filter_semester === $tahun_aktif['semester_aktif'] ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200' ?>">
-                    <?= $filter_semester === $tahun_aktif['semester_aktif'] ? '● Aktif Berjalan' : 'Riwayat Lampau' ?>
+                    <?= $filter_semester === $tahun_aktif['semester_aktif'] ? '● Aktif' : 'Riwayat Lampau' ?>
                 </div>
             </div>
 
