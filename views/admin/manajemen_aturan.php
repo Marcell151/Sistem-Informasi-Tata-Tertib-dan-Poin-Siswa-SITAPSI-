@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Manajemen Aturan (COMPLETE WITH SANKSI)
+ * SITAPSI - Manajemen Aturan (UI GLOBAL PORTAL)
  * Tab 1: Aturan Pelanggaran & SP
  * Tab 2: Referensi Sanksi
  */
@@ -11,16 +11,11 @@ require_once '../../includes/session_check.php';
 
 requireAdmin();
 
-// Tab aktif
 $active_tab = $_GET['tab'] ?? 'pelanggaran';
-
-// Filter kategori (untuk tab pelanggaran)
 $filter_kategori = $_GET['kategori'] ?? 'all';
 
-// Ambil daftar kategori
 $kategori_list = fetchAll("SELECT id_kategori, nama_kategori FROM tb_kategori_pelanggaran ORDER BY id_kategori");
 
-// Ambil aturan SP
 $aturan_sp = fetchAll("
     SELECT 
         sp.id_aturan_sp,
@@ -33,7 +28,6 @@ $aturan_sp = fetchAll("
     ORDER BY k.id_kategori, sp.batas_bawah_poin
 ");
 
-// Query jenis pelanggaran dengan filter
 $sql_pelanggaran = "
     SELECT 
         jp.id_jenis,
@@ -47,24 +41,25 @@ $sql_pelanggaran = "
     JOIN tb_kategori_pelanggaran k ON jp.id_kategori = k.id_kategori
     WHERE 1=1
 ";
-
 $params = [];
-
 if ($filter_kategori !== 'all') {
     $sql_pelanggaran .= " AND k.id_kategori = :kategori";
     $params['kategori'] = $filter_kategori;
 }
-
 $sql_pelanggaran .= " ORDER BY k.id_kategori, jp.sub_kategori, jp.nama_pelanggaran";
-
 $pelanggaran_list = fetchAll($sql_pelanggaran, $params);
 
-// Ambil daftar sanksi
 $sanksi_list = fetchAll("SELECT * FROM tb_sanksi_ref ORDER BY CAST(kode_sanksi AS UNSIGNED)");
 
 $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+$btn_primary = "px-4 py-2.5 bg-[#000080] text-white text-sm font-semibold rounded-lg shadow-md shadow-blue-900/10 hover:bg-blue-900 transition-all flex items-center justify-center";
+$btn_outline = "px-4 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center";
+$input_class = "w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-700 bg-white transition-all";
+$label_class = "block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide";
+$card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -73,105 +68,91 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Aturan - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Manajemen Aturan</h1>
-                    <p class="text-sm text-gray-500">Pengaturan pelanggaran, sanksi & threshold SP</p>
-                </div>
-                
-                <!-- Tab Switcher -->
-                <div class="flex space-x-2">
-                    <a href="?tab=pelanggaran" 
-                       class="px-4 py-2 rounded-lg font-medium transition-colors <?= $active_tab === 'pelanggaran' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
-                        📋 Pelanggaran
-                    </a>
-                    <a href="?tab=sanksi" 
-                       class="px-4 py-2 rounded-lg font-medium transition-colors <?= $active_tab === 'sanksi' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
-                        ⚖️ Sanksi
-                    </a>
-                </div>
+        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Manajemen Aturan</h1>
+                <p class="text-sm font-medium text-slate-500">Pengaturan bobot poin pelanggaran & sanksi</p>
+            </div>
+            
+            <div class="flex space-x-2 bg-slate-100 p-1 rounded-lg">
+                <a href="?tab=pelanggaran" 
+                   class="px-4 py-1.5 rounded-md text-sm font-bold transition-all <?= $active_tab === 'pelanggaran' ? 'bg-white text-[#000080] shadow-sm' : 'text-slate-500 hover:text-slate-700' ?>">
+                    Pelanggaran & SP
+                </a>
+                <a href="?tab=sanksi" 
+                   class="px-4 py-1.5 rounded-md text-sm font-bold transition-all <?= $active_tab === 'sanksi' ? 'bg-white text-[#000080] shadow-sm' : 'text-slate-500 hover:text-slate-700' ?>">
+                    Referensi Sanksi
+                </a>
             </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 max-w-7xl mx-auto">
 
             <?php if ($success): ?>
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($success) ?></p>
             </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($error) ?></p>
             </div>
             <?php endif; ?>
 
             <?php if ($active_tab === 'pelanggaran'): ?>
-            <!-- ============================================ -->
-            <!-- TAB 1: PELANGGARAN & SP THRESHOLD -->
-            <!-- ============================================ -->
-            
-            <!-- Aturan SP -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center">
-                    <span>⚖️ Aturan Threshold Surat Peringatan</span>
-                    <button onclick="document.getElementById('modal-info-sp').classList.remove('hidden')" 
-                            class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-lg hover:bg-blue-100">
-                        ℹ️ Info SP
+            <div class="<?= $card_class ?> overflow-hidden">
+                <div class="p-4 border-b border-[#E2E8F0] bg-slate-50/50 flex justify-between items-center">
+                    <span class="font-bold text-slate-800 text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+                        Ambang Batas SP Per Kategori
+                    </span>
+                    <button onclick="document.getElementById('modal-info-sp').classList.remove('hidden')" class="text-xs font-bold text-[#000080] hover:underline flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        Info System
                     </button>
                 </div>
 
                 <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <?php 
                         $grouped_sp = [];
-                        foreach ($aturan_sp as $a) {
-                            $grouped_sp[$a['nama_kategori']][] = $a;
-                        }
-                        
+                        foreach ($aturan_sp as $a) { $grouped_sp[$a['nama_kategori']][] = $a; }
                         $colors = [
-                            'KELAKUAN' => ['bg' => 'bg-red-50', 'border' => 'border-red-500', 'text' => 'text-red-700'],
-                            'KERAJINAN' => ['bg' => 'bg-blue-50', 'border' => 'border-blue-500', 'text' => 'text-blue-700'],
-                            'KERAPIAN' => ['bg' => 'bg-yellow-50', 'border' => 'border-yellow-500', 'text' => 'text-yellow-700']
+                            'KELAKUAN' => ['bg' => 'bg-red-50/50', 'border' => 'border-red-200', 'text' => 'text-red-700', 'badge' => 'bg-red-100 text-red-700'],
+                            'KERAJINAN' => ['bg' => 'bg-blue-50/50', 'border' => 'border-blue-200', 'text' => 'text-blue-700', 'badge' => 'bg-blue-100 text-blue-700'],
+                            'KERAPIAN' => ['bg' => 'bg-yellow-50/50', 'border' => 'border-yellow-200', 'text' => 'text-yellow-700', 'badge' => 'bg-yellow-100 text-yellow-700']
                         ];
                         
                         foreach ($grouped_sp as $kategori => $aturan):
-                            $color = $colors[$kategori] ?? ['bg' => 'bg-gray-50', 'border' => 'border-gray-500', 'text' => 'text-gray-700'];
+                            $color = $colors[$kategori] ?? ['bg' => 'bg-slate-50', 'border' => 'border-slate-200', 'text' => 'text-slate-700', 'badge' => 'bg-slate-200 text-slate-700'];
                         ?>
-                        <div class="<?= $color['bg'] ?> border-l-4 <?= $color['border'] ?> p-4 rounded-lg">
-                            <h3 class="font-bold <?= $color['text'] ?> mb-3"><?= $kategori ?></h3>
-                            <div class="space-y-2">
+                        <div class="<?= $color['bg'] ?> border <?= $color['border'] ?> rounded-xl p-5 shadow-sm">
+                            <h3 class="font-extrabold <?= $color['text'] ?> mb-4 flex items-center text-sm">
+                                <span class="w-2 h-2 rounded-full mr-2 <?= $color['badge'] ?>"></span>
+                                <?= $kategori ?>
+                            </h3>
+                            <div class="space-y-2.5">
                                 <?php foreach ($aturan as $a): ?>
-                                <div class="bg-white p-3 rounded border flex justify-between items-center">
+                                <div class="bg-white px-4 py-3 rounded-lg border border-[#E2E8F0] shadow-sm flex justify-between items-center group">
                                     <div>
-                                        <span class="font-bold text-gray-800"><?= $a['level_sp'] ?></span>
-                                        <span class="text-sm font-medium text-gray-600 ml-2">&ge; <?= $a['batas_bawah_poin'] ?> poin</span>
+                                        <span class="font-extrabold text-slate-800 text-sm"><?= $a['level_sp'] ?></span>
+                                        <span class="text-xs font-bold text-slate-500 ml-2">&ge; <?= $a['batas_bawah_poin'] ?> pt</span>
                                     </div>
                                     <button onclick="editAturanSP(<?= $a['id_aturan_sp'] ?>, '<?= $kategori ?>', '<?= $a['level_sp'] ?>', <?= $a['batas_bawah_poin'] ?>)"
-                                            class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100" title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
+                                            class="text-slate-400 hover:text-[#000080] transition-colors" title="Edit Threshold">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </button>
                                 </div>
                                 <?php endforeach; ?>
@@ -182,99 +163,60 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </div>
             </div>
 
-            <!-- Header dengan Filter & Tombol Tambah -->
-            <div class="bg-white rounded-xl shadow-sm p-6 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <label class="text-sm font-medium text-gray-700">Filter Kategori:</label>
-                    <div class="flex space-x-2">
-                        <a href="?tab=pelanggaran&kategori=all" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?= $filter_kategori === 'all' ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
-                            Semua
-                        </a>
+            <div class="<?= $card_class ?> overflow-hidden">
+                <div class="p-4 border-b border-[#E2E8F0] bg-slate-50/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div class="flex items-center space-x-2 overflow-x-auto scrollbar-hide pb-2 sm:pb-0">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wide mr-2">Filter Kategori:</span>
+                        <a href="?tab=pelanggaran&kategori=all" class="px-3 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-colors <?= $filter_kategori === 'all' ? 'bg-[#000080] text-white' : 'bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-50' ?>">Semua</a>
                         <?php foreach ($kategori_list as $k): ?>
-                        <a href="?tab=pelanggaran&kategori=<?= $k['id_kategori'] ?>" 
-                           class="px-4 py-2 rounded-lg font-medium transition-colors <?= $filter_kategori == $k['id_kategori'] ? 'bg-navy text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' ?>">
-                            <?= $k['nama_kategori'] ?>
-                        </a>
+                            <a href="?tab=pelanggaran&kategori=<?= $k['id_kategori'] ?>" class="px-3 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-colors <?= $filter_kategori == $k['id_kategori'] ? 'bg-[#000080] text-white' : 'bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-50' ?>"><?= $k['nama_kategori'] ?></a>
                         <?php endforeach; ?>
                     </div>
-                </div>
-                <button onclick="document.getElementById('modal-tambah-pelanggaran').classList.remove('hidden')" 
-                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <span>Tambah Pelanggaran</span>
-                </button>
-            </div>
-
-            <!-- Daftar Jenis Pelanggaran -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b font-bold text-gray-700">
-                    📋 Daftar Jenis Pelanggaran 
-                    <?php if ($filter_kategori !== 'all'): ?>
-                        <?php 
-                        $nama_kat = '';
-                        foreach ($kategori_list as $k) {
-                            if ($k['id_kategori'] == $filter_kategori) {
-                                $nama_kat = $k['nama_kategori'];
-                                break;
-                            }
-                        }
-                        ?>
-                        <span class="text-sm text-gray-500">(Filter: <?= $nama_kat ?>)</span>
-                    <?php endif; ?>
+                    <button onclick="document.getElementById('modal-tambah-pelanggaran').classList.remove('hidden')" class="<?= $btn_primary ?> h-8 text-[11px] px-3 w-full sm:w-auto">
+                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Tambah Data
+                    </button>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white text-xs text-slate-500 uppercase border-b border-[#E2E8F0]">
                             <tr>
-                                <th class="p-4">Kategori</th>
-                                <th class="p-4">Sub Kategori</th>
-                                <th class="p-4">Nama Pelanggaran</th>
-                                <th class="p-4">Poin</th>
-                                <th class="p-4">Sanksi Default</th>
-                                <th class="p-4">Aksi</th>
+                                <th class="p-4 font-bold">Kategori</th>
+                                <th class="p-4 font-bold">Sub Kategori</th>
+                                <th class="p-4 font-bold">Nama Pelanggaran</th>
+                                <th class="p-4 font-bold text-center">Poin</th>
+                                <th class="p-4 font-bold text-center">Sanksi Ref.</th>
+                                <th class="p-4 font-bold text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if (empty($pelanggaran_list)): ?>
-                            <tr>
-                                <td colspan="6" class="p-12 text-center text-gray-500">Tidak ada data pelanggaran</td>
-                            </tr>
+                            <tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium text-sm">Tidak ada data pelanggaran</td></tr>
                             <?php else: ?>
                             <?php foreach($pelanggaran_list as $p): ?>
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="p-4">
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium
-                                        <?= $p['nama_kategori'] === 'KELAKUAN' ? 'bg-red-100 text-red-800' : '' ?>
-                                        <?= $p['nama_kategori'] === 'KERAJINAN' ? 'bg-blue-100 text-blue-800' : '' ?>
-                                        <?= $p['nama_kategori'] === 'KERAPIAN' ? 'bg-yellow-100 text-yellow-800' : '' ?>">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
+                                        <?= $p['nama_kategori'] === 'KELAKUAN' ? 'bg-red-50 text-red-600 border border-red-200' : '' ?>
+                                        <?= $p['nama_kategori'] === 'KERAJINAN' ? 'bg-blue-50 text-blue-600 border border-blue-200' : '' ?>
+                                        <?= $p['nama_kategori'] === 'KERAPIAN' ? 'bg-yellow-50 text-yellow-600 border border-yellow-200' : '' ?>">
                                         <?= $p['nama_kategori'] ?>
                                     </span>
                                 </td>
-                                <td class="p-4 text-gray-600"><?= htmlspecialchars($p['sub_kategori']) ?></td>
-                                <td class="p-4 font-medium text-gray-800"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
-                                <td class="p-4">
-                                    <span class="px-3 py-1 bg-gray-100 rounded-full font-bold text-gray-800">
-                                        <?= $p['poin_default'] ?>
-                                    </span>
+                                <td class="p-4 text-xs font-bold text-slate-500"><?= htmlspecialchars($p['sub_kategori']) ?></td>
+                                <td class="p-4 font-bold text-slate-800 text-[13px] whitespace-normal min-w-[200px]"><?= htmlspecialchars($p['nama_pelanggaran']) ?></td>
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded-md font-bold text-[11px] shadow-sm"><?= $p['poin_default'] ?></span>
                                 </td>
-                                <td class="p-4 text-gray-600 text-xs"><?= htmlspecialchars($p['sanksi_default']) ?></td>
-                                <td class="p-4">
-                                    <div class="flex space-x-2">
-                                        <button onclick='editPelanggaran(<?= json_encode($p) ?>)'
-                                                class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
+                                <td class="p-4 text-center font-mono text-xs font-bold text-slate-500"><?= htmlspecialchars($p['sanksi_default']) ?></td>
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <button onclick='editPelanggaran(<?= json_encode($p) ?>)' class="p-1.5 bg-white border border-[#E2E8F0] text-slate-600 rounded-md hover:bg-slate-50 hover:text-[#000080] transition-colors shadow-sm" title="Edit">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </button>
-                                        <button onclick="hapusPelanggaran(<?= $p['id_jenis'] ?>)"
-                                                class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
+                                        <button onclick="hapusPelanggaran(<?= $p['id_jenis'] ?>)" class="p-1.5 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50 transition-colors shadow-sm" title="Hapus">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
                                     </div>
                                 </td>
@@ -287,113 +229,71 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             </div>
 
             <?php else: ?>
-            <!-- ============================================ -->
-            <!-- TAB 2: REFERENSI SANKSI -->
-            <!-- ============================================ -->
-            
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center">
-                    <span>⚖️ Daftar Referensi Sanksi</span>
-                    <button onclick="document.getElementById('modal-tambah-sanksi').classList.remove('hidden')" 
-                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        <span>Tambah Sanksi</span>
-                    </button>
+            <div class="flex flex-col sm:flex-row gap-6">
+                
+                <div class="w-full sm:w-1/3">
+                    <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl shadow-sm text-sm">
+                        <h4 class="font-extrabold text-[#000080] mb-2 flex items-center"><svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Referensi Kode Sanksi</h4>
+                        <p class="text-blue-800 font-medium leading-relaxed">Sanksi ini digunakan sebagai referensi pada tabel pelanggaran. Anda bisa memasukkan lebih dari 1 kode sanksi (dipisah koma) pada kolom "Sanksi Default" di form pelanggaran.</p>
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
-                            <tr>
-                                <th class="p-4">Kode</th>
-                                <th class="p-4">Deskripsi Sanksi</th>
-                                <th class="p-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <?php if (empty($sanksi_list)): ?>
-                            <tr>
-                                <td colspan="3" class="p-12 text-center text-gray-500">Belum ada data sanksi</td>
-                            </tr>
-                            <?php else: ?>
-                            <?php foreach($sanksi_list as $s): ?>
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-4">
-                                    <span class="px-3 py-1 bg-navy text-white rounded-full font-bold text-sm">
-                                        <?= htmlspecialchars($s['kode_sanksi']) ?>
-                                    </span>
-                                </td>
-                                <td class="p-4 text-gray-800"><?= htmlspecialchars($s['deskripsi']) ?></td>
-                                <td class="p-4">
-                                    <div class="flex space-x-2">
-                                        <button onclick='editSanksi(<?= json_encode($s) ?>)'
-                                                class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </button>
-                                        <button onclick="hapusSanksi(<?= $s['id_sanksi_ref'] ?>)"
-                                                class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Info Box -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    <div>
-                        <h4 class="font-bold text-blue-800 mb-1">ℹ️ Tentang Sanksi</h4>
-                        <p class="text-sm text-blue-700">
-                            Sanksi digunakan sebagai referensi pada pelanggaran. Setiap pelanggaran dapat memiliki satu atau beberapa sanksi (dipisah koma pada kolom "Sanksi Default").
-                            Contoh: Sanksi "1,5,7" berarti pelanggaran tersebut akan menggunakan sanksi kode 1, 5, dan 7.
-                        </p>
+                <div class="w-full sm:w-2/3 <?= $card_class ?> overflow-hidden">
+                    <div class="p-4 border-b border-[#E2E8F0] bg-slate-50/50 flex justify-between items-center">
+                        <span class="font-bold text-slate-800 text-sm">Daftar Kode Sanksi</span>
+                        <button onclick="document.getElementById('modal-tambah-sanksi').classList.remove('hidden')" class="<?= $btn_primary ?> h-8 text-[11px] px-3">Tambah Sanksi</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-white text-xs text-slate-500 uppercase border-b border-[#E2E8F0]">
+                                <tr>
+                                    <th class="p-4 font-bold text-center w-24">Kode</th>
+                                    <th class="p-4 font-bold">Deskripsi Tindakan Sanksi</th>
+                                    <th class="p-4 font-bold text-center w-24">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#E2E8F0]">
+                                <?php if (empty($sanksi_list)): ?>
+                                <tr><td colspan="3" class="p-8 text-center text-slate-400">Belum ada data sanksi</td></tr>
+                                <?php else: ?>
+                                <?php foreach($sanksi_list as $s): ?>
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="p-4 text-center">
+                                        <span class="px-2.5 py-1 bg-[#000080]/10 text-[#000080] rounded-md font-extrabold text-[11px] border border-[#000080]/20 shadow-sm"><?= htmlspecialchars($s['kode_sanksi']) ?></span>
+                                    </td>
+                                    <td class="p-4 font-bold text-slate-700 whitespace-normal text-xs leading-relaxed"><?= htmlspecialchars($s['deskripsi']) ?></td>
+                                    <td class="p-4 text-center">
+                                        <div class="flex items-center justify-center space-x-2">
+                                            <button onclick='editSanksi(<?= json_encode($s) ?>)' class="p-1.5 bg-white border border-[#E2E8F0] text-slate-600 rounded-md hover:bg-slate-50 hover:text-[#000080] transition-colors shadow-sm" title="Edit"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            <button onclick="hapusSanksi(<?= $s['id_sanksi_ref'] ?>)" class="p-1.5 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50 transition-colors shadow-sm" title="Hapus"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-
             <?php endif; ?>
 
         </div>
-
     </div>
-
 </div>
 
-<!-- ============================================ -->
-<!-- MODALS: PELANGGARAN -->
-<!-- ============================================ -->
-
-<!-- Modal Tambah Pelanggaran -->
-<div id="modal-tambah-pelanggaran" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-lg max-w-2xl w-full my-8">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Tambah Jenis Pelanggaran</h3>
-            <button onclick="document.getElementById('modal-tambah-pelanggaran').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-tambah-pelanggaran" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-tambah-pelanggaran')"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800">Tambah Jenis Pelanggaran</h3>
+            <button onclick="closeModal('modal-tambah-pelanggaran')" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <form action="../../actions/tambah_aturan.php" method="POST" class="p-6 space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+        <form action="../../actions/tambah_aturan.php" method="POST" class="p-6 space-y-5">
+            <div class="grid grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kategori *</label>
-                    <select name="id_kategori" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Kategori *</label>
+                    <select name="id_kategori" required class="<?= $input_class ?>">
                         <option value="">Pilih Kategori</option>
                         <?php foreach ($kategori_list as $k): ?>
                         <option value="<?= $k['id_kategori'] ?>"><?= $k['nama_kategori'] ?></option>
@@ -401,262 +301,189 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Sub Kategori *</label>
-                    <input type="text" name="sub_kategori" required 
-                           placeholder="Contoh: 02. Sikap & Moral"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Sub Kategori *</label>
+                    <input type="text" name="sub_kategori" required placeholder="Contoh: 02. Sikap & Moral" class="<?= $input_class ?>">
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pelanggaran *</label>
-                <textarea name="nama_pelanggaran" rows="2" required
-                          placeholder="Contoh: Berkata tidak sopan/kasar/jorok"
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy"></textarea>
+                <label class="<?= $label_class ?>">Nama Pelanggaran *</label>
+                <textarea name="nama_pelanggaran" rows="2" required placeholder="Contoh: Berkata tidak sopan/kasar" class="<?= $input_class ?>"></textarea>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Poin Default *</label>
-                    <input type="number" name="poin_default" min="1" required 
-                           placeholder="Contoh: 100"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Poin Default *</label>
+                    <input type="number" name="poin_default" min="1" required placeholder="100" class="<?= $input_class ?>">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Sanksi Default *</label>
-                    <input type="text" name="sanksi_default" required 
-                           placeholder="Contoh: 1,5,7"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
-                    <p class="text-xs text-gray-500 mt-1">Kode sanksi dipisah koma</p>
+                    <label class="<?= $label_class ?>">Kode Sanksi Default *</label>
+                    <input type="text" name="sanksi_default" required placeholder="1,5,7" class="<?= $input_class ?>">
+                    <p class="text-[10px] text-slate-500 mt-1 font-medium">Pisahkan dengan koma jika lebih dari satu</p>
                 </div>
             </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="document.getElementById('modal-tambah-pelanggaran').classList.add('hidden')" 
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 font-medium">
-                    Simpan
-                </button>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-tambah-pelanggaran')" class="<?= $btn_outline ?> flex-1">Batal</button>
+                <button type="submit" class="<?= $btn_primary ?> flex-1">Simpan Data</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Edit Pelanggaran - FIXED ACTION -->
-<div id="modal-edit-pelanggaran" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-lg max-w-2xl w-full my-8">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Edit Jenis Pelanggaran</h3>
-            <button onclick="document.getElementById('modal-edit-pelanggaran').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-edit-pelanggaran" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-edit-pelanggaran')"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800">Edit Jenis Pelanggaran</h3>
+            <button onclick="closeModal('modal-edit-pelanggaran')" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <!-- PERBAIKAN: Ganti action ke edit_aturan_pelanggaran.php (bukan edit_pelanggaran.php) -->
-        <form action="../../actions/edit_aturan_pelanggaran.php" method="POST" class="p-6 space-y-4">
+        <form action="../../actions/edit_aturan_pelanggaran.php" method="POST" class="p-6 space-y-5">
             <input type="hidden" name="id_jenis" id="edit-id-jenis">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kategori *</label>
-                    <select name="id_kategori" id="edit-id-kategori" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Kategori *</label>
+                    <select name="id_kategori" id="edit-id-kategori" required class="<?= $input_class ?>">
                         <?php foreach ($kategori_list as $k): ?>
                         <option value="<?= $k['id_kategori'] ?>"><?= $k['nama_kategori'] ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Sub Kategori *</label>
-                    <input type="text" name="sub_kategori" id="edit-sub-kategori" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Sub Kategori *</label>
+                    <input type="text" name="sub_kategori" id="edit-sub-kategori" required class="<?= $input_class ?>">
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pelanggaran *</label>
-                <textarea name="nama_pelanggaran" id="edit-nama-pelanggaran" rows="2" required
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy"></textarea>
+                <label class="<?= $label_class ?>">Nama Pelanggaran *</label>
+                <textarea name="nama_pelanggaran" id="edit-nama-pelanggaran" rows="2" required class="<?= $input_class ?>"></textarea>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Poin Default *</label>
-                    <input type="number" name="poin_default" id="edit-poin-default" min="1" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Poin Default *</label>
+                    <input type="number" name="poin_default" id="edit-poin-default" min="1" required class="<?= $input_class ?>">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Sanksi Default *</label>
-                    <input type="text" name="sanksi_default" id="edit-sanksi-default" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                    <label class="<?= $label_class ?>">Kode Sanksi Default *</label>
+                    <input type="text" name="sanksi_default" id="edit-sanksi-default" required class="<?= $input_class ?>">
                 </div>
             </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="document.getElementById('modal-edit-pelanggaran').classList.add('hidden')" 
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 font-medium">
-                    Update
-                </button>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-edit-pelanggaran')" class="<?= $btn_outline ?> flex-1">Batal</button>
+                <button type="submit" class="<?= $btn_primary ?> flex-1">Update Data</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Edit Aturan SP -->
-<div id="modal-edit-sp" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Edit Aturan SP</h3>
-            <button onclick="document.getElementById('modal-edit-sp').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-edit-sp" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-edit-sp')"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800">Edit Batas SP</h3>
+            <button onclick="closeModal('modal-edit-sp')" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <form action="../../actions/edit_aturan_sp.php" method="POST" class="p-6 space-y-4">
+        <form action="../../actions/edit_aturan_sp.php" method="POST" class="p-6 space-y-5">
             <input type="hidden" name="id_aturan_sp" id="sp-id">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                <input type="text" id="sp-kategori" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                <label class="<?= $label_class ?>">Kategori</label>
+                <input type="text" id="sp-kategori" readonly class="<?= $input_class ?> bg-slate-50 font-bold text-slate-500 cursor-not-allowed">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Level SP</label>
-                <input type="text" id="sp-level" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                <label class="<?= $label_class ?>">Level Surat Peringatan (SP)</label>
+                <input type="text" id="sp-level" readonly class="<?= $input_class ?> bg-slate-50 font-bold text-slate-500 cursor-not-allowed">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Batas Bawah Poin *</label>
-                <input type="number" name="batas_bawah_poin" id="sp-batas" min="0" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
+                <label class="<?= $label_class ?>">Ambang Batas Poin (Minimal) *</label>
+                <input type="number" name="batas_bawah_poin" id="sp-batas" min="0" required class="<?= $input_class ?> border-[#000080]/30 focus:border-[#000080]">
             </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="document.getElementById('modal-edit-sp').classList.add('hidden')" 
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 font-medium">
-                    Update
-                </button>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-edit-sp')" class="<?= $btn_outline ?> flex-1">Batal</button>
+                <button type="submit" class="<?= $btn_primary ?> flex-1">Update</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- MODALS: SANKSI -->
-<!-- ============================================ -->
-
-<!-- Modal Tambah Sanksi -->
-<div id="modal-tambah-sanksi" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Tambah Sanksi Baru</h3>
-            <button onclick="document.getElementById('modal-tambah-sanksi').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        <form action="../../actions/tambah_sanksi.php" method="POST" class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kode Sanksi *</label>
-                <input type="text" name="kode_sanksi" required 
-                       placeholder="Contoh: 11"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
-                <p class="text-xs text-gray-500 mt-1">Kode unik untuk referensi sanksi</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Sanksi *</label>
-                <textarea name="deskripsi" rows="3" required
-                          placeholder="Contoh: Menulis surat pernyataan bermaterai"
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy"></textarea>
-            </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="document.getElementById('modal-tambah-sanksi').classList.add('hidden')" 
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium">
-                    Simpan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Edit Sanksi -->
-<div id="modal-edit-sanksi" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Edit Sanksi</h3>
-            <button onclick="document.getElementById('modal-edit-sanksi').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        <form action="../../actions/edit_sanksi.php" method="POST" class="p-6 space-y-4">
-            <input type="hidden" name="id_sanksi_ref" id="sanksi-id">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kode Sanksi *</label>
-                <input type="text" name="kode_sanksi" id="sanksi-kode" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Sanksi *</label>
-                <textarea name="deskripsi" id="sanksi-deskripsi" rows="3" required
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy"></textarea>
-            </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="document.getElementById('modal-edit-sanksi').classList.add('hidden')" 
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 font-medium">
-                    Update
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Info SP -->
-<div id="modal-info-sp" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-2xl w-full">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">ℹ️ Informasi Aturan SP</h3>
-            <button onclick="document.getElementById('modal-info-sp').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-info-sp" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-info-sp')"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800 flex items-center"><svg class="w-5 h-5 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Informasi Sistem SP</h3>
+            <button onclick="closeModal('modal-info-sp')" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="p-6">
-            <div class="prose prose-sm">
-                <h4 class="font-bold text-gray-800">Cara Kerja Threshold SP:</h4>
-                <ul class="list-disc pl-5 space-y-2 text-gray-700">
-                    <li><strong>SP1:</strong> Siswa mendapat peringatan pertama saat poin mencapai batas bawah SP1</li>
-                    <li><strong>SP2:</strong> Peringatan kedua dengan sanksi lebih berat</li>
-                    <li><strong>SP3:</strong> Peringatan terakhir sebelum dikeluarkan</li>
-                    <li><strong>Dikeluarkan:</strong> Siswa dikeluarkan dari sekolah</li>
+            <div class="text-sm text-slate-700 leading-relaxed mb-4">
+                <p class="mb-2">Sistem Surat Peringatan (SP) di SITAPSI bekerja secara otomatis (Trigger) berdasarkan akumulasi poin siswa di <strong>masing-masing kategori</strong>.</p>
+                <ul class="list-disc pl-5 space-y-1 font-bold text-slate-800">
+                    <li>SP1 : Peringatan Tahap 1</li>
+                    <li>SP2 : Peringatan Tahap 2</li>
+                    <li>SP3 : Peringatan Tahap Akhir</li>
+                    <li class="text-red-600">Dikeluarkan : Sanksi Maksimal</li>
                 </ul>
-                <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                    <p class="text-sm text-yellow-700">
-                        <strong>Catatan:</strong> Setiap kategori (Kelakuan, Kerajinan, Kerapian) memiliki threshold SP yang berbeda. 
-                        SP akan otomatis ter-trigger saat siswa mencapai batas poin yang ditentukan.
-                    </p>
-                </div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl shadow-sm">
+                <p class="text-[11px] text-amber-800 font-medium"><strong>Catatan Penting:</strong> Jika seorang siswa mencapai ambang batas SP2 di kategori Kelakuan, maka ia akan menerima SP2 meskipun di kategori Kerajinan poinnya masih 0.</p>
             </div>
         </div>
+        <div class="p-5 border-t border-[#E2E8F0] flex justify-end">
+            <button onclick="closeModal('modal-info-sp')" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition-colors text-sm">Paham</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-tambah-sanksi" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-tambah-sanksi')"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800">Tambah Sanksi Baru</h3>
+            <button onclick="closeModal('modal-tambah-sanksi')" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <form action="../../actions/tambah_sanksi.php" method="POST" class="p-6 space-y-5">
+            <div>
+                <label class="<?= $label_class ?>">Kode Sanksi (Angka) *</label>
+                <input type="text" name="kode_sanksi" required placeholder="Contoh: 11" class="<?= $input_class ?>">
+            </div>
+            <div>
+                <label class="<?= $label_class ?>">Deskripsi Tindakan Sanksi *</label>
+                <textarea name="deskripsi" rows="3" required placeholder="Contoh: Menulis surat pernyataan bermaterai" class="<?= $input_class ?>"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-tambah-sanksi')" class="<?= $btn_outline ?> flex-1">Batal</button>
+                <button type="submit" class="<?= $btn_primary ?> flex-1">Simpan Data</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit-sanksi" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('modal-edit-sanksi')"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800">Edit Data Sanksi</h3>
+            <button onclick="closeModal('modal-edit-sanksi')" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <form action="../../actions/edit_sanksi.php" method="POST" class="p-6 space-y-5">
+            <input type="hidden" name="id_sanksi_ref" id="sanksi-id">
+            <div>
+                <label class="<?= $label_class ?>">Kode Sanksi *</label>
+                <input type="text" name="kode_sanksi" id="sanksi-kode" required class="<?= $input_class ?>">
+            </div>
+            <div>
+                <label class="<?= $label_class ?>">Deskripsi Tindakan Sanksi *</label>
+                <textarea name="deskripsi" id="sanksi-deskripsi" rows="3" required class="<?= $input_class ?>"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('modal-edit-sanksi')" class="<?= $btn_outline ?> flex-1">Batal</button>
+                <button type="submit" class="<?= $btn_primary ?> flex-1">Update Data</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-// ============================================
-// FUNCTIONS: PELANGGARAN
-// ============================================
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+
+// Pelanggaran & SP
 function editPelanggaran(data) {
     document.getElementById('edit-id-jenis').value = data.id_jenis;
     document.getElementById('edit-id-kategori').value = data.id_kategori;
@@ -668,7 +495,7 @@ function editPelanggaran(data) {
 }
 
 function hapusPelanggaran(id) {
-    if (confirm('⚠️ Yakin ingin menghapus jenis pelanggaran ini?\n\nData transaksi yang menggunakan pelanggaran ini akan tetap tersimpan.')) {
+    if (confirm('⚠️ Yakin ingin menghapus jenis pelanggaran ini?\n\nData transaksi lama yang menggunakan pelanggaran ini akan tetap aman/tersimpan.')) {
         window.location.href = `../../actions/hapus_aturan.php?id=${id}`;
     }
 }
@@ -681,9 +508,7 @@ function editAturanSP(id, kategori, level, batas) {
     document.getElementById('modal-edit-sp').classList.remove('hidden');
 }
 
-// ============================================
-// FUNCTIONS: SANKSI
-// ============================================
+// Sanksi
 function editSanksi(data) {
     document.getElementById('sanksi-id').value = data.id_sanksi_ref;
     document.getElementById('sanksi-kode').value = data.kode_sanksi;
@@ -692,7 +517,7 @@ function editSanksi(data) {
 }
 
 function hapusSanksi(id) {
-    if (confirm('⚠️ Yakin ingin menghapus sanksi ini?\n\nPastikan tidak ada pelanggaran yang masih menggunakan kode sanksi ini.')) {
+    if (confirm('⚠️ Yakin ingin menghapus sanksi ini?\n\nPastikan tidak ada pelanggaran yang masih bergantung pada kode sanksi ini.')) {
         window.location.href = `../../actions/hapus_sanksi.php?id=${id}`;
     }
 }

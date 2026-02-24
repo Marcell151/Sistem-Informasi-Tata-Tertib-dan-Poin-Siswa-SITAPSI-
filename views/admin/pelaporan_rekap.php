@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Pelaporan & Rekap
+ * SITAPSI - Pelaporan & Rekap (UI GLOBAL PORTAL)
  * Hub untuk memilih: Rekapitulasi atau Rapor Karakter
  */
 
@@ -19,135 +19,68 @@ $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tah
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pelaporan & Rekap - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30">
-            <h1 class="text-2xl font-bold text-gray-800">Pelaporan & Rekap</h1>
-            <p class="text-sm text-gray-500">Pilih jenis laporan yang ingin dibuat</p>
+        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30">
+            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Pelaporan & Rekap</h1>
+            <p class="text-sm font-medium text-slate-500">Pusat unduh laporan rekapitulasi poin dan rapor karakter</p>
         </div>
 
-        <div class="p-6">
+        <div class="p-6 space-y-6 max-w-5xl mx-auto">
             
-            <!-- Info Header -->
-            <div class="bg-gradient-to-r from-navy to-blue-800 text-white rounded-xl shadow-lg p-6 mb-8">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2">Sistem Pelaporan</h2>
-                        <p class="text-blue-200">Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?> • Semester <?= $tahun_aktif['semester_aktif'] ?></p>
-                    </div>
-                    <div class="text-6xl">📊</div>
+            <div class="bg-[#000080] text-white rounded-xl shadow-md shadow-blue-900/10 p-6 relative overflow-hidden">
+                <svg class="absolute right-0 top-0 text-white/5 w-48 h-48 transform translate-x-8 -translate-y-8" fill="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-extrabold mb-1">Sistem Pelaporan</h2>
+                    <p class="text-blue-200 font-medium text-sm">Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?> • Semester <?= $tahun_aktif['semester_aktif'] ?></p>
                 </div>
             </div>
 
-            <!-- 2 Pilihan Laporan -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <!-- Rekapitulasi Kelas -->
                 <a href="rekapitulasi_kelas.php" class="block group">
-                    <div class="bg-white rounded-xl shadow-lg p-8 transition-all transform hover:scale-105 hover:shadow-2xl border-l-4 border-blue-600">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="text-6xl">📋</div>
-                            <div class="bg-blue-100 rounded-full p-4">
-                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-8 transition-all transform hover:-translate-y-1 hover:shadow-md hover:border-[#000080] h-full flex flex-col">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#000080] group-hover:text-white transition-colors">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                         </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors">
-                            Rekapitulasi Kelas
-                        </h3>
-                        <p class="text-gray-600 mb-6">
-                            Laporan poin pelanggaran siswa per kelas dalam bentuk matriks (Leger). 
-                            Menampilkan total poin setiap kategori dan status SP.
+                        <h3 class="text-xl font-extrabold text-slate-800 mb-3 group-hover:text-[#000080] transition-colors">Rekapitulasi Kelas (Leger)</h3>
+                        <p class="text-sm text-slate-500 mb-6 flex-1 leading-relaxed">
+                            Laporan poin pelanggaran siswa per kelas dalam bentuk matriks. Menampilkan total poin 3 kategori dan status SP.
                         </p>
-                        <div class="space-y-2 text-sm text-gray-700">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>Tabel matriks per kelas</span>
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>Export ke Excel</span>
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>Real-time data</span>
-                            </div>
+                        <div class="space-y-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
+                            <p class="flex items-center"><svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Tabel Matriks Per Kelas</p>
+                            <p class="flex items-center"><svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Export ke Excel</p>
                         </div>
-                        <div class="mt-6 flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-                            <span>Buka Rekapitulasi</span>
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                            </svg>
+                        <div class="flex items-center text-[#000080] font-bold text-sm">
+                            <span>Buka Menu</span>
+                            <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </div>
                     </div>
                 </a>
 
-                <!-- Rapor Karakter -->
                 <a href="rapor_karakter.php" class="block group">
-                    <div class="bg-white rounded-xl shadow-lg p-8 transition-all transform hover:scale-105 hover:shadow-2xl border-l-4 border-purple-600">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="text-6xl">🎓</div>
-                            <div class="bg-purple-100 rounded-full p-4">
-                                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-8 transition-all transform hover:-translate-y-1 hover:shadow-md hover:border-[#000080] h-full flex flex-col">
+                        <div class="w-16 h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors">
-                            Rapor Karakter Akhir
-                        </h3>
-                        <p class="text-gray-600 mb-6">
-                            Laporan akhir semester dengan konversi poin menjadi nilai predikat (A/B/C/D) 
-                            untuk 3 aspek karakter siswa.
+                        <h3 class="text-xl font-extrabold text-slate-800 mb-3 group-hover:text-purple-600 transition-colors">Rapor Karakter Akhir</h3>
+                        <p class="text-sm text-slate-500 mb-6 flex-1 leading-relaxed">
+                            Laporan akhir semester dengan konversi poin menjadi nilai predikat (A/B/C/D) untuk 3 aspek karakter siswa.
                         </p>
-                        <div class="space-y-2 text-sm text-gray-700">
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>Konversi nilai A/B/C/D</span>
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>Export ke PDF</span>
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>Per siswa atau per kelas</span>
-                            </div>
+                        <div class="space-y-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
+                            <p class="flex items-center"><svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Konversi Nilai A/B/C/D</p>
+                            <p class="flex items-center"><svg class="w-4 h-4 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Export Format PDF Resmi</p>
                         </div>
-                        <div class="mt-6 flex items-center text-purple-600 font-semibold group-hover:translate-x-2 transition-transform">
-                            <span>Buat Rapor Karakter</span>
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                            </svg>
+                        <div class="flex items-center text-purple-600 font-bold text-sm">
+                            <span>Buka Menu</span>
+                            <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </div>
                     </div>
                 </a>
@@ -155,9 +88,7 @@ $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tah
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 </body>

@@ -1,7 +1,6 @@
 <?php
 /**
- * SITAPSI - Data Siswa (COMPLETE WITH MODALS)
- * Fix: Semua modal dimasukkan langsung di file ini
+ * SITAPSI - Data Siswa (UI ALIGNED WITH GLOBAL PORTAL)
  */
 
 session_start();
@@ -20,7 +19,6 @@ $tahun_aktif = fetchOne("
 
 $kelas_list = fetchAll("SELECT id_kelas, nama_kelas FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
-// Query siswa dengan subquery untuk ambil MAX id_anggota per NIS (hindari duplikat)
 $sql = "
     SELECT 
         s.nis,
@@ -70,6 +68,14 @@ $siswa_list = fetchAll($sql, $params);
 $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+// --- UI CONFIG VARIABLES ---
+$btn_primary = "px-4 py-2.5 bg-[#000080] text-white text-sm font-semibold rounded-lg shadow-md shadow-blue-900/10 hover:bg-blue-900 transition-all flex items-center justify-center";
+$btn_outline = "px-4 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center";
+$btn_success = "px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg shadow-md shadow-emerald-900/10 hover:bg-emerald-700 transition-all flex items-center justify-center";
+$input_class = "w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-700 bg-white transition-all";
+$label_class = "block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide";
+$card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -78,78 +84,64 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Siswa - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: { colors: { 'navy': '#000080' } }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
 
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
 
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30 flex justify-between items-center">
+        <div class="bg-white border-b border-[#E2E8F0] px-6 py-4 sticky top-0 z-30 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Data Siswa</h1>
-                <p class="text-sm text-gray-500">Manajemen data siswa & import Excel</p>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Data Siswa</h1>
+                <p class="text-sm font-medium text-slate-500">Manajemen data master siswa & import Excel</p>
             </div>
-            <div class="flex space-x-2">
-                <button onclick="downloadTemplate()"
-                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <span>Download Template</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="downloadTemplate()" class="<?= $btn_success ?>">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Template
                 </button>
-                <button onclick="openModalImport()"
-                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <span>Import Excel</span>
+                <button onclick="openModalImport()" class="<?= $btn_outline ?>">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Import
                 </button>
-                <button onclick="openModalTambah()"
-                        class="bg-navy hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <span>Tambah Siswa</span>
+                <button onclick="openModalTambah()" class="<?= $btn_primary ?>">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Tambah Siswa
                 </button>
             </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 max-w-7xl mx-auto">
 
             <?php if ($success): ?>
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($success) ?></p>
             </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($error) ?></p>
             </div>
             <?php endif; ?>
 
-            <!-- Filter -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="<?= $card_class ?> p-5">
+                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cari Nama/NIS</label>
-                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
-                               placeholder="Ketik nama atau NIS..."
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <label class="<?= $label_class ?>">Pencarian</label>
+                        <div class="relative">
+                            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau NIS..." class="<?= $input_class ?> pl-10">
+                            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <label class="<?= $label_class ?>">Status</label>
+                        <select name="status" class="<?= $input_class ?>">
                             <option value="Aktif" <?= $filter_status === 'Aktif' ? 'selected' : '' ?>>Aktif</option>
                             <option value="Lulus" <?= $filter_status === 'Lulus' ? 'selected' : '' ?>>Lulus</option>
                             <option value="Keluar" <?= $filter_status === 'Keluar' ? 'selected' : '' ?>>Keluar</option>
@@ -157,8 +149,8 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
-                        <select name="kelas" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <label class="<?= $label_class ?>">Kelas</label>
+                        <select name="kelas" class="<?= $input_class ?>">
                             <option value="all">Semua Kelas</option>
                             <?php foreach ($kelas_list as $k): ?>
                             <option value="<?= $k['id_kelas'] ?>" <?= $filter_kelas == $k['id_kelas'] ? 'selected' : '' ?>>
@@ -167,78 +159,69 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full bg-navy hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                            🔍 Filter
-                        </button>
+                    <div>
+                        <button type="submit" class="<?= $btn_primary ?> w-full">Filter Data</button>
                     </div>
                 </form>
             </div>
 
-            <!-- Tabel Data Siswa -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center">
-                    <span>Daftar Siswa (Total: <?= count($siswa_list) ?>)</span>
-                    <span class="px-3 py-1 rounded-full text-xs font-medium
-                        <?= $filter_status === 'Aktif' ? 'bg-green-100 text-green-800' : '' ?>
-                        <?= $filter_status === 'Lulus' ? 'bg-blue-100 text-blue-800' : '' ?>
-                        <?= $filter_status === 'Keluar' ? 'bg-yellow-100 text-yellow-800' : '' ?>
-                        <?= $filter_status === 'Dikeluarkan' ? 'bg-red-100 text-red-800' : '' ?>">
+            <div class="<?= $card_class ?> overflow-hidden">
+                <div class="p-4 border-b border-[#E2E8F0] bg-slate-50/50 flex justify-between items-center">
+                    <span class="font-bold text-slate-800 text-sm">Daftar Siswa <span class="text-slate-400 font-medium ml-1">(Total: <?= count($siswa_list) ?>)</span></span>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider
+                        <?= $filter_status === 'Aktif' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
                         <?= $filter_status ?>
                     </span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white text-xs text-slate-500 uppercase border-b border-[#E2E8F0]">
                             <tr>
-                                <th class="p-4">NIS</th>
-                                <th class="p-4">Nama Siswa</th>
-                                <th class="p-4">Kelas</th>
-                                <th class="p-4">JK</th>
-                                <th class="p-4">Orang Tua</th>
-                                <th class="p-4">No. HP</th>
-                                <th class="p-4">Status</th>
-                                <th class="p-4">Aksi</th>
+                                <th class="p-4 font-bold">Siswa</th>
+                                <th class="p-4 font-bold">Kelas</th>
+                                <th class="p-4 font-bold">Orang Tua</th>
+                                <th class="p-4 font-bold text-center">Status</th>
+                                <th class="p-4 font-bold text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if(empty($siswa_list)): ?>
                             <tr>
-                                <td colspan="8" class="p-12 text-center text-gray-500">
-                                    Tidak ada data siswa dengan filter ini
-                                </td>
+                                <td colspan="5" class="p-8 text-center text-slate-400 text-sm font-medium">Tidak ada data siswa ditemukan</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach($siswa_list as $siswa): ?>
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-4 font-medium"><?= htmlspecialchars($siswa['nis']) ?></td>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="p-4">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-10 h-10 bg-navy rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                                        <div class="w-10 h-10 bg-[#000080] rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
                                             <?php if($siswa['foto_profil']): ?>
                                                 <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
                                             <?php else: ?>
                                                 <span class="text-white font-bold text-sm"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
                                             <?php endif; ?>
                                         </div>
-                                        <span class="font-bold text-navy"><?= htmlspecialchars($siswa['nama_siswa']) ?></span>
+                                        <div>
+                                            <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
+                                            <p class="text-[10px] font-medium text-slate-500">NIS: <?= htmlspecialchars($siswa['nis']) ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan' ?></p>
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="p-4"><?= $siswa['nama_kelas'] ? htmlspecialchars($siswa['nama_kelas']) : '<span class="text-gray-400">-</span>' ?></td>
-                                <td class="p-4"><?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></td>
-                                <td class="p-4"><?= htmlspecialchars($siswa['nama_ortu'] ?? '-') ?></td>
-                                <td class="p-4"><?= htmlspecialchars($siswa['no_hp_ortu'] ?? '-') ?></td>
+                                <td class="p-4 text-slate-600 font-medium">
+                                    <?= $siswa['nama_kelas'] ? htmlspecialchars($siswa['nama_kelas']) : '<span class="text-slate-400">-</span>' ?>
+                                </td>
                                 <td class="p-4">
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium
-                                        <?= $siswa['status_aktif'] === 'Aktif' ? 'bg-green-100 text-green-800' : '' ?>
-                                        <?= $siswa['status_aktif'] === 'Lulus' ? 'bg-blue-100 text-blue-800' : '' ?>
-                                        <?= $siswa['status_aktif'] === 'Keluar' ? 'bg-yellow-100 text-yellow-800' : '' ?>
-                                        <?= $siswa['status_aktif'] === 'Dikeluarkan' ? 'bg-red-100 text-red-800' : '' ?>">
+                                    <p class="font-medium text-slate-700 text-xs"><?= htmlspecialchars($siswa['nama_ortu'] ?? '-') ?></p>
+                                    <p class="text-[10px] text-slate-400"><?= htmlspecialchars($siswa['no_hp_ortu'] ?? '-') ?></p>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold 
+                                        <?= $siswa['status_aktif'] === 'Aktif' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
                                         <?= $siswa['status_aktif'] ?>
                                     </span>
                                 </td>
-                                <td class="p-4">
-                                    <div class="flex space-x-2">
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
                                         <button onclick='editSiswa(<?= json_encode([
                                             "nis" => $siswa["nis"],
                                             "id_anggota" => $siswa["id_anggota"],
@@ -249,16 +232,12 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                                             "no_hp_ortu" => $siswa["no_hp_ortu"] ?? "",
                                             "id_kelas" => $siswa["id_kelas"]
                                         ]) ?>)'
-                                                class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
+                                                class="p-1.5 bg-white border border-[#E2E8F0] text-slate-600 rounded-md hover:bg-slate-50 transition-colors shadow-sm" title="Edit">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </button>
                                         <button onclick="hapusSiswa('<?= htmlspecialchars($siswa['nis'], ENT_QUOTES) ?>', '<?= htmlspecialchars($siswa['nama_siswa'], ENT_QUOTES) ?>')"
-                                                class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
+                                                class="p-1.5 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50 transition-colors shadow-sm" title="Hapus">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
                                     </div>
                                 </td>
@@ -274,199 +253,166 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     </div>
 </div>
 
-<!-- Modal Import Excel -->
-<div id="modal-import" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Import Data Siswa (Excel)</h3>
-            <button onclick="closeModalImport()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-import" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModalImport()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 overflow-hidden transform transition-all">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-800 flex items-center"><svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Import Excel</h3>
+            <button type="button" onclick="closeModalImport()" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <form action="../../actions/import_siswa.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+        <form action="../../actions/import_siswa.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">File Excel (.xlsx, .csv)</label>
-                <input type="file" name="file_excel" accept=".xlsx,.xls,.csv" required
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                <label class="<?= $label_class ?>">File (.xlsx / .csv)</label>
+                <input type="file" name="file_excel" accept=".xlsx,.xls,.csv" required class="<?= $input_class ?> text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-[#000080] hover:file:bg-blue-100 cursor-pointer">
             </div>
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <p class="text-sm text-blue-700">
-                    <strong>Format Excel:</strong><br>
-                    NIS | Nama | JK | Tempat Lahir | Tanggal Lahir | Alamat | Nama Ortu | No HP | Kelas
+            <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-lg">
+                <p class="text-xs text-blue-800 leading-relaxed font-medium">
+                    Format Kolom Excel yang dibutuhkan:<br>
+                    <span class="font-mono text-slate-600 mt-1 block">NIS | Nama | JK | Tempat Lahir | Tgl Lahir | Alamat | Nama Ortu | No HP | Kelas</span>
                 </p>
             </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="closeModalImport()"
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit"
-                        class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium">
-                    Upload & Import
-                </button>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModalImport()" class="<?= $btn_outline ?> flex-1">Batal</button>
+                <button type="submit" class="<?= $btn_primary ?> flex-1">Upload File</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Tambah Siswa -->
-<div id="modal-tambah" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-lg max-w-2xl w-full my-8">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Tambah Siswa Baru</h3>
-            <button onclick="closeModalTambah()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-tambah" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModalTambah()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative z-10 overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between flex-shrink-0">
+            <h3 class="font-extrabold text-slate-800 flex items-center"><svg class="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg> Tambah Siswa Baru</h3>
+            <button type="button" onclick="closeModalTambah()" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <form action="../../actions/tambah_siswa.php" method="POST" class="p-6 space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">NIS *</label>
-                    <input type="text" name="nis" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+        <div class="overflow-y-auto p-6">
+            <form action="../../actions/tambah_siswa.php" method="POST" id="formTambah" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="<?= $label_class ?>">NIS *</label>
+                        <input type="text" name="nis" required class="<?= $input_class ?>" placeholder="Nomor Induk Siswa">
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Nama Lengkap *</label>
+                        <input type="text" name="nama_siswa" required class="<?= $input_class ?>" placeholder="Nama Siswa">
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Jenis Kelamin *</label>
+                        <select name="jenis_kelamin" required class="<?= $input_class ?>">
+                            <option value="">Pilih JK...</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Kelas *</label>
+                        <select name="id_kelas" required class="<?= $input_class ?>">
+                            <option value="">Pilih Kelas...</option>
+                            <?php foreach ($kelas_list as $k): ?>
+                            <option value="<?= $k['id_kelas'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2 pt-4 border-t border-[#E2E8F0]">
+                        <h4 class="text-sm font-bold text-slate-800 mb-4">Informasi Orang Tua / Wali</h4>
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Nama Orang Tua *</label>
+                        <input type="text" name="nama_ortu" required class="<?= $input_class ?>" placeholder="Nama lengkap ortu/wali">
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">No. HP (WhatsApp) *</label>
+                        <input type="text" name="no_hp_ortu" required class="<?= $input_class ?>" placeholder="Contoh: 08123...">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
-                    <input type="text" name="nama_siswa" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin *</label>
-                    <select name="jenis_kelamin" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                        <option value="">Pilih</option>
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kelas *</label>
-                    <select name="id_kelas" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                        <option value="">Pilih Kelas</option>
-                        <?php foreach ($kelas_list as $k): ?>
-                        <option value="<?= $k['id_kelas'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Orang Tua *</label>
-                    <input type="text" name="nama_ortu" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">No. HP Orang Tua *</label>
-                    <input type="text" name="no_hp_ortu" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                </div>
-            </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="closeModalTambah()"
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit"
-                        class="flex-1 px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 font-medium">
-                    Simpan Siswa
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
+        <div class="p-5 border-t border-[#E2E8F0] bg-white flex gap-3 flex-shrink-0">
+            <button type="button" onclick="closeModalTambah()" class="<?= $btn_outline ?> flex-1">Batal</button>
+            <button type="submit" form="formTambah" class="<?= $btn_primary ?> flex-1">Simpan Data</button>
+        </div>
     </div>
 </div>
 
-<!-- Modal Edit Siswa -->
-<div id="modal-edit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-lg max-w-2xl w-full my-8">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-bold text-gray-800">Edit Data Siswa</h3>
-            <button onclick="closeModalEdit()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="modal-edit" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModalEdit()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl relative z-10 overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between flex-shrink-0">
+            <h3 class="font-extrabold text-slate-800 flex items-center"><svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit Data Siswa</h3>
+            <button type="button" onclick="closeModalEdit()" class="text-slate-400 hover:text-slate-600 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <form action="../../actions/edit_siswa.php" method="POST" class="p-6 space-y-4">
-            <input type="hidden" name="nis" id="edit-nis">
-            <input type="hidden" name="id_anggota" id="edit-id-anggota">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">NIS</label>
-                    <input type="text" id="edit-nis-display" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+        <div class="overflow-y-auto p-6">
+            <form action="../../actions/edit_siswa.php" method="POST" id="formEdit" class="space-y-5">
+                <input type="hidden" name="nis" id="edit-nis">
+                <input type="hidden" name="id_anggota" id="edit-id-anggota">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="<?= $label_class ?>">NIS (Read Only)</label>
+                        <input type="text" id="edit-nis-display" readonly class="<?= $input_class ?> bg-slate-50 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Nama Lengkap *</label>
+                        <input type="text" name="nama_siswa" id="edit-nama-siswa" required class="<?= $input_class ?>">
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Jenis Kelamin *</label>
+                        <select name="jenis_kelamin" id="edit-jenis-kelamin" required class="<?= $input_class ?>">
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Status Keaktifan *</label>
+                        <select name="status_aktif" id="edit-status-aktif" required class="<?= $input_class ?>">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Lulus">Lulus</option>
+                            <option value="Keluar">Keluar</option>
+                            <option value="Dikeluarkan">Dikeluarkan</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="<?= $label_class ?>">Pindah/Set Kelas</label>
+                        <select name="id_kelas" id="edit-id-kelas" class="<?= $input_class ?>">
+                            <option value="">-- Tidak ada kelas / Lulus --</option>
+                            <?php foreach ($kelas_list as $k): ?>
+                            <option value="<?= $k['id_kelas'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="text-[11px] text-orange-600 mt-1.5 flex items-center font-medium">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Mengubah kelas akan memindahkan siswa pada Tahun Ajaran yang sedang Aktif.
+                        </p>
+                    </div>
+                    <div class="sm:col-span-2 pt-4 border-t border-[#E2E8F0]">
+                        <h4 class="text-sm font-bold text-slate-800 mb-4">Informasi Orang Tua / Wali</h4>
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">Nama Orang Tua *</label>
+                        <input type="text" name="nama_ortu" id="edit-nama-ortu" required class="<?= $input_class ?>">
+                    </div>
+                    <div>
+                        <label class="<?= $label_class ?>">No. HP (WhatsApp) *</label>
+                        <input type="text" name="no_hp_ortu" id="edit-no-hp-ortu" required class="<?= $input_class ?>">
+                    </div>
                 </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
-                    <input type="text" name="nama_siswa" id="edit-nama-siswa" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin *</label>
-                    <select name="jenis_kelamin" id="edit-jenis-kelamin" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                    <select name="status_aktif" id="edit-status-aktif" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                        <option value="Aktif">Aktif</option>
-                        <option value="Lulus">Lulus</option>
-                        <option value="Keluar">Keluar</option>
-                        <option value="Dikeluarkan">Dikeluarkan</option>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
-                    <select name="id_kelas" id="edit-id-kelas" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                        <option value="">-- Tidak ada kelas / Lulus --</option>
-                        <?php foreach ($kelas_list as $k): ?>
-                        <option value="<?= $k['id_kelas'] ?>"><?= htmlspecialchars($k['nama_kelas']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">
-                        ⚠️ Mengubah kelas akan memindahkan siswa ke kelas terpilih di tahun ajaran aktif
-                    </p>
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Orang Tua *</label>
-                    <input type="text" name="nama_ortu" id="edit-nama-ortu" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                </div>
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">No. HP Orang Tua *</label>
-                    <input type="text" name="no_hp_ortu" id="edit-no-hp-ortu" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
-                </div>
-            </div>
-            <div class="flex space-x-2">
-                <button type="button" onclick="closeModalEdit()"
-                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                    Batal
-                </button>
-                <button type="submit"
-                        class="flex-1 px-4 py-2 bg-navy text-white rounded-lg hover:bg-blue-900 font-medium">
-                    Update
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
+        <div class="p-5 border-t border-[#E2E8F0] bg-white flex gap-3 flex-shrink-0">
+            <button type="button" onclick="closeModalEdit()" class="<?= $btn_outline ?> flex-1">Batal</button>
+            <button type="submit" form="formEdit" class="<?= $btn_primary ?> flex-1">Update Data</button>
+        </div>
     </div>
 </div>
 
 <script>
-// Modal Import
-function openModalImport() {
-    document.getElementById('modal-import').classList.remove('hidden');
-}
-function closeModalImport() {
-    document.getElementById('modal-import').classList.add('hidden');
-}
-
-// Modal Tambah
-function openModalTambah() {
-    document.getElementById('modal-tambah').classList.remove('hidden');
-}
-function closeModalTambah() {
-    document.getElementById('modal-tambah').classList.add('hidden');
-}
-
-// Modal Edit
-function closeModalEdit() {
-    document.getElementById('modal-edit').classList.add('hidden');
-}
+// Modal Logic Toggle
+function openModalImport() { document.getElementById('modal-import').classList.remove('hidden'); }
+function closeModalImport() { document.getElementById('modal-import').classList.add('hidden'); }
+function openModalTambah() { document.getElementById('modal-tambah').classList.remove('hidden'); }
+function closeModalTambah() { document.getElementById('modal-tambah').classList.add('hidden'); }
+function closeModalEdit() { document.getElementById('modal-edit').classList.add('hidden'); }
 
 function editSiswa(data) {
     document.getElementById('edit-nis').value = data.nis;
@@ -477,19 +423,12 @@ function editSiswa(data) {
     document.getElementById('edit-status-aktif').value = data.status_aktif;
     document.getElementById('edit-nama-ortu').value = data.nama_ortu;
     document.getElementById('edit-no-hp-ortu').value = data.no_hp_ortu;
-
-    const selectKelas = document.getElementById('edit-id-kelas');
-    if (data.id_kelas) {
-        selectKelas.value = data.id_kelas;
-    } else {
-        selectKelas.value = '';
-    }
-
+    document.getElementById('edit-id-kelas').value = data.id_kelas || '';
     document.getElementById('modal-edit').classList.remove('hidden');
 }
 
 function hapusSiswa(nis, nama) {
-    if (confirm('⚠️ Hapus siswa: ' + nama + ' (' + nis + ')?\n\nSiswa yang memiliki riwayat pelanggaran tidak dapat dihapus.\nDisarankan ubah status menjadi Lulus/Keluar.')) {
+    if (confirm(`⚠️ Hapus siswa: ${nama} (${nis})?\n\nSiswa yang memiliki riwayat pelanggaran tidak dapat dihapus.\nDisarankan ubah status menjadi Lulus/Keluar.`)) {
         window.location.href = '../../actions/hapus_siswa.php?nis=' + encodeURIComponent(nis);
     }
 }

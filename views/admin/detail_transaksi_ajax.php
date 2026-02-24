@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Detail Transaksi (AJAX)
+ * SITAPSI - Detail Transaksi (AJAX - UI GLOBAL)
  * Dipanggil via AJAX untuk menampilkan detail di modal
  */
 
@@ -26,7 +26,7 @@ $transaksi = fetchOne("
     JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
     JOIN tb_siswa s ON a.nis = s.nis
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
-    JOIN tb_guru g ON h.id_guru = g.id_guru
+    LEFT JOIN tb_guru g ON h.id_guru = g.id_guru
     WHERE h.id_transaksi = :id
 ", ['id' => $id_transaksi]);
 
@@ -62,122 +62,104 @@ $detail_sanksi = fetchAll("
 // Hitung total poin
 $total_poin = array_sum(array_column($detail_pelanggaran, 'poin_saat_itu'));
 
-// Parse foto (JSON array)
+// Parse foto (JSON array) -> LOGIKA ASLI DIKEMBALIKAN
 $foto_array = [];
 if (!empty($transaksi['bukti_foto'])) {
     $foto_array = json_decode($transaksi['bukti_foto'], true) ?: [];
 }
 ?>
 
-<!-- Info Siswa -->
-<div class="bg-gradient-to-r from-navy to-blue-800 text-white rounded-lg p-6 mb-6">
-    <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
+<div class="space-y-6">
+
+    <div class="bg-slate-50 border border-[#E2E8F0] rounded-xl p-5 flex items-start space-x-4 shadow-sm">
+        <div class="w-16 h-16 bg-[#000080] rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-sm flex-shrink-0 overflow-hidden">
             <?php if($transaksi['foto_profil']): ?>
-                <img src="../../assets/uploads/siswa/<?= $transaksi['foto_profil'] ?>" class="w-full h-full object-cover">
+                <img src="../../assets/uploads/siswa/<?= htmlspecialchars($transaksi['foto_profil']) ?>" class="w-full h-full object-cover">
             <?php else: ?>
-                <span class="text-navy font-bold text-2xl"><?= strtoupper(substr($transaksi['nama_siswa'], 0, 1)) ?></span>
+                <?= strtoupper(substr($transaksi['nama_siswa'], 0, 1)) ?>
             <?php endif; ?>
         </div>
+        
         <div class="flex-1">
-            <h3 class="text-xl font-bold"><?= htmlspecialchars($transaksi['nama_siswa']) ?></h3>
-            <p class="text-blue-200 text-sm"><?= $transaksi['nama_kelas'] ?> • <?= $transaksi['nis'] ?></p>
-        </div>
-        <div class="text-right">
-            <p class="text-blue-200 text-xs">Total Poin</p>
-            <p class="text-3xl font-bold">+<?= $total_poin ?></p>
-        </div>
-    </div>
-</div>
-
-<!-- Info Transaksi -->
-<div class="grid grid-cols-2 gap-4 mb-6">
-    <div class="bg-gray-50 p-4 rounded-lg">
-        <p class="text-xs text-gray-500 font-medium">ID Transaksi</p>
-        <p class="text-lg font-bold text-gray-800">#<?= $transaksi['id_transaksi'] ?></p>
-    </div>
-    <div class="bg-gray-50 p-4 rounded-lg">
-        <p class="text-xs text-gray-500 font-medium">Tanggal & Waktu</p>
-        <p class="text-lg font-bold text-gray-800"><?= date('d/m/Y', strtotime($transaksi['tanggal'])) ?></p>
-        <p class="text-sm text-gray-600"><?= substr($transaksi['waktu'], 0, 5) ?> WIB</p>
-    </div>
-    <div class="bg-gray-50 p-4 rounded-lg">
-        <p class="text-xs text-gray-500 font-medium">Tipe Form</p>
-        <p class="text-lg font-bold text-gray-800"><?= $transaksi['tipe_form'] ?></p>
-    </div>
-    <div class="bg-gray-50 p-4 rounded-lg">
-        <p class="text-xs text-gray-500 font-medium">Pelapor</p>
-        <p class="text-lg font-bold text-gray-800"><?= htmlspecialchars($transaksi['nama_guru']) ?></p>
-    </div>
-</div>
-
-<!-- Detail Pelanggaran -->
-<div class="mb-6">
-    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-        </svg>
-        Detail Pelanggaran
-    </h4>
-    <div class="space-y-2">
-        <?php foreach($detail_pelanggaran as $dp): ?>
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div class="flex-1">
-                <span class="px-2 py-1 rounded-full text-xs font-medium mr-2
-                    <?= $dp['nama_kategori'] === 'KELAKUAN' ? 'bg-red-100 text-red-800' : '' ?>
-                    <?= $dp['nama_kategori'] === 'KERAJINAN' ? 'bg-blue-100 text-blue-800' : '' ?>
-                    <?= $dp['nama_kategori'] === 'KERAPIAN' ? 'bg-yellow-100 text-yellow-800' : '' ?>">
-                    <?= $dp['nama_kategori'] ?>
+            <h3 class="text-xl font-extrabold text-slate-800"><?= htmlspecialchars($transaksi['nama_siswa']) ?></h3>
+            <p class="text-sm font-medium text-slate-600 mb-2.5"><?= htmlspecialchars($transaksi['nama_kelas']) ?> • NIS: <?= htmlspecialchars($transaksi['nis']) ?></p>
+            
+            <div class="flex flex-wrap gap-2">
+                <span class="px-2.5 py-1 bg-white border border-[#E2E8F0] text-slate-600 rounded-md text-xs font-bold flex items-center shadow-sm">
+                    <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <?= date('d M Y', strtotime($transaksi['tanggal'])) ?> (<?= substr($transaksi['waktu'], 0, 5) ?>)
                 </span>
-                <span class="text-gray-800 font-medium"><?= htmlspecialchars($dp['nama_pelanggaran']) ?></span>
+                
+                <span class="px-2.5 py-1 bg-white border border-[#E2E8F0] text-slate-600 rounded-md text-xs font-bold flex items-center shadow-sm">
+                    <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <?= ($transaksi['id_guru'] == 0 || $transaksi['id_guru'] == null) ? 'Admin Tatibsi' : htmlspecialchars($transaksi['nama_guru']) ?>
+                </span>
+                
+                <span class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded-md text-xs font-bold shadow-sm">
+                    +<?= $total_poin ?> Poin
+                </span>
             </div>
-            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full font-bold text-sm">
-                +<?= $dp['poin_saat_itu'] ?>
-            </span>
         </div>
-        <?php endforeach; ?>
     </div>
-</div>
 
-<!-- Sanksi -->
-<?php if(!empty($detail_sanksi)): ?>
-<div class="mb-6">
-    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-        </svg>
-        Sanksi yang Diberikan
-    </h4>
-    <div class="space-y-2">
-        <?php foreach($detail_sanksi as $ds): ?>
-        <div class="flex items-start p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-            <span class="px-2 py-1 bg-yellow-600 text-white rounded-full text-xs font-bold mr-3 flex-shrink-0">
-                <?= $ds['kode_sanksi'] ?>
-            </span>
-            <p class="text-gray-800 text-sm"><?= htmlspecialchars($ds['deskripsi']) ?></p>
+    <div>
+        <h4 class="font-extrabold text-slate-800 text-sm mb-3 flex items-center uppercase tracking-wide">
+            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Rincian Pelanggaran
+        </h4>
+        <div class="space-y-2">
+            <?php foreach ($detail_pelanggaran as $dp): ?>
+            <div class="flex items-center justify-between p-3.5 bg-white border border-[#E2E8F0] rounded-xl shadow-sm hover:border-[#000080]/30 transition-colors">
+                <div>
+                    <span class="text-[10px] font-bold text-[#000080] uppercase tracking-wider bg-[#000080]/10 px-2 py-0.5 rounded mb-1 inline-block">
+                        SILO <?= htmlspecialchars($dp['nama_kategori']) ?>
+                    </span>
+                    <p class="text-sm font-bold text-slate-700 leading-snug"><?= htmlspecialchars($dp['nama_pelanggaran']) ?></p>
+                </div>
+                <div class="text-right ml-4">
+                    <span class="font-extrabold text-red-600 text-lg">+<?= $dp['poin_saat_itu'] ?></span>
+                </div>
+            </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
     </div>
-</div>
-<?php endif; ?>
 
-<!-- Bukti Foto -->
-<?php if(!empty($foto_array)): ?>
-<div>
-    <h4 class="font-bold text-gray-800 mb-3 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-        </svg>
-        Bukti Foto (<?= count($foto_array) ?>)
-    </h4>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <?php foreach($foto_array as $foto): ?>
-        <a href="../../assets/uploads/bukti/<?= $foto ?>" target="_blank" class="block">
-            <img src="../../assets/uploads/bukti/<?= $foto ?>" 
-                 class="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-navy transition-colors cursor-pointer"
-                 alt="Bukti">
-        </a>
-        <?php endforeach; ?>
+    <?php if(!empty($detail_sanksi)): ?>
+    <div>
+        <h4 class="font-extrabold text-slate-800 text-sm mb-3 flex items-center uppercase tracking-wide mt-6">
+            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            Sanksi yang Diberikan
+        </h4>
+        <div class="space-y-2">
+            <?php foreach ($detail_sanksi as $ds): ?>
+            <div class="flex items-start p-3.5 bg-slate-50 border border-[#E2E8F0] rounded-xl shadow-sm">
+                <span class="px-2 py-1 bg-[#000080] text-white rounded-md text-xs font-bold mr-3 flex-shrink-0 shadow-sm">
+                    <?= $ds['kode_sanksi'] ?>
+                </span>
+                <p class="text-slate-700 text-sm font-medium pt-0.5 leading-snug"><?= htmlspecialchars($ds['deskripsi']) ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
     </div>
+    <?php endif; ?>
+
+    <?php if(!empty($foto_array)): ?>
+    <div>
+        <h4 class="font-extrabold text-slate-800 text-sm mb-3 flex items-center uppercase tracking-wide mt-6">
+            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            Bukti Foto (<?= count($foto_array) ?>)
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <?php foreach ($foto_array as $foto): ?>
+            <a href="../../assets/uploads/bukti/<?= htmlspecialchars($foto) ?>" target="_blank" class="block group relative rounded-xl overflow-hidden border border-[#E2E8F0] shadow-sm">
+                <img src="../../assets/uploads/bukti/<?= htmlspecialchars($foto) ?>" class="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110">
+                <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
 </div>
-<?php endif; ?>

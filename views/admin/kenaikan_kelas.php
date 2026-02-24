@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Kenaikan Kelas (WITH LOCK CHECK)
+ * SITAPSI - Kenaikan Kelas (UI GLOBAL PORTAL)
  */
 
 session_start();
@@ -49,7 +49,10 @@ foreach ($kelas_list as $k) {
 
 $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
-unset($_SESSION['success_message'], $_SESSION['error_message']);
+$info = $_SESSION['info_message'] ?? '';
+unset($_SESSION['success_message'], $_SESSION['error_message'], $_SESSION['info_message']);
+
+$card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -58,90 +61,82 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kenaikan Kelas - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
-            <a href="pengaturan_akademik.php" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
+        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
+            <a href="pengaturan_akademik.php" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Proses Kenaikan Kelas</h1>
-                <p class="text-sm text-gray-500">Pindahkan siswa ke kelas berikutnya</p>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Proses Kenaikan Kelas</h1>
+                <p class="text-sm font-medium text-slate-500">Pindahkan siswa ke tingkat kelas selanjutnya</p>
             </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 max-w-7xl mx-auto">
 
             <?php if ($success): ?>
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($success) ?></p>
             </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($error) ?></p>
+            </div>
+            <?php endif; ?>
+            
+            <?php if ($info): ?>
+            <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($info) ?></p>
             </div>
             <?php endif; ?>
 
-            <!-- Info Header -->
-            <div class="bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center justify-between">
+            <div class="bg-[#000080] text-white rounded-xl shadow-md shadow-blue-900/10 p-6 relative overflow-hidden">
+                <svg class="absolute right-0 top-0 text-white/5 w-48 h-48 transform translate-x-8 -translate-y-8" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div class="relative z-10 flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold mb-2">Kenaikan Kelas Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?></h2>
-                        <p class="text-purple-200">Pilih kelas asal untuk memulai proses kenaikan kelas</p>
-                    </div>
-                    <div class="text-6xl">📈</div>
-                </div>
-            </div>
-
-            <!-- Instruksi -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    <div>
-                        <h4 class="font-bold text-blue-800 mb-1">ℹ️ Cara Kerja Kenaikan Kelas</h4>
-                        <ol class="text-sm text-blue-700 list-decimal list-inside space-y-1">
-                            <li>Pilih kelas ASAL (misal: 7A tahun lalu)</li>
-                            <li>Sistem akan tampilkan siswa yang masih di kelas tersebut</li>
-                            <li>Centang siswa yang akan naik kelas</li>
-                            <li>Pilih kelas TUJUAN (misal: 8A tahun sekarang)</li>
-                            <li>Klik "Proses Kenaikan" untuk memindahkan</li>
-                        </ol>
+                        <h2 class="text-2xl font-extrabold mb-1">Kenaikan Kelas <?= $tahun_aktif['nama_tahun'] ?></h2>
+                        <p class="text-blue-200 font-medium text-sm">Pilih kelas ASAL untuk memulai proses memindahkan siswa.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Pilih Kelas Asal -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <h3 class="font-bold text-gray-800 mb-4 text-lg">Pilih Kelas Asal (Tingkat Lama)</h3>
+            <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl flex items-start shadow-sm">
+                <svg class="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <div>
+                    <h4 class="font-extrabold text-[#000080] mb-2 text-sm uppercase tracking-wider">Cara Kerja Kenaikan Kelas</h4>
+                    <ol class="text-sm text-blue-800 list-decimal list-inside space-y-1 font-medium">
+                        <li>Pilih kelas <strong class="text-[#000080]">ASAL</strong> (tingkat sebelumnya).</li>
+                        <li>Sistem akan menampilkan siswa yang masih berada di kelas tersebut.</li>
+                        <li>Centang nama siswa yang dinyatakan naik kelas.</li>
+                        <li>Pilih kelas <strong class="text-[#000080]">TUJUAN</strong> (tingkat baru).</li>
+                        <li>Klik tombol "Proses Kenaikan Kelas".</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="<?= $card_class ?> p-6">
+                <h3 class="font-extrabold text-slate-800 mb-6 text-lg border-b border-[#E2E8F0] pb-3">Pilih Kelas Asal</h3>
                 
                 <?php foreach ($kelas_by_tingkat as $tingkat => $kelas_items): ?>
-                <div class="mb-6">
-                    <h4 class="font-bold text-gray-700 mb-3 flex items-center">
-                        <span class="bg-navy text-white px-3 py-1 rounded-full mr-2">Tingkat <?= $tingkat ?></span>
+                <div class="mb-8 last:mb-0">
+                    <h4 class="font-bold text-slate-500 mb-4 flex items-center text-xs uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-[#000080] mr-2"></span>
+                        Tingkat <?= $tingkat ?>
                     </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         <?php foreach ($kelas_items as $k): 
                             // Hitung siswa yang belum dipindahkan
                             $jumlah = fetchOne("
@@ -155,9 +150,9 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                             ])['total'] ?? 0;
                         ?>
                         <a href="kenaikan_kelas_proses.php?kelas_asal=<?= $k['id_kelas'] ?>" 
-                           class="block bg-gray-50 hover:bg-navy hover:text-white border-2 border-gray-200 hover:border-navy rounded-lg p-4 text-center transition-all group">
-                            <p class="text-2xl font-bold mb-1"><?= $k['nama_kelas'] ?></p>
-                            <p class="text-xs text-gray-500 group-hover:text-white"><?= $jumlah ?> siswa</p>
+                           class="block bg-white border border-[#E2E8F0] hover:bg-[#000080] hover:text-white hover:border-[#000080] hover:shadow-md rounded-xl p-5 text-center transition-all group">
+                            <p class="text-2xl font-extrabold text-slate-800 group-hover:text-white mb-1"><?= $k['nama_kelas'] ?></p>
+                            <p class="text-[11px] font-bold text-slate-400 group-hover:text-blue-200 uppercase tracking-wider"><?= $jumlah ?> siswa</p>
                         </a>
                         <?php endforeach; ?>
                     </div>

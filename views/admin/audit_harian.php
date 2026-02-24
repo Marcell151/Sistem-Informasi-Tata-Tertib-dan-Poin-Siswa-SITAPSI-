@@ -1,7 +1,6 @@
 <?php
 /**
- * SITAPSI - Audit Harian (COMPLETE)
- * Default: 1 Bulan | Filter: Range Date | Aksi: Detail, Edit, Hapus
+ * SITAPSI - Audit Harian (LOGIKA ASLI + UI GLOBAL + FIX LAYOUT)
  */
 
 session_start();
@@ -20,7 +19,7 @@ $filter_tipe = $_GET['tipe'] ?? 'all';
 $filter_dari = $_GET['dari'] ?? date('Y-m-01'); // Awal bulan ini
 $filter_sampai = $_GET['sampai'] ?? date('Y-m-d'); // Hari ini
 
-// Query log transaksi dengan RANGE DATE
+// Query log transaksi dengan RANGE DATE (LOGIKA ASLI)
 $sql = "
     SELECT 
         h.id_transaksi,
@@ -64,6 +63,12 @@ $log_transaksi = fetchAll($sql, $params);
 $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+// --- UI CONFIG VARIABLES ---
+$btn_primary = "px-4 py-2.5 bg-[#000080] text-white text-sm font-semibold rounded-lg shadow-md shadow-blue-900/10 hover:bg-blue-900 transition-all flex items-center justify-center";
+$input_class = "w-full px-4 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-700 bg-white transition-all";
+$label_class = "block text-sm font-medium text-slate-700 mb-2";
+$card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -72,157 +77,145 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Harian - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30">
-            <h1 class="text-2xl font-bold text-gray-800">Audit Harian Pelanggaran</h1>
-            <p class="text-sm text-gray-500">Log & jejak input pelanggaran (Default: 1 bulan terakhir)</p>
+        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Audit Harian Pelanggaran</h1>
+                <p class="text-sm font-medium text-slate-500">Log & jejak input pelanggaran (Default: 1 bulan terakhir)</p>
+            </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 max-w-7xl mx-auto">
 
             <?php if ($success): ?>
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p class="text-green-700 font-medium"><?= htmlspecialchars($success) ?></p>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($success) ?></p>
             </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p class="text-red-700 font-medium"><?= htmlspecialchars($error) ?></p>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <p class="font-medium text-sm"><?= htmlspecialchars($error) ?></p>
             </div>
             <?php endif; ?>
 
-            <!-- Filter Section -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="<?= $card_class ?> p-6">
+                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label>
-                        <input type="date" name="dari" value="<?= $filter_dari ?>" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <label class="<?= $label_class ?>">Dari Tanggal</label>
+                        <input type="date" name="dari" value="<?= htmlspecialchars($filter_dari) ?>" class="<?= $input_class ?>">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label>
-                        <input type="date" name="sampai" value="<?= $filter_sampai ?>" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <label class="<?= $label_class ?>">Sampai Tanggal</label>
+                        <input type="date" name="sampai" value="<?= htmlspecialchars($filter_sampai) ?>" class="<?= $input_class ?>">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Form</label>
-                        <select name="tipe" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
+                        <label class="<?= $label_class ?>">Tipe Form</label>
+                        <select name="tipe" class="<?= $input_class ?>">
                             <option value="all" <?= $filter_tipe === 'all' ? 'selected' : '' ?>>Semua Tipe</option>
                             <option value="piket" <?= $filter_tipe === 'piket' ? 'selected' : '' ?>>Mode Piket</option>
                             <option value="kelas" <?= $filter_tipe === 'kelas' ? 'selected' : '' ?>>Mode Kelas</option>
                         </select>
                     </div>
 
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full bg-navy hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-                            🔍 Filter Data
+                    <div>
+                        <button type="submit" class="<?= $btn_primary ?> w-full h-[42px]">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            Filter Data
                         </button>
                     </div>
 
                 </form>
             </div>
 
-            <!-- Data Table -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b font-bold text-gray-700">
-                    Log Transaksi - <?= date('d F', strtotime($filter_dari)) ?> s.d. <?= date('d F Y', strtotime($filter_sampai)) ?>
-                    <span class="text-sm text-gray-500 ml-2">(Total: <?= count($log_transaksi) ?> transaksi)</span>
+            <div class="<?= $card_class ?> overflow-hidden">
+                <div class="p-4 border-b border-[#E2E8F0] bg-slate-50/50 flex justify-between items-center">
+                    <span class="font-bold text-slate-800 text-sm">
+                        Log Transaksi - <?= date('d M Y', strtotime($filter_dari)) ?> s.d. <?= date('d M Y', strtotime($filter_sampai)) ?>
+                    </span>
+                    <span class="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-md text-[10px] font-bold">Total: <?= count($log_transaksi) ?> transaksi</span>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
+                        <thead class="bg-white text-xs text-slate-500 uppercase border-b border-[#E2E8F0]">
                             <tr>
-                                <th class="p-4 text-left">Waktu</th>
-                                <th class="p-4 text-left">Siswa</th>
-                                <th class="p-4 text-left">Pelanggaran</th>
-                                <th class="p-4 text-left">Poin</th>
-                                <th class="p-4 text-left">Tipe</th>
-                                <th class="p-4 text-left">Pelapor</th>
-                                <th class="p-4 text-left">Aksi</th>
+                                <th class="p-4 font-bold">Waktu</th>
+                                <th class="p-4 font-bold">Siswa</th>
+                                <th class="p-4 font-bold">Pelanggaran</th>
+                                <th class="p-4 font-bold text-center">Poin</th>
+                                <th class="p-4 font-bold text-center">Tipe</th>
+                                <th class="p-4 font-bold">Pelapor</th>
+                                <th class="p-4 font-bold text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if(empty($log_transaksi)): ?>
                             <tr>
-                                <td colspan="7" class="p-12 text-center text-gray-500">
+                                <td colspan="7" class="p-12 text-center text-slate-400">
                                     <div class="flex flex-col items-center">
-                                        <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-12 h-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
-                                        <p class="font-medium">Tidak ada data untuk periode ini</p>
+                                        <p class="font-medium text-sm">Tidak ada data untuk periode ini</p>
                                     </div>
                                 </td>
                             </tr>
                             <?php else: ?>
                             <?php foreach($log_transaksi as $log): ?>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="p-4 whitespace-nowrap text-gray-900">
-                                    <?= date('d/m/Y', strtotime($log['tanggal'])) ?><br>
-                                    <span class="text-xs text-gray-500"><?= substr($log['waktu'], 0, 5) ?></span>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="p-4 text-slate-800">
+                                    <span class="font-bold"><?= date('d/m/Y', strtotime($log['tanggal'])) ?></span><br>
+                                    <span class="text-[10px] font-medium text-slate-500"><?= substr($log['waktu'], 0, 5) ?></span>
                                 </td>
                                 <td class="p-4">
-                                    <p class="font-medium text-gray-900"><?= htmlspecialchars($log['nama_siswa']) ?></p>
-                                    <p class="text-xs text-gray-500"><?= $log['nama_kelas'] ?> • <?= $log['nis'] ?></p>
+                                    <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($log['nama_siswa']) ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $log['nama_kelas'] ?> • <?= $log['nis'] ?></p>
                                 </td>
-                                <td class="p-4 text-gray-700 max-w-xs">
-                                    <div class="line-clamp-2"><?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?></div>
+                                <td class="p-4 text-slate-700 max-w-xs">
+                                    <div class="truncate text-xs" title="<?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?>">
+                                        <?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?>
+                                    </div>
                                 </td>
-                                <td class="p-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800">
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 text-[11px] font-bold rounded-md bg-red-50 text-red-600 border border-red-200">
                                         +<?= $log['total_poin'] ?>
                                     </span>
                                 </td>
-                                <td class="p-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full <?= $log['tipe_form'] === 'Piket' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' ?>">
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-md <?= $log['tipe_form'] === 'Piket' ? 'bg-[#000080]/10 text-[#000080] border border-[#000080]/20' : 'bg-purple-50 text-purple-700 border border-purple-200' ?>">
                                         <?= $log['tipe_form'] ?>
                                     </span>
                                 </td>
-                                <td class="p-4 text-gray-700"><?= htmlspecialchars($log['nama_guru']) ?></td>
-                                <td class="p-4 whitespace-nowrap">
-                                    <div class="flex space-x-2">
+                                <td class="p-4">
+                                    <span class="text-xs font-semibold text-slate-700"><?= htmlspecialchars($log['nama_guru']) ?></span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
                                         <button onclick="viewDetail(<?= $log['id_transaksi'] ?>)" 
-                                                class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" 
-                                                title="Lihat Detail">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
+                                                class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Detail">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         </button>
                                         <button onclick="editTransaction(<?= $log['id_transaksi'] ?>)" 
-                                                class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors" 
-                                                title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
+                                                class="p-1.5 bg-white border border-[#E2E8F0] text-amber-600 rounded-md hover:bg-amber-50 transition-colors shadow-sm" title="Edit">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </button>
                                         <button onclick="deleteTransaction(<?= $log['id_transaksi'] ?>)" 
-                                                class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" 
-                                                title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
+                                                class="p-1.5 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50 transition-colors shadow-sm" title="Hapus">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
                                     </div>
                                 </td>
@@ -235,25 +228,24 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             </div>
 
         </div>
-
     </div>
-
 </div>
 
-<!-- Modal Detail -->
-<div id="modal-detail" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-            <h3 class="text-lg font-bold text-gray-800">Detail Transaksi Pelanggaran</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+<div id="modal-detail" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
+        <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between flex-shrink-0">
+            <h3 class="font-extrabold text-slate-800 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Detail Transaksi
+            </h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
-        <div id="modal-content" class="p-6">
+        <div id="modal-content" class="p-6 overflow-y-auto">
             <div class="flex items-center justify-center py-8">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy"></div>
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#000080]"></div>
             </div>
         </div>
     </div>
@@ -264,11 +256,10 @@ function viewDetail(id) {
     document.getElementById('modal-detail').classList.remove('hidden');
     document.getElementById('modal-content').innerHTML = `
         <div class="flex items-center justify-center py-8">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy"></div>
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#000080]"></div>
         </div>
     `;
     
-    // Fetch detail via AJAX
     fetch(`detail_transaksi_ajax.php?id=${id}`)
         .then(response => response.text())
         .then(html => {

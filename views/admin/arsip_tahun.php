@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Arsip Tahun Ajaran (COMPLETE FILTER)
+ * SITAPSI - Arsip Tahun Ajaran (UI GLOBAL PORTAL)
  * Fitur: Filter Kelas, Pencarian Siswa, Filter Kategori
  */
 
@@ -11,6 +11,13 @@ require_once '../../includes/session_check.php';
 requireAdmin();
 
 $id_tahun = $_GET['tahun'] ?? null;
+
+// --- UI CONFIG VARIABLES ---
+$btn_primary = "px-4 py-2.5 bg-[#000080] text-white text-sm font-semibold rounded-lg shadow-md shadow-blue-900/10 hover:bg-blue-900 transition-all flex items-center justify-center";
+$btn_outline = "px-4 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center";
+$input_class = "w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-700 bg-white transition-all";
+$label_class = "block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide";
+$card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 
 // ========================================
 // STATE 1: PILIH TAHUN (JIKA BELUM ADA TAHUN DIPILIH)
@@ -29,50 +36,44 @@ if (!$id_tahun) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arsip Tahun Ajaran - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: { colors: { 'navy': '#000080' } }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
-            <a href="pengaturan_akademik.php" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    <div class="flex-1 overflow-auto lg:ml-64">
+        <div class="bg-white border-b border-[#E2E8F0] px-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
+            <a href="dashboard.php" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Arsip Tahun Ajaran</h1>
-                <p class="text-sm text-gray-500">Pilih tahun ajaran untuk melihat data arsip</p>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Arsip Sistem</h1>
+                <p class="text-sm font-medium text-slate-500">Pilih tahun ajaran untuk melihat data historis</p>
             </div>
         </div>
 
-        <div class="p-6 space-y-6">
-            <div class="bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2">📦 Arsip Data Pelanggaran</h2>
-                        <p class="text-gray-200">Data historis yang tidak dapat diubah lagi.</p>
-                    </div>
-                    <div class="text-6xl">🗄️</div>
+        <div class="p-6 space-y-6 max-w-7xl mx-auto">
+            
+            <div class="bg-[#000080] text-white rounded-xl shadow-md shadow-blue-900/10 p-6 relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-extrabold mb-2 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+                        Arsip Data Pelanggaran
+                    </h2>
+                    <p class="text-blue-100 font-medium">Data historis pada tahun ajaran yang telah ditutup (Read-Only).</p>
                 </div>
+                <svg class="absolute right-0 top-0 text-white/5 w-48 h-48 transform translate-x-8 -translate-y-8" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"></path></svg>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <?php if (empty($tahun_arsip)): ?>
-                <div class="col-span-full bg-white rounded-xl shadow-sm p-12 text-center">
-                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                    <p class="text-gray-500 font-medium">Belum ada tahun ajaran yang diarsipkan</p>
+                <div class="col-span-full bg-white rounded-xl border border-dashed border-[#E2E8F0] p-12 text-center">
+                    <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+                    <p class="text-slate-500 font-bold text-lg">Belum ada tahun ajaran yang diarsipkan</p>
                 </div>
                 <?php else: ?>
                 <?php foreach ($tahun_arsip as $t): 
-                    // Statistik Preview
                     $stats = fetchOne("
                         SELECT 
                             COUNT(DISTINCT a.nis) as total_siswa,
@@ -84,31 +85,34 @@ if (!$id_tahun) {
                     ", ['id_tahun1' => $t['id_tahun'], 'id_tahun2' => $t['id_tahun']]);
                 ?>
                 <a href="?tahun=<?= $t['id_tahun'] ?>" class="block group">
-                    <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 border-l-4 border-gray-500">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="<?= $card_class ?> p-6 hover:shadow-lg hover:border-[#000080]/30 transition-all transform hover:-translate-y-1 relative overflow-hidden">
+                        <div class="w-1.5 h-full bg-slate-300 group-hover:bg-[#000080] absolute left-0 top-0 transition-colors"></div>
+                        <div class="flex items-center justify-between mb-5 pl-2">
                             <div>
-                                <h3 class="text-2xl font-bold text-gray-800 group-hover:text-gray-600"><?= $t['nama_tahun'] ?></h3>
-                                <p class="text-sm text-gray-500">Semester <?= $t['semester_aktif'] ?></p>
+                                <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-[#000080] transition-colors"><?= $t['nama_tahun'] ?></h3>
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Semester <?= $t['semester_aktif'] ?></p>
                             </div>
-                            <div class="text-4xl">📁</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 mb-4">
-                            <div class="bg-gray-50 p-2 rounded text-center">
-                                <p class="text-xs text-gray-600">Siswa</p>
-                                <p class="text-lg font-bold text-gray-800"><?= $stats['total_siswa'] ?></p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded text-center">
-                                <p class="text-xs text-gray-600">Kejadian</p>
-                                <p class="text-lg font-bold text-gray-800"><?= $stats['total_pelanggaran'] ?></p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded text-center">
-                                <p class="text-xs text-gray-600">Poin</p>
-                                <p class="text-lg font-bold text-gray-800"><?= number_format((float)$stats['total_poin']) ?></p>
+                            <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#000080]/10 group-hover:text-[#000080] transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                             </div>
                         </div>
-                        <div class="flex items-center text-gray-600 group-hover:text-gray-800 font-medium text-sm">
+                        <div class="grid grid-cols-3 gap-3 mb-4 pl-2">
+                            <div class="bg-slate-50 border border-[#E2E8F0] p-2.5 rounded-lg text-center">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase">Siswa</p>
+                                <p class="text-sm font-extrabold text-slate-800"><?= number_format((float)$stats['total_siswa']) ?></p>
+                            </div>
+                            <div class="bg-slate-50 border border-[#E2E8F0] p-2.5 rounded-lg text-center">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase">Kejadian</p>
+                                <p class="text-sm font-extrabold text-slate-800"><?= number_format((float)$stats['total_pelanggaran']) ?></p>
+                            </div>
+                            <div class="bg-red-50 border border-red-100 p-2.5 rounded-lg text-center">
+                                <p class="text-[10px] font-bold text-red-600 uppercase">Poin</p>
+                                <p class="text-sm font-extrabold text-red-700"><?= number_format((float)$stats['total_poin']) ?></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-slate-500 group-hover:text-[#000080] font-bold text-[11px] uppercase tracking-wider pl-2 mt-4">
                             <span>Buka Arsip</span>
-                            <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </div>
                     </div>
                 </a>
@@ -139,10 +143,9 @@ if (!$tahun_info || $tahun_info['status'] !== 'Arsip') {
 // 2. Ambil Parameter Filter
 $filter_kelas    = $_GET['kelas'] ?? 'all';
 $filter_search   = $_GET['search'] ?? '';
-$filter_kategori = $_GET['kategori'] ?? 'all'; // New: Filter Kategori
+$filter_kategori = $_GET['kategori'] ?? 'all';
 
-// 3. Ambil Daftar Kelas (Dropdown)
-// Hanya kelas yang ada di tahun ajaran tersebut
+// 3. Ambil Daftar Kelas
 $kelas_list = fetchAll("
     SELECT DISTINCT k.id_kelas, k.nama_kelas 
     FROM tb_kelas k
@@ -151,7 +154,7 @@ $kelas_list = fetchAll("
     ORDER BY k.nama_kelas
 ", ['id_tahun' => $id_tahun]);
 
-// 4. Ambil Daftar Kategori (Dropdown)
+// 4. Ambil Daftar Kategori
 $kategori_list = fetchAll("SELECT * FROM tb_kategori_pelanggaran");
 
 // 5. Build Dynamic SQL Query
@@ -175,31 +178,23 @@ $sql = "
 
 $params = ['id_tahun' => $id_tahun];
 
-// Apply Filter Kelas
 if ($filter_kelas !== 'all') {
     $sql .= " AND k.id_kelas = :kelas";
     $params['kelas'] = $filter_kelas;
 }
-
-// Apply Filter Pencarian (Nama Siswa atau NIS)
 if (!empty($filter_search)) {
     $sql .= " AND (s.nama_siswa LIKE :search OR s.nis LIKE :search)";
     $params['search'] = "%$filter_search%";
 }
-
-// Apply Filter Kategori
 if ($filter_kategori !== 'all') {
     $sql .= " AND jp.id_kategori = :kategori";
     $params['kategori'] = $filter_kategori;
 }
 
-// Finalize Query
 $sql .= " GROUP BY h.id_transaksi ORDER BY h.tanggal DESC, h.waktu DESC LIMIT 200";
-
 $pelanggaran_list = fetchAll($sql, $params);
 
-// 6. Hitung Statistik Ringkas (Sesuai Filter)
-// Note: Statistik ini global per tahun, tidak ikut filter agar admin tetap tau total konteksnya.
+// 6. Hitung Statistik
 $stats = fetchOne("
     SELECT 
         COUNT(DISTINCT a.nis) as total_siswa,
@@ -217,63 +212,56 @@ $stats = fetchOne("
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arsip <?= $tahun_info['nama_tahun'] ?> - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: { colors: { 'navy': '#000080' } }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30 flex items-center justify-between">
+        <div class="bg-white border-b border-[#E2E8F0] px-6 py-4 sticky top-0 z-30 flex items-center justify-between">
             <div class="flex items-center space-x-4">
-                <a href="arsip_tahun.php" class="text-gray-400 hover:text-navy transition-colors flex items-center">
-                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    <span class="text-sm font-medium">Kembali</span>
+                <a href="arsip_tahun.php" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </a>
-                <div class="h-6 w-px bg-gray-300"></div>
+                <div class="h-6 w-px bg-[#E2E8F0]"></div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-800">Arsip: <?= $tahun_info['nama_tahun'] ?></h1>
-                    <p class="text-xs text-gray-500">Semester <?= $tahun_info['semester_aktif'] ?></p>
+                    <h1 class="text-xl font-extrabold text-slate-800">Arsip: <?= htmlspecialchars($tahun_info['nama_tahun']) ?></h1>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Semester <?= htmlspecialchars($tahun_info['semester_aktif']) ?></p>
                 </div>
             </div>
             
-            <div class="hidden md:flex space-x-2">
-                <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100">Total Poin: <?= number_format((float)$stats['total_poin']) ?></span>
-                <span class="px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold border border-red-100">Kasus: <?= $stats['total_pelanggaran'] ?></span>
+            <div class="hidden md:flex space-x-3">
+                <div class="flex items-center px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
+                    <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span class="text-xs font-bold text-blue-800">Total Kejadian: <?= number_format($stats['total_pelanggaran']) ?></span>
+                </div>
+                <div class="flex items-center px-3 py-1.5 bg-red-50 border border-red-100 rounded-lg">
+                    <svg class="w-4 h-4 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span class="text-xs font-bold text-red-800">Total Poin: <?= number_format((float)$stats['total_poin']) ?></span>
+                </div>
             </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 max-w-7xl mx-auto">
 
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 class="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                    Filter Data Arsip
-                </h3>
+            <div class="<?= $card_class ?> p-5 bg-slate-50/30">
                 <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                     <input type="hidden" name="tahun" value="<?= $id_tahun ?>">
                     
                     <div class="md:col-span-4">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Cari Siswa (Nama/NIS)</label>
+                        <label class="<?= $label_class ?>">Cari Siswa (Nama/NIS)</label>
                         <div class="relative">
-                            <input type="text" name="search" value="<?= htmlspecialchars($filter_search) ?>" placeholder="Contoh: Budi atau 12345" 
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent text-sm">
-                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" name="search" value="<?= htmlspecialchars($filter_search) ?>" placeholder="Contoh: Budi / 12345" class="<?= $input_class ?> pl-9">
+                            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         </div>
                     </div>
 
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Kelas Pada Tahun Ini</label>
-                        <select name="kelas" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent text-sm">
+                        <label class="<?= $label_class ?>">Kelas</label>
+                        <select name="kelas" class="<?= $input_class ?>">
                             <option value="all">Semua Kelas</option>
                             <?php foreach ($kelas_list as $k): ?>
                             <option value="<?= $k['id_kelas'] ?>" <?= $filter_kelas == $k['id_kelas'] ? 'selected' : '' ?>>
@@ -284,8 +272,8 @@ $stats = fetchOne("
                     </div>
 
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Kategori Pelanggaran</label>
-                        <select name="kategori" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent text-sm">
+                        <label class="<?= $label_class ?>">Kategori</label>
+                        <select name="kategori" class="<?= $input_class ?>">
                             <option value="all">Semua Kategori</option>
                             <?php foreach ($kategori_list as $kat): ?>
                             <option value="<?= $kat['id_kategori'] ?>" <?= $filter_kategori == $kat['id_kategori'] ? 'selected' : '' ?>>
@@ -296,68 +284,65 @@ $stats = fetchOne("
                     </div>
 
                     <div class="md:col-span-2 flex space-x-2">
-                        <button type="submit" class="flex-1 px-4 py-2 bg-navy hover:bg-blue-900 text-white font-semibold rounded-lg transition-colors text-sm flex justify-center items-center">
-                            Filter
-                        </button>
-                        <a href="?tahun=<?= $id_tahun ?>" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm flex justify-center items-center" title="Reset Filter">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <button type="submit" class="<?= $btn_primary ?> flex-1 h-[38px]">Filter</button>
+                        <a href="?tahun=<?= $id_tahun ?>" class="<?= $btn_outline ?> px-3 h-[38px]" title="Reset">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                         </a>
                     </div>
                 </form>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-                    <span class="font-bold text-gray-700 text-sm">📋 Hasil Pencarian Arsip</span>
-                    <span class="text-xs text-gray-500 italic">Menampilkan maks 200 data</span>
+            <div class="<?= $card_class ?> overflow-hidden">
+                <div class="p-4 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
+                    <span class="font-bold text-slate-800 text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Hasil Pencarian Arsip
+                    </span>
+                    <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">Maks 200 data</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-100 text-xs text-gray-600 uppercase tracking-wider">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50/50 text-xs text-slate-500 uppercase border-b border-[#E2E8F0]">
                             <tr>
-                                <th class="p-4 font-semibold">Tanggal & Waktu</th>
-                                <th class="p-4 font-semibold">Identitas Siswa</th>
-                                <th class="p-4 font-semibold">Detail Pelanggaran</th>
-                                <th class="p-4 font-semibold text-center">Poin</th>
-                                <th class="p-4 font-semibold text-center">Tipe</th>
-                                <th class="p-4 font-semibold">Pelapor</th>
+                                <th class="p-4 font-bold">Waktu</th>
+                                <th class="p-4 font-bold">Identitas Siswa</th>
+                                <th class="p-4 font-bold">Detail Pelanggaran</th>
+                                <th class="p-4 font-bold text-center">Poin</th>
+                                <th class="p-4 font-bold text-center">Tipe</th>
+                                <th class="p-4 font-bold">Pelapor</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if(empty($pelanggaran_list)): ?>
                             <tr>
-                                <td colspan="6" class="p-12 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        <p>Tidak ada data pelanggaran yang sesuai filter.</p>
-                                    </div>
+                                <td colspan="6" class="p-12 text-center text-slate-400">
+                                    <svg class="w-12 h-12 mb-3 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <p class="font-medium text-sm">Tidak ada data yang sesuai dengan filter.</p>
                                 </td>
                             </tr>
                             <?php else: ?>
                             <?php foreach($pelanggaran_list as $log): ?>
-                            <tr class="hover:bg-blue-50 transition-colors">
-                                <td class="p-4 whitespace-nowrap text-gray-700">
-                                    <div class="font-medium"><?= date('d M Y', strtotime($log['tanggal'])) ?></div>
-                                    <div class="text-xs text-gray-500"><?= substr($log['waktu'], 0, 5) ?> WIB</div>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="p-4 text-slate-800">
+                                    <span class="font-bold text-xs"><?= date('d M Y', strtotime($log['tanggal'])) ?></span><br>
+                                    <span class="text-[10px] font-medium text-slate-500"><?= substr($log['waktu'], 0, 5) ?> WIB</span>
                                 </td>
                                 <td class="p-4">
-                                    <div class="font-bold text-navy"><?= htmlspecialchars($log['nama_siswa']) ?></div>
-                                    <div class="text-xs text-gray-500"><?= $log['nama_kelas'] ?> • <?= $log['nis'] ?></div>
+                                    <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($log['nama_siswa']) ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $log['nama_kelas'] ?> • <?= $log['nis'] ?></p>
                                 </td>
-                                <td class="p-4 text-gray-700 max-w-xs">
-                                    <div class="text-sm"><?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?></div>
+                                <td class="p-4 max-w-xs">
+                                    <p class="text-xs text-slate-700 truncate" title="<?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?>"><?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?></p>
                                 </td>
-                                <td class="p-4 whitespace-nowrap text-center">
-                                    <span class="px-2 py-1 text-xs font-bold rounded bg-red-100 text-red-800 border border-red-200">
-                                        +<?= $log['total_poin'] ?>
-                                    </span>
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 text-[11px] font-bold rounded-md bg-red-50 text-red-600 border border-red-200 shadow-sm">+<?= $log['total_poin'] ?></span>
                                 </td>
-                                <td class="p-4 whitespace-nowrap text-center">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full <?= $log['tipe_form'] === 'Piket' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' ?>">
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-md <?= $log['tipe_form'] === 'Piket' ? 'bg-[#000080]/10 text-[#000080] border border-[#000080]/20' : 'bg-purple-50 text-purple-700 border border-purple-200' ?>">
                                         <?= $log['tipe_form'] ?>
                                     </span>
                                 </td>
-                                <td class="p-4 text-gray-600 text-sm"><?= htmlspecialchars($log['nama_guru']) ?></td>
+                                <td class="p-4 text-xs font-medium text-slate-700"><?= htmlspecialchars($log['nama_guru']) ?></td>
                             </tr>
                             <?php endforeach; ?>
                             <?php endif; ?>
@@ -366,9 +351,9 @@ $stats = fetchOne("
                 </div>
             </div>
 
-            <div class="flex items-center justify-center p-4 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-200 text-sm">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                <span>Mode Arsip: Data hanya dapat dibaca (Read-Only) dan tidak dapat diedit atau dihapus.</span>
+            <div class="flex items-center justify-center p-4 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-sm shadow-sm font-medium">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span><strong>Mode Arsip:</strong> Data hanya dapat dibaca (Read-Only) dan tidak dapat diedit atau dihapus.</span>
             </div>
 
         </div>

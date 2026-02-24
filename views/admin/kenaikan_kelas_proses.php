@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Proses Kenaikan Kelas
+ * SITAPSI - Proses Kenaikan Kelas (UI GLOBAL PORTAL)
  * Pilih siswa dari kelas asal → Pindahkan ke kelas tujuan
  */
 
@@ -61,6 +61,11 @@ $kelas_tujuan_list = fetchAll("
     WHERE tingkat = :tingkat 
     ORDER BY nama_kelas
 ", ['tingkat' => $tingkat_tujuan]);
+
+// --- UI CONFIG VARIABLES ---
+$btn_primary = "px-6 py-3 bg-[#000080] text-white text-sm font-bold rounded-lg shadow-md shadow-blue-900/10 hover:bg-blue-900 transition-all flex items-center justify-center";
+$btn_outline = "px-6 py-3 bg-white border border-[#E2E8F0] text-slate-700 text-sm font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center";
+$card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -69,98 +74,85 @@ $kelas_tujuan_list = fetchAll("
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proses Kenaikan - <?= $kelas_asal['nama_kelas'] ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 'navy': '#000080' }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
     
     <?php include '../../includes/sidebar_admin.php'; ?>
 
-    <div class="flex-1 overflow-auto bg-gray-100">
+    <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
-            <a href="kenaikan_kelas.php" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
+        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
+            <a href="kenaikan_kelas.php" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Kenaikan Kelas: <?= $kelas_asal['nama_kelas'] ?> → Tingkat <?= $tingkat_tujuan ?></h1>
-                <p class="text-sm text-gray-500">Centang siswa yang akan naik kelas</p>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Proses Kenaikan Kelas</h1>
+                <p class="text-sm font-medium text-slate-500"><?= $kelas_asal['nama_kelas'] ?> → Tingkat <?= $tingkat_tujuan ?></p>
             </div>
         </div>
 
-        <div class="p-6">
+        <div class="p-6 max-w-6xl mx-auto">
 
             <form action="../../actions/proses_kenaikan_kelas.php" method="POST" onsubmit="return validateForm()">
                 <input type="hidden" name="id_kelas_asal" value="<?= $id_kelas_asal ?>">
                 
-                <!-- Info Kelas -->
-                <div class="bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-xl shadow-lg p-6 mb-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-purple-200 text-sm mb-1">Kelas Asal</p>
-                            <h2 class="text-3xl font-bold"><?= $kelas_asal['nama_kelas'] ?></h2>
-                        </div>
-                        <div class="text-6xl">→</div>
-                        <div class="text-right">
-                            <p class="text-purple-200 text-sm mb-1">Tingkat Tujuan</p>
-                            <h2 class="text-3xl font-bold">Kelas <?= $tingkat_tujuan ?></h2>
-                        </div>
+                <div class="bg-[#000080] text-white rounded-xl shadow-md shadow-blue-900/10 p-6 mb-6 flex items-center justify-between relative overflow-hidden">
+                    <svg class="absolute right-0 top-0 text-white/5 w-48 h-48 transform translate-x-8 -translate-y-8" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <div class="relative z-10">
+                        <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Kelas Asal</p>
+                        <h2 class="text-3xl font-extrabold"><?= $kelas_asal['nama_kelas'] ?></h2>
+                    </div>
+                    <div class="relative z-10 text-white/30 text-4xl mx-8">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </div>
+                    <div class="relative z-10 text-right">
+                        <p class="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Tingkat Tujuan</p>
+                        <h2 class="text-3xl font-extrabold">Kelas <?= $tingkat_tujuan ?></h2>
                     </div>
                 </div>
 
-                <!-- Pilih Kelas Tujuan -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <label class="block text-sm font-bold text-gray-800 mb-3">Pilih Kelas Tujuan *</label>
+                <div class="<?= $card_class ?> p-6 mb-6">
+                    <label class="block text-sm font-extrabold text-slate-800 mb-4 uppercase tracking-wide">Pilih Kelas Tujuan *</label>
                     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         <?php foreach ($kelas_tujuan_list as $kt): ?>
                         <label class="block">
                             <input type="radio" name="id_kelas_tujuan" value="<?= $kt['id_kelas'] ?>" required class="peer hidden">
-                            <div class="border-2 border-gray-300 peer-checked:border-purple-600 peer-checked:bg-purple-50 rounded-lg p-4 text-center cursor-pointer hover:border-purple-400 transition-all">
-                                <p class="text-2xl font-bold text-gray-800 peer-checked:text-purple-600"><?= $kt['nama_kelas'] ?></p>
+                            <div class="border border-[#E2E8F0] peer-checked:border-[#000080] peer-checked:bg-[#000080]/5 rounded-xl p-4 text-center cursor-pointer hover:border-[#000080]/30 transition-all shadow-sm">
+                                <p class="text-2xl font-extrabold text-slate-800 peer-checked:text-[#000080]"><?= $kt['nama_kelas'] ?></p>
                             </div>
                         </label>
                         <?php endforeach; ?>
                     </div>
                 </div>
 
-                <!-- Daftar Siswa -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                    <div class="p-4 border-b flex items-center justify-between">
-                        <span class="font-bold text-gray-700">Daftar Siswa (Total: <?= count($siswa_list) ?>)</span>
+                <div class="<?= $card_class ?> overflow-hidden mb-6">
+                    <div class="p-4 border-b border-[#E2E8F0] bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <span class="font-bold text-slate-800 text-sm">Pilih Siswa (Total: <?= count($siswa_list) ?>)</span>
                         <div class="flex space-x-2">
-                            <button type="button" onclick="selectAll()" class="text-sm bg-green-50 text-green-700 px-3 py-1 rounded hover:bg-green-100">
+                            <button type="button" onclick="selectAll()" class="text-xs font-bold bg-white border border-[#E2E8F0] text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">
                                 ✓ Pilih Semua
                             </button>
-                            <button type="button" onclick="deselectAll()" class="text-sm bg-red-50 text-red-700 px-3 py-1 rounded hover:bg-red-100">
+                            <button type="button" onclick="deselectAll()" class="text-xs font-bold bg-white border border-[#E2E8F0] text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 shadow-sm transition-colors">
                                 ✗ Batal Semua
                             </button>
                         </div>
                     </div>
                     <div class="p-6">
                         <?php if (empty($siswa_list)): ?>
-                        <div class="text-center py-8 text-gray-500">
-                            <p class="font-medium">Tidak ada siswa di kelas ini</p>
+                        <div class="text-center py-8 text-slate-400">
+                            <p class="font-medium text-sm">Tidak ada siswa tersisa di kelas ini</p>
                         </div>
                         <?php else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <?php foreach ($siswa_list as $siswa): ?>
-                            <label class="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-400 cursor-pointer transition-all group">
+                            <label class="flex items-center space-x-3 p-3.5 border border-[#E2E8F0] rounded-xl hover:border-[#000080]/30 cursor-pointer transition-all hover:bg-slate-50 shadow-sm group">
                                 <input type="checkbox" name="siswa[]" value="<?= $siswa['nis'] ?>" 
-                                       class="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-600">
+                                       class="w-5 h-5 text-[#000080] border-slate-300 rounded focus:ring-[#000080]">
                                 <div class="flex-1 min-w-0">
-                                    <p class="font-bold text-gray-800 truncate group-hover:text-purple-600"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
-                                    <p class="text-xs text-gray-500"><?= $siswa['nis'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
+                                    <p class="font-bold text-slate-800 text-sm truncate group-hover:text-[#000080]"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider mt-0.5"><?= $siswa['nis'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
                                 </div>
                             </label>
                             <?php endforeach; ?>
@@ -169,13 +161,11 @@ $kelas_tujuan_list = fetchAll("
                     </div>
                 </div>
 
-                <!-- Submit Button -->
-                <div class="flex space-x-4">
-                    <a href="kenaikan_kelas.php" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium text-center">
-                        Batal
-                    </a>
-                    <button type="submit" class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
-                        📈 Proses Kenaikan Kelas
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <a href="kenaikan_kelas.php" class="<?= $btn_outline ?> sm:flex-none sm:w-1/3">Batal</a>
+                    <button type="submit" class="<?= $btn_primary ?> flex-1">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        Proses Kenaikan Kelas
                     </button>
                 </div>
 
@@ -210,7 +200,7 @@ function validateForm() {
         return false;
     }
     
-    return confirm(`⚠️ Konfirmasi Kenaikan Kelas\n\n${siswa.length} siswa akan dipindahkan ke kelas tujuan.\n\nLanjutkan?`);
+    return confirm(`⚠️ KONFIRMASI\n\n${siswa.length} siswa akan dipindahkan ke kelas yang baru dipilih.\n\nLanjutkan?`);
 }
 </script>
 

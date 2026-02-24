@@ -1,91 +1,82 @@
 <?php
 /**
- * SITAPSI - Navbar Guru (Responsive Final)
- * Mobile: Sticky Bottom Navigation (2 Menu Utama)
- * Desktop: Top Horizontal Navigation
- * Header: Menampilkan Nama Lengkap (Konsisten)
+ * SITAPSI - Navbar Guru (Terintegrasi UI Global)
+ * Desain translasi dari React/Next.js ke PHP Native
  */
 
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
-
-// Ambil nama lengkap dari session
-$nama_lengkap = $_SESSION['nama_lengkap'] ?? 'Guru';
+$user_name = $_SESSION['nama_lengkap'] ?? ($user['nama_lengkap'] ?? 'Guru');
+$initial = strtoupper(substr($user_name, 0, 1));
 ?>
 
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-    <div class="flex justify-around items-center h-16">
+<header class="bg-white border-b border-[#E2E8F0] sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-[#000080] shadow-md shadow-blue-900/10 flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <h1 class="text-sm font-extrabold text-[#000080] tracking-tight leading-tight">SITAPSI</h1>
+                    <p class="text-[10px] font-bold text-slate-500 truncate max-w-[140px] leading-tight">Portal Guru</p>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex space-x-2 items-center">
+                <a href="input_pelanggaran.php" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors <?= $current_page === 'input_pelanggaran' ? 'bg-[#000080] text-white shadow-md shadow-blue-900/10' : 'text-slate-600 hover:text-[#000080] hover:bg-slate-50' ?>">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                    Input Pelanggaran
+                </a>
+                
+                <a href="rekap_kelas.php" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors <?= in_array($current_page, ['rekap_kelas', 'detail_siswa']) ? 'bg-[#000080] text-white shadow-md shadow-blue-900/10' : 'text-slate-600 hover:text-[#000080] hover:bg-slate-50' ?>">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg>
+                    Rekap Kelas
+                </a>
+            </nav>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 border-r border-[#E2E8F0] pr-4">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-slate-800"><?= htmlspecialchars($user_name) ?></p>
+                        <p class="text-[10px] font-medium text-slate-500 uppercase">Guru SMPK 2</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-[#000080] flex items-center justify-center text-sm font-bold text-white shadow-sm">
+                        <?= $initial ?>
+                    </div>
+                </div>
+                
+                <a href="../../actions/logout.php" onclick="return confirm('Keluar dari Portal Guru?')" 
+                   class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center" title="Keluar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<nav class="md:hidden fixed bottom-0 w-full bg-white border-t border-[#E2E8F0] z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+    <div class="flex justify-around items-center h-16 px-2">
         
-        <a href="../guru/input_pelanggaran.php" 
-           class="flex flex-col items-center justify-center flex-1 h-full transition-colors <?= $current_page === 'input_pelanggaran' ? 'text-navy bg-blue-50 border-t-2 border-navy' : 'text-gray-500 hover:text-navy hover:bg-gray-50' ?>">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-            <span class="text-xs font-medium">Input Poin</span>
+        <a href="input_pelanggaran.php" class="flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors <?= $current_page === 'input_pelanggaran' ? 'text-[#000080]' : 'text-slate-400 hover:text-slate-600' ?>">
+            <div class="<?= $current_page === 'input_pelanggaran' ? 'bg-blue-50 p-1.5 rounded-lg' : 'p-1.5' ?>">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            </div>
+            <span class="text-[10px] font-bold">Input Poin</span>
         </a>
 
-        <a href="../guru/rekap_kelas.php"
-           class="flex flex-col items-center justify-center flex-1 h-full transition-colors <?= $current_page === 'rekap_kelas' ? 'text-navy bg-blue-50 border-t-2 border-navy' : 'text-gray-500 hover:text-navy hover:bg-gray-50' ?>">
-            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <span class="text-xs font-medium">Rekap Kelas</span>
+        <a href="rekap_kelas.php" class="flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors <?= in_array($current_page, ['rekap_kelas', 'detail_siswa']) ? 'text-[#000080]' : 'text-slate-400 hover:text-slate-600' ?>">
+            <div class="<?= in_array($current_page, ['rekap_kelas', 'detail_siswa']) ? 'bg-blue-50 p-1.5 rounded-lg' : 'p-1.5' ?>">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg>
+            </div>
+            <span class="text-[10px] font-bold">Rekap Kelas</span>
         </a>
 
     </div>
 </nav>
-
-
-<header class="bg-navy text-white shadow-lg sticky top-0 z-40">
-    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-        
-        <div class="flex items-center space-x-3">
-            <div class="bg-white rounded-full p-1.5 shadow-sm">
-                <svg class="w-6 h-6 text-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold tracking-wide leading-tight">SITAPSI</h1>
-                <p class="text-[10px] text-blue-200 hidden sm:block">Sistem Tata Tertib Siswa</p>
-            </div>
-        </div>
-
-        <nav class="hidden md:flex items-center space-x-6">
-            <a href="../guru/input_pelanggaran.php" 
-               class="text-sm font-semibold transition-colors flex items-center space-x-2 <?= $current_page === 'input_pelanggaran' ? 'text-white border-b-2 border-white pb-1' : 'text-blue-200 hover:text-white pb-1' ?>">
-                <span>Input Pelanggaran</span>
-            </a>
-
-            <a href="../guru/rekap_kelas.php" 
-               class="text-sm font-semibold transition-colors flex items-center space-x-2 <?= $current_page === 'rekap_kelas' ? 'text-white border-b-2 border-white pb-1' : 'text-blue-200 hover:text-white pb-1' ?>">
-                <span>Rekap Kelas</span>
-            </a>
-        </nav>
-
-        <div class="flex items-center space-x-3">
-            
-            <div class="text-right">
-                <p class="text-sm font-semibold text-white max-w-[120px] md:max-w-none truncate md:overflow-visible">
-                    <?= htmlspecialchars($nama_lengkap) ?>
-                </p>
-                
-                <div class="flex items-center justify-end space-x-1">
-                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                    <p class="text-[10px] text-blue-200">Online</p>
-                </div>
-            </div>
-            
-            <a href="../../actions/logout.php" 
-               onclick="return confirm('Apakah Anda yakin ingin keluar?');"
-               class="bg-red-500/90 hover:bg-red-600 text-white p-2 md:px-3 md:py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center shadow-md border border-red-400">
-                <svg class="w-5 h-5 md:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                </svg>
-                <span class="hidden md:inline">Keluar</span>
-            </a>
-        </div>
-
-    </div>
-</header>
-
-<div class="h-20 md:hidden"></div>
