@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Dashboard Admin (UI ALIGNED WITH GLOBAL PORTAL)
+ * FIX LOGIKA: Menyesuaikan Grafik & Aktivitas berdasarkan Semester Aktif
  */
 
 session_start();
@@ -16,7 +17,7 @@ $tahun_aktif = fetchOne("
     LIMIT 1
 ");
 
-// Statistik umum
+// Statistik umum (Memanfaatkan total poin yang sudah difilter oleh sistem semester)
 $stats = fetchOne("
     SELECT 
         COUNT(DISTINCT a.nis) as total_siswa,
@@ -36,20 +37,24 @@ $stats_sp = fetchOne("
     WHERE id_tahun = :id_tahun
 ", ['id_tahun' => $tahun_aktif['id_tahun']]);
 
-// Aktivitas 30 hari terakhir
+// LOGIKA BARU: Aktivitas 30 hari terakhir HANYA PADA SEMESTER AKTIF
 $aktivitas_30_hari = fetchAll("
     SELECT 
         DATE(h.tanggal) as tanggal,
         COUNT(*) as jumlah
     FROM tb_pelanggaran_header h
     WHERE h.id_tahun = :id_tahun
+    AND h.semester = :semester
     AND h.tanggal >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
     GROUP BY DATE(h.tanggal)
     ORDER BY tanggal DESC
     LIMIT 30
-", ['id_tahun' => $tahun_aktif['id_tahun']]);
+", [
+    'id_tahun' => $tahun_aktif['id_tahun'],
+    'semester' => $tahun_aktif['semester_aktif']
+]);
 
-// Top 5 siswa poin tertinggi
+// Top 5 siswa poin tertinggi (Total poin umum sudah mewakili semester aktif berkat Ganti Semester Smart Sync)
 $top_siswa = fetchAll("
     SELECT 
         s.nama_siswa,
@@ -64,6 +69,7 @@ $top_siswa = fetchAll("
     JOIN tb_siswa s ON a.nis = s.nis
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE a.id_tahun = :id_tahun
+    AND a.total_poin_umum > 0
     ORDER BY a.total_poin_umum DESC
     LIMIT 5
 ", ['id_tahun' => $tahun_aktif['id_tahun']]);
@@ -210,7 +216,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
                         <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if (empty($top_siswa)): ?>
                             <tr>
-                                <td colspan="5" class="p-8 text-center text-slate-400 text-sm font-medium">Belum ada data pelanggaran</td>
+                                <td colspan="5" class="p-8 text-center text-slate-400 text-sm font-medium">Belum ada data pelanggaran di semester ini</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach ($top_siswa as $idx => $siswa): ?>

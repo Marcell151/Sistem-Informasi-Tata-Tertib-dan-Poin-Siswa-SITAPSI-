@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Detail Siswa (FIX TABLE WRAP + UI GLOBAL)
+ * FIX LOGIKA: Kandidat Reward mengecek poin 1 Tahun Penuh
  */
 
 session_start();
@@ -46,6 +47,16 @@ if (!$siswa) {
     header('Location: monitoring_siswa.php');
     exit;
 }
+
+// LOGIKA BARU: Cek histori 1 tahun
+$cek_history = fetchOne("
+    SELECT COALESCE(SUM(d.poin_saat_itu), 0) as total_tahunan
+    FROM tb_pelanggaran_header h
+    JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
+    WHERE h.id_anggota = :id_anggota AND h.id_tahun = :id_tahun
+", ['id_anggota' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
+
+$is_bersih = ($cek_history['total_tahunan'] == 0);
 
 // Hitung poin per semester
 $poin_ganjil = fetchOne("
@@ -103,9 +114,6 @@ $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
 
-// Deteksi Kandidat Reward
-$is_bersih = ($siswa['total_poin_umum'] == 0);
-
 // --- UI CONFIG VARIABLES ---
 $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
@@ -159,11 +167,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 <div>
                     <h4 class="font-extrabold text-amber-800 text-lg mb-1">🌟 Kandidat Siswa Teladan 🌟</h4>
                     <p class="text-sm text-amber-700 font-medium">
-                        <?php if ($tahun_aktif['semester_aktif'] === 'Ganjil'): ?>
-                            Siswa ini memiliki <strong>0 Poin Pelanggaran</strong> di Semester Ganjil. Kandidat penerima reward di akhir semester!
-                        <?php else: ?>
-                            Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong>. Kandidat penerima Sertifikat Bebas Pelanggaran! 🎓
-                        <?php endif; ?>
+                        Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong>. Kandidat penerima Sertifikat Bebas Pelanggaran! 🎓
                     </p>
                 </div>
             </div>
@@ -187,11 +191,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         
                         <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-medium">
                             <span class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 flex items-center">
-                                <svg class="w-4 h-4 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <svg class="w-4 h-4 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                 <?= $siswa['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan' ?>
                             </span>
                             <span class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 flex items-center">
-                                <svg class="w-4 h-4 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                <svg class="w-4 h-4 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                                 Ortu: <?= htmlspecialchars($siswa['nama_ortu']) ?>
                             </span>
                         </div>
@@ -298,7 +302,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     </a>
                 </div>
                 <div class="text-xs font-bold px-3 py-1.5 rounded-full <?= $filter_semester === $tahun_aktif['semester_aktif'] ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200' ?>">
-                    <?= $filter_semester === $tahun_aktif['semester_aktif'] ? '● Aktif' : 'Riwayat Lampau' ?>
+                    <?= $filter_semester === $tahun_aktif['semester_aktif'] ? '● Aktif Berjalan' : 'Riwayat Lampau' ?>
                 </div>
             </div>
 

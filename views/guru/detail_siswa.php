@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Detail Siswa untuk Guru (MANUAL REPORT SYSTEM - UI GLOBAL)
- * Tombol report terpusat (1 tombol) dengan dropdown pilihan pelanggaran
+ * FIX LOGIKA: Kandidat Reward mengecek poin 1 Tahun Penuh
  */
 
 session_start();
@@ -18,7 +18,6 @@ if (!$id_anggota) {
     exit;
 }
 
-// FIX PENGAMBILAN DATA GURU LOGIN
 $id_guru_login = $_SESSION['user_id'];
 $guru = fetchOne("SELECT id_guru, nama_guru, id_kelas FROM tb_guru WHERE id_guru = :id", ['id' => $id_guru_login]);
 
@@ -61,6 +60,16 @@ if (!$siswa) {
 // CEK STATUS WALI KELAS
 $id_kelas_wali = $guru['id_kelas'] ?? null;
 $is_wali_kelas = ($id_kelas_wali !== null && $id_kelas_wali == $siswa['id_kelas']);
+
+// LOGIKA BARU: Cek histori 1 tahun
+$cek_history = fetchOne("
+    SELECT COALESCE(SUM(d.poin_saat_itu), 0) as total_tahunan
+    FROM tb_pelanggaran_header h
+    JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
+    WHERE h.id_anggota = :id_anggota AND h.id_tahun = :id_tahun
+", ['id_anggota' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
+
+$is_bersih = ($cek_history['total_tahunan'] == 0);
 
 // Ambil semua daftar pelanggaran khusus untuk DROPDOWN REPORT
 $list_pelanggaran_dropdown = fetchAll("
@@ -120,8 +129,6 @@ $success = $_SESSION['success_message'] ?? '';
 $error = $_SESSION['error_message'] ?? '';
 unset($_SESSION['success_message'], $_SESSION['error_message']);
 
-$is_bersih = ($siswa['total_poin_umum'] == 0);
-
 // --- UI CONFIG VARIABLES ---
 $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 ?>
@@ -173,7 +180,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 </div>
                 <div>
                     <h4 class="font-extrabold text-amber-800 text-lg mb-1">🌟 Kandidat Siswa Teladan</h4>
-                    <p class="text-sm text-amber-700 font-medium">Siswa ini memiliki 0 Poin Pelanggaran. Kandidat penerima reward!</p>
+                    <p class="text-sm text-amber-700 font-medium">Siswa ini bersih (0 Poin) selama <strong>1 Tahun Ajaran penuh (Ganjil & Genap)</strong>. Kandidat kuat penerima Sertifikat Bebas Pelanggaran!</p>
                 </div>
             </div>
             <?php endif; ?>
@@ -265,33 +272,21 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             </div>
 
             <div class="<?= $card_class ?> overflow-hidden">
-                <div class="flex border-b border-[#E2E8F0] overflow-x-auto bg-slate-50/50">
-                    <button onclick="switchTab('kelakuan')" id="tab-kelakuan" class="tab-button flex-1 py-4 px-4 font-extrabold text-sm text-center transition-colors bg-red-600 text-white border-b-2 border-red-700 whitespace-nowrap">
-                        🚨 KELAKUAN (<?= count($pelanggaran_kelakuan) ?>)
-                    </button>
-                    <button onclick="switchTab('kerajinan')" id="tab-kerajinan" class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent whitespace-nowrap">
-                        📘 KERAJINAN (<?= count($pelanggaran_kerajinan) ?>)
-                    </button>
-                    <button onclick="switchTab('kerapian')" id="tab-kerapian" class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent whitespace-nowrap">
-                        👔 KERAPIAN (<?= count($pelanggaran_kerapian) ?>)
-                    </button>
+                <div class="flex border-b border-[#E2E8F0] overflow-x-auto bg-slate-50/50 scrollbar-hide">
+                    <button onclick="switchTab('kelakuan')" id="tab-kelakuan" class="tab-button flex-1 py-4 px-4 font-extrabold text-sm text-center transition-colors bg-red-600 text-white border-b-2 border-red-700 whitespace-nowrap">🚨 KELAKUAN</button>
+                    <button onclick="switchTab('kerajinan')" id="tab-kerajinan" class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent whitespace-nowrap">📘 KERAJINAN</button>
+                    <button onclick="switchTab('kerapian')" id="tab-kerapian" class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent whitespace-nowrap">👔 KERAPIAN</button>
                 </div>
 
                 <?php 
-                $kategori_data = [
-                    'kelakuan' => ['data' => $pelanggaran_kelakuan, 'color' => 'red', 'label' => 'Kelakuan'],
-                    'kerajinan' => ['data' => $pelanggaran_kerajinan, 'color' => 'blue', 'label' => 'Kerajinan'],
-                    'kerapian' => ['data' => $pelanggaran_kerapian, 'color' => 'yellow', 'label' => 'Kerapian'],
-                ];
-                
-                foreach ($kategori_data as $key => $kat):
-                    $color = $kat['color'];
+                $kategori_data = ['kelakuan' => ['data' => $pelanggaran_kelakuan, 'color' => 'red'], 'kerajinan' => ['data' => $pelanggaran_kerajinan, 'color' => 'blue'], 'kerapian' => ['data' => $pelanggaran_kerapian, 'color' => 'yellow']];
+                foreach ($kategori_data as $key => $kat): $color = $kat['color'];
                 ?>
                 <div id="content-<?= $key ?>" class="tab-content <?= $key !== 'kelakuan' ? 'hidden' : '' ?>">
                     <?php if (empty($kat['data'])): ?>
                     <div class="text-center py-12 text-slate-400">
                         <svg class="w-16 h-16 text-slate-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="font-medium text-sm">Tidak ada catatan pelanggaran di kategori ini.</p>
+                        <p class="font-medium text-sm">Tidak ada catatan pelanggaran.</p>
                     </div>
                     <?php else: ?>
                     <div class="overflow-x-auto">
@@ -311,18 +306,12 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="p-4 whitespace-nowrap align-top">
                                         <p class="font-bold text-slate-700 text-xs"><?= date('d/m/Y', strtotime($p['tanggal'])) ?></p>
-                                        <p class="text-[10px] text-slate-400 mt-0.5"><?= substr($p['waktu'], 0, 5) ?> WIB</p>
                                     </td>
                                     <td class="p-4 whitespace-normal min-w-[200px] align-top">
                                         <p class="text-xs font-bold text-slate-800 leading-relaxed"><?= htmlspecialchars($p['nama_pelanggaran']) ?></p>
-                                        <?php if($p['sanksi']): ?>
-                                            <p class="text-[10px] text-slate-500 mt-1.5 flex items-start"><svg class="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span class="leading-tight">Sanksi: <?= htmlspecialchars($p['sanksi']) ?></span></p>
-                                        <?php endif; ?>
                                     </td>
                                     <td class="p-4 text-center whitespace-nowrap align-top">
-                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-<?= $color ?>-50 text-<?= $color ?>-600 border border-<?= $color ?>-200">
-                                            +<?= $p['poin_saat_itu'] ?>
-                                        </span>
+                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-<?= $color ?>-50 text-<?= $color ?>-600 border border-<?= $color ?>-200">+<?= $p['poin_saat_itu'] ?></span>
                                     </td>
                                     <td class="p-4 text-center whitespace-nowrap align-top">
                                         <?php if (!empty($p['bukti_foto']) && $p['bukti_foto'] !== 'null'): ?>
@@ -354,7 +343,6 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 </div>
                 <?php endforeach; ?>
             </div>
-
         </div>
     </main>
 </div>
@@ -374,37 +362,22 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
         </div>
         <form action="../../actions/kirim_report.php" method="POST" class="p-6 space-y-5">
             <input type="hidden" name="id_anggota" value="<?= $id_anggota ?>">
-            
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pilih Transaksi yang Salah *</label>
                 <select name="id_transaksi" required class="w-full px-4 py-3 border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm bg-slate-50 text-slate-700 transition-all">
                     <option value="">-- Pilih Transaksi Pelanggaran --</option>
                     <?php foreach ($list_pelanggaran_dropdown as $opt): ?>
-                        <option value="<?= $opt['id_transaksi'] ?>">
-                            <?= date('d/m/Y', strtotime($opt['tanggal'])) ?> - <?= htmlspecialchars($opt['nama_pelanggaran']) ?>
-                        </option>
+                        <option value="<?= $opt['id_transaksi'] ?>"><?= date('d/m/Y', strtotime($opt['tanggal'])) ?> - <?= htmlspecialchars($opt['nama_pelanggaran']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <?php if(empty($list_pelanggaran_dropdown)): ?>
-                    <p class="text-[11px] text-red-500 mt-1.5 font-bold">Siswa ini tidak memiliki pelanggaran untuk dilaporkan.</p>
-                <?php endif; ?>
             </div>
-            
             <div>
                 <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pesan Untuk Admin *</label>
                 <textarea name="alasan_revisi" required rows="3" placeholder="Contoh: Tolong hapus transaksi ini, karena salah identitas siswa..." class="w-full px-4 py-3 border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm text-slate-700 transition-all resize-none"></textarea>
             </div>
-            
-            <div class="flex items-start bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
-                <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                <p class="text-xs text-blue-800 leading-relaxed font-medium">
-                    Pesan ini akan dikirim ke Tim Admin. Admin akan memverifikasi dan mengeksekusi perbaikan (edit/hapus) secara manual jika disetujui.
-                </p>
-            </div>
-            
             <div class="flex space-x-3 pt-2">
                 <button type="button" onclick="closeReportModal()" class="flex-1 px-4 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 rounded-lg hover:bg-slate-50 font-bold text-sm transition-colors shadow-sm">Batal</button>
-                <button type="submit" <?= empty($list_pelanggaran_dropdown) ? 'disabled' : '' ?> class="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-bold text-sm transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">Kirim Pesan</button>
+                <button type="submit" <?= empty($list_pelanggaran_dropdown) ? 'disabled' : '' ?> class="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-bold text-sm transition-colors shadow-sm">Kirim Pesan</button>
             </div>
         </form>
     </div>
@@ -428,7 +401,6 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 </div>
 
 <script>
-// Logic Tab Kategori
 function switchTab(tab) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
     document.querySelectorAll('.tab-button').forEach(b => {
@@ -447,16 +419,9 @@ function switchTab(tab) {
     else activeTab.classList.add('bg-yellow-500', 'border-yellow-600');
 }
 
-// Logic Modal Report
-function openReportModal() {
-    document.getElementById('modal-report').classList.remove('hidden');
-}
+function openReportModal() { document.getElementById('modal-report').classList.remove('hidden'); }
+function closeReportModal() { document.getElementById('modal-report').classList.add('hidden'); }
 
-function closeReportModal() {
-    document.getElementById('modal-report').classList.add('hidden');
-}
-
-// Logic Modal Bukti Foto (Sesuai folder di database)
 function lihatBukti(jsonString) {
     const fotos = JSON.parse(jsonString);
     const container = document.getElementById('bukti-container');

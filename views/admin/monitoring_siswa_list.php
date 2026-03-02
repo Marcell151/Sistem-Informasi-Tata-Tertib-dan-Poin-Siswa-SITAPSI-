@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Monitoring Siswa List (UI GLOBAL PORTAL)
+ * FIX LOGIKA: Kandidat Reward mengecek poin 1 Tahun Penuh, bukan per semester
  */
 
 session_start();
@@ -18,12 +19,16 @@ if (!$id_kelas) {
 $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
 
-// Query siswa dengan SP
+// Query siswa dengan pengecekan total poin TAHUNAN (Ganjil + Genap)
 $siswa_list = fetchAll("
     SELECT 
         s.nis, s.nama_siswa, s.jenis_kelamin, s.foto_profil,
         a.id_anggota, a.poin_kelakuan, a.poin_kerajinan, a.poin_kerapian, a.total_poin_umum,
-        a.status_sp_terakhir, a.status_sp_kelakuan, a.status_sp_kerajinan, a.status_sp_kerapian
+        a.status_sp_terakhir, a.status_sp_kelakuan, a.status_sp_kerajinan, a.status_sp_kerapian,
+        (SELECT COALESCE(SUM(d.poin_saat_itu), 0) 
+         FROM tb_pelanggaran_header h 
+         JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
+         WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
     FROM tb_anggota_kelas a
     JOIN tb_siswa s ON a.nis = s.nis
     WHERE a.id_kelas = :id_kelas AND a.id_tahun = :id_tahun AND s.status_aktif = 'Aktif'
@@ -41,9 +46,7 @@ $siswa_list = fetchAll("
 <body class="bg-[#F8FAFC]">
 
 <div class="flex h-screen overflow-hidden">
-    
     <?php include '../../includes/sidebar_admin.php'; ?>
-
     <div class="flex-1 overflow-auto lg:ml-64">
         
         <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex items-center space-x-4">
@@ -57,7 +60,6 @@ $siswa_list = fetchAll("
         </div>
 
         <div class="p-6 space-y-6 max-w-7xl mx-auto">
-
             <div class="bg-[#000080] text-white rounded-xl shadow-md shadow-blue-900/10 p-6 relative overflow-hidden">
                 <svg class="absolute right-0 top-0 text-white/5 w-48 h-48 transform translate-x-8 -translate-y-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 <div class="relative z-10 flex items-center justify-between">
@@ -79,7 +81,8 @@ $siswa_list = fetchAll("
                 </div>
                 <?php else: ?>
                 <?php foreach ($siswa_list as $siswa): 
-                    $is_bersih = ($siswa['total_poin_umum'] == 0);
+                    // LOGIKA BARU: Cek dari total_tahunan, bukan total_poin_umum yang bisa ter-reset
+                    $is_bersih = ($siswa['total_tahunan'] == 0);
                 ?>
                 <a href="detail_siswa.php?id=<?= $siswa['id_anggota'] ?>" 
                    class="block bg-white rounded-xl shadow-sm border <?= $is_bersih ? 'border-amber-400' : 'border-[#E2E8F0]' ?> hover:shadow-lg transition-all transform hover:-translate-y-1 overflow-hidden relative group">
@@ -123,7 +126,7 @@ $siswa_list = fetchAll("
 
                         <div class="flex items-center justify-between pt-3 border-t border-[#E2E8F0]">
                             <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Total Poin</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Total Poin Smt</p>
                                 <p class="font-extrabold text-lg text-slate-800 leading-none"><?= $siswa['total_poin_umum'] ?></p>
                             </div>
                             <div class="text-right">
@@ -142,6 +145,5 @@ $siswa_list = fetchAll("
         </div>
     </div>
 </div>
-
 </body>
 </html>

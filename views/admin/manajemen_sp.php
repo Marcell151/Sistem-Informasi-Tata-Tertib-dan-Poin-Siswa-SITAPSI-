@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Manajemen SP (UI GLOBAL PORTAL)
- * Menampilkan riwayat SP dengan kategori pemicu
+ * Menampilkan riwayat SP dengan filter Semester Pintar
  */
 
 session_start();
@@ -10,10 +10,12 @@ require_once '../../includes/session_check.php';
 
 requireAdmin();
 
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 
 $filter_kelas = $_GET['kelas'] ?? 'all';
 $filter_status = $_GET['status'] ?? 'all';
+// Default filter diset ke semester yang sedang aktif berjalan
+$filter_semester = $_GET['semester'] ?? $tahun_aktif['semester_aktif'];
 
 $kelas_list = fetchAll("SELECT * FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
@@ -38,9 +40,19 @@ if ($filter_kelas !== 'all') {
     $sql .= " AND k.id_kelas = :kelas";
     $params['kelas'] = $filter_kelas;
 }
+
 if ($filter_status !== 'all') {
     $sql .= " AND sp.status = :status";
     $params['status'] = $filter_status;
+}
+
+// Logika Deteksi Semester berdasarkan Bulan Terbit
+if ($filter_semester === 'Ganjil') {
+    // Bulan Juli (7) s.d Desember (12)
+    $sql .= " AND MONTH(sp.tanggal_terbit) >= 7";
+} elseif ($filter_semester === 'Genap') {
+    // Bulan Januari (1) s.d Juni (6)
+    $sql .= " AND MONTH(sp.tanggal_terbit) <= 6";
 }
 
 $sql .= " ORDER BY sp.tanggal_terbit DESC, sp.id_sp DESC";
@@ -107,7 +119,17 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             </div>
 
             <div class="<?= $card_class ?> p-5 bg-slate-50/30">
-                <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    
+                    <div>
+                        <label class="<?= $label_class ?>">Filter Semester</label>
+                        <select name="semester" class="<?= $input_class ?> font-bold text-[#000080]">
+                            <option value="all" <?= $filter_semester === 'all' ? 'selected' : '' ?>>Semua Semester (1 Tahun)</option>
+                            <option value="Ganjil" <?= $filter_semester === 'Ganjil' ? 'selected' : '' ?>>Semester Ganjil</option>
+                            <option value="Genap" <?= $filter_semester === 'Genap' ? 'selected' : '' ?>>Semester Genap</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="<?= $label_class ?>">Filter Kelas</label>
                         <select name="kelas" class="<?= $input_class ?>">
@@ -117,18 +139,20 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                             <?php endforeach; ?>
                         </select>
                     </div>
+
                     <div>
                         <label class="<?= $label_class ?>">Status SP</label>
                         <select name="status" class="<?= $input_class ?>">
                             <option value="all">Semua Status</option>
                             <option value="Pending" <?= $filter_status === 'Pending' ? 'selected' : '' ?>>Menunggu TTD (Pending)</option>
-                            <option value="Selesai" <?= $filter_status === 'Selesai' ? 'selected' : '' ?>>Telah Disetujui (Selesai)</option>
+                            <option value="Selesai" <?= $filter_status === 'Selesai' ? 'selected' : '' ?>>Disetujui (Selesai)</option>
                         </select>
                     </div>
+
                     <div>
                         <button type="submit" class="<?= $btn_primary ?> w-full h-[38px]">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            Filter Data
+                            Terapkan Filter
                         </button>
                     </div>
                 </form>
@@ -236,13 +260,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                                         </a>
                                         <?php if ($sp['status'] === 'Pending'): ?>
-                                        <form action="../../actions/validasi_sp.php" method="POST" class="inline">
-                                            <input type="hidden" name="id_sp" value="<?= $sp['id_sp'] ?>">
-                                            <button type="submit" onclick="return confirm('Validasi Surat Peringatan ini sebagai Selesai / Sudah Ditandatangani?')"
-                                                    class="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-md hover:bg-emerald-100 transition-colors shadow-sm" title="Validasi">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                            </button>
-                                        </form>
+                                        <a href="../../actions/validasi_sp.php?id=<?= $sp['id_sp'] ?>" 
+                                        onclick="return confirm('Validasi Surat Peringatan ini sebagai Selesai / Sudah Ditandatangani?')"
+                                        class="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-md hover:bg-emerald-100 transition-colors shadow-sm inline-block" title="Validasi">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        </a>
                                         <?php endif; ?>
                                     </div>
                                 </td>

@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Rekapitulasi Kelas (UI GLOBAL PORTAL)
  * Menampilkan matriks poin dan SP per kategori
+ * FIX LOGIKA: Kandidat Reward mengecek poin 1 Tahun Penuh
  */
 
 session_start();
@@ -28,11 +29,12 @@ if (!$id_kelas && !empty($kelas_list)) {
 if ($id_kelas) {
     $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
     
-    // Query siswa dengan SP per kategori
+    // LOGIKA BARU: Tambah sub-query total_tahunan
     $siswa_kelas = fetchAll("
         SELECT 
             s.nis,
             s.nama_siswa,
+            a.id_anggota,
             a.poin_kelakuan,
             a.poin_kerajinan,
             a.poin_kerapian,
@@ -40,7 +42,11 @@ if ($id_kelas) {
             a.status_sp_terakhir,
             a.status_sp_kelakuan,
             a.status_sp_kerajinan,
-            a.status_sp_kerapian
+            a.status_sp_kerapian,
+            (SELECT COALESCE(SUM(d.poin_saat_itu), 0) 
+             FROM tb_pelanggaran_header h 
+             JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
+             WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
         FROM tb_siswa s
         JOIN tb_anggota_kelas a ON s.nis = a.nis
         WHERE s.status_aktif = 'Aktif' 
@@ -143,7 +149,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <div class="flex flex-col items-center"><svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Kerapian<br><span class="text-[9px] opacity-75">(Poin)</span></div>
                                 </th>
                                 
-                                <th class="p-3 text-center bg-slate-100 font-extrabold text-slate-700">Total<br><span class="text-[9px] opacity-75">Poin</span></th>
+                                <th class="p-3 text-center bg-slate-100 font-extrabold text-slate-700 border-l border-[#E2E8F0]">Total<br><span class="text-[9px] opacity-75">Poin Smt</span></th>
                                 
                                 <th class="p-3 text-center bg-red-50/80 font-extrabold text-red-700 border-l border-[#E2E8F0]">SP<br><span class="text-[9px] opacity-75">Kelakuan</span></th>
                                 <th class="p-3 text-center bg-blue-50/80 font-extrabold text-blue-700">SP<br><span class="text-[9px] opacity-75">Kerajinan</span></th>
@@ -160,11 +166,19 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 </td>
                             </tr>
                             <?php else: ?>
-                            <?php foreach ($siswa_kelas as $idx => $siswa): ?>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center sticky left-0 bg-white group-hover:bg-slate-50 border-r border-[#E2E8F0] font-bold text-slate-500 text-xs"><?= $idx + 1 ?></td>
-                                <td class="p-3 sticky left-10 bg-white group-hover:bg-slate-50 border-r border-[#E2E8F0] font-bold text-[#000080] text-xs" style="min-width: 200px;">
-                                    <?= htmlspecialchars($siswa['nama_siswa']) ?>
+                            <?php foreach ($siswa_kelas as $idx => $siswa): 
+                                // LOGIKA BARU: Cek dari total_tahunan
+                                $is_bersih = ($siswa['total_tahunan'] == 0);
+                            ?>
+                            <tr class="hover:bg-slate-50 transition-colors group <?= $is_bersih ? 'bg-amber-50/30' : '' ?>">
+                                <td class="p-3 text-center sticky left-0 bg-white group-hover:bg-slate-50 <?= $is_bersih ? 'bg-amber-50/30 group-hover:bg-amber-50/50' : '' ?> border-r border-[#E2E8F0] font-bold text-slate-500 text-xs"><?= $idx + 1 ?></td>
+                                <td class="p-3 sticky left-10 bg-white group-hover:bg-slate-50 <?= $is_bersih ? 'bg-amber-50/30 group-hover:bg-amber-50/50' : '' ?> border-r border-[#E2E8F0] font-bold text-[#000080] text-xs" style="min-width: 200px;">
+                                    <div class="flex items-center">
+                                        <?= htmlspecialchars($siswa['nama_siswa']) ?>
+                                        <?php if ($is_bersih): ?>
+                                            <span title="Kandidat Reward" class="ml-2 text-amber-500"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg></span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 
                                 <td class="p-3 text-center bg-red-50/30">
@@ -177,7 +191,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-[11px] font-extrabold border border-yellow-200 shadow-sm"><?= $siswa['poin_kerapian'] ?></span>
                                 </td>
                                 
-                                <td class="p-3 text-center bg-slate-50">
+                                <td class="p-3 text-center bg-slate-50 border-l border-[#E2E8F0]">
                                     <span class="px-2.5 py-1 bg-slate-800 text-white rounded-md text-[11px] font-extrabold shadow-sm"><?= $siswa['total_poin_umum'] ?></span>
                                 </td>
                                 

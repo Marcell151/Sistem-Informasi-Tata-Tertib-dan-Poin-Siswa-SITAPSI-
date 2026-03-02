@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Rekap Kelas untuk Guru (UI GLOBAL PORTAL)
- * Fitur: Matriks Poin, Reward Badge, Navigasi tanpa Sidebar
+ * Fitur: Matriks Poin, Reward Badge (Logika 1 Tahun), Navigasi tanpa Sidebar
  */
 
 session_start();
@@ -35,6 +35,7 @@ $siswa_kelas = [];
 if ($id_kelas) {
     $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
     
+    // LOGIKA CODING: Ditambahkan sub-query total_tahunan
     $siswa_kelas = fetchAll("
         SELECT 
             s.nis,
@@ -47,7 +48,11 @@ if ($id_kelas) {
             a.status_sp_terakhir,
             a.status_sp_kelakuan,
             a.status_sp_kerajinan,
-            a.status_sp_kerapian
+            a.status_sp_kerapian,
+            (SELECT COALESCE(SUM(d.poin_saat_itu), 0) 
+             FROM tb_pelanggaran_header h 
+             JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
+             WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
         FROM tb_siswa s
         JOIN tb_anggota_kelas a ON s.nis = a.nis
         WHERE s.status_aktif = 'Aktif' 
@@ -155,11 +160,12 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if (empty($siswa_kelas)): ?>
                             <tr>
-                                <td colspan=\"8\" class="p-12 text-center text-slate-400 font-medium text-sm">Tidak ada data siswa.</td>
+                                <td colspan="8" class="p-12 text-center text-slate-400 font-medium text-sm">Tidak ada data siswa.</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach ($siswa_kelas as $idx => $siswa): 
-                                $is_bersih = ($siswa['total_poin_umum'] == 0);
+                                // LOGIKA BARU: Cek dari total_tahunan
+                                $is_bersih = ($siswa['total_tahunan'] == 0);
                             ?>
                             <tr class="hover:bg-slate-50 transition-colors group <?= $is_bersih ? 'bg-amber-50/30' : '' ?>">
                                 <td class="p-3 text-center sticky left-0 bg-white group-hover:bg-slate-50 <?= $is_bersih ? 'bg-amber-50/30 group-hover:bg-amber-50/50' : '' ?> border-r border-[#E2E8F0] font-bold text-slate-500 text-xs"><?= $idx + 1 ?></td>
@@ -205,15 +211,15 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 </div>
             </div>
 
-            <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl shadow-sm text-sm">
+            <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl shadow-sm text-sm mb-10">
                 <div class="flex items-start">
-                    <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span class="text-lg mr-3">ℹ️</span>
                     <div>
                         <h4 class="font-extrabold text-[#000080] mb-2 uppercase tracking-wide">Panduan Singkat</h4>
-                        <ul class="text-blue-800 space-y-1.5 font-medium text-xs">
-                            <li class="flex items-center"><svg class="w-4 h-4 text-amber-500 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg> <strong>Kandidat Reward:</strong> Siswa berprestasi dengan poin bersih (0). Baris mereka akan disorot warna kuning pastel.</li>
-                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-[#000080] rounded-full mr-2 ml-1"></span> <strong>SP Max (Tertinggi):</strong> Adalah tingkat SP terparah yang saat ini dikenakan pada siswa.</li>
-                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-[#000080] rounded-full mr-2 ml-1"></span> <strong>Klik Detail:</strong> Untuk melihat rincian riwayat pelanggaran dan tombol Laporan Wali Kelas.</li>
+                        <ul class="text-blue-800 space-y-1.5 font-medium text-xs list-disc list-inside ml-2">
+                            <li><strong>Kandidat Reward:</strong> Siswa berprestasi dengan poin bersih (0). Baris mereka akan disorot warna kuning pastel.</li>
+                            <li><strong>SP Max (Tertinggi):</strong> Adalah tingkat SP terparah yang saat ini dikenakan pada siswa.</li>
+                            <li><strong>Lihat Detail:</strong> Untuk melihat rincian riwayat pelanggaran dan tombol Laporan Wali Kelas.</li>
                         </ul>
                     </div>
                 </div>
