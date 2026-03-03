@@ -1,6 +1,6 @@
 <?php
 /**
- * SITAPSI - Hapus Siswa (NEW FILE)
+ * SITAPSI - Hapus Siswa
  * Menghapus siswa dari tb_siswa dan semua relasi
  */
 
@@ -10,10 +10,10 @@ require_once '../includes/session_check.php';
 
 requireAdmin();
 
-$nis = $_GET['nis'] ?? null;
+$no_induk = $_GET['no_induk'] ?? null;
 
-if (!$nis) {
-    $_SESSION['error_message'] = '❌ NIS tidak valid';
+if (!$no_induk) {
+    $_SESSION['error_message'] = '❌ No Induk tidak valid';
     header('Location: ../views/admin/data_siswa.php');
     exit;
 }
@@ -23,7 +23,7 @@ try {
     $pdo->beginTransaction();
 
     // Ambil nama siswa untuk pesan sukses
-    $siswa = fetchOne("SELECT nama_siswa FROM tb_siswa WHERE nis = :nis", ['nis' => $nis]);
+    $siswa = fetchOne("SELECT nama_siswa FROM tb_siswa WHERE no_induk = :no_induk", ['no_induk' => $no_induk]);
 
     if (!$siswa) {
         throw new Exception('Siswa tidak ditemukan');
@@ -34,8 +34,8 @@ try {
         SELECT COUNT(*) as total
         FROM tb_pelanggaran_header h
         JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-        WHERE a.nis = :nis
-    ", ['nis' => $nis]);
+        WHERE a.no_induk = :no_induk
+    ", ['no_induk' => $no_induk]);
 
     if ($cek_pelanggaran['total'] > 0) {
         throw new Exception(
@@ -46,22 +46,21 @@ try {
     }
 
     // Hapus dari tb_anggota_kelas dulu
-    executeQuery("DELETE FROM tb_anggota_kelas WHERE nis = :nis", ['nis' => $nis]);
+    executeQuery("DELETE FROM tb_anggota_kelas WHERE no_induk = :no_induk", ['no_induk' => $no_induk]);
 
     // Hapus dari tb_siswa
-    executeQuery("DELETE FROM tb_siswa WHERE nis = :nis", ['nis' => $nis]);
+    executeQuery("DELETE FROM tb_siswa WHERE no_induk = :no_induk", ['no_induk' => $no_induk]);
 
     $pdo->commit();
 
-    $_SESSION['success_message'] = '✅ Siswa ' . $siswa['nama_siswa'] . ' berhasil dihapus!';
+    $_SESSION['success_message'] = "✅ Siswa {$siswa['nama_siswa']} ($no_induk) berhasil dihapus permanen.";
 
 } catch (Exception $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $_SESSION['error_message'] = '❌ Gagal menghapus: ' . $e->getMessage();
+    $_SESSION['error_message'] = '❌ Gagal: ' . $e->getMessage();
 }
 
 header('Location: ../views/admin/data_siswa.php');
 exit;
-?>

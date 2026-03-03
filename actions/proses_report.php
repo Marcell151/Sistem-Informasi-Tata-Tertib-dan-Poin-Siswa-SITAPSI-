@@ -30,7 +30,7 @@ try {
             s.nama_siswa
         FROM tb_pelanggaran_header h
         JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-        JOIN tb_siswa s ON a.nis = s.nis
+        JOIN tb_siswa s ON a.no_induk = s.no_induk
         WHERE h.id_transaksi = :id
     ", ['id' => $id_transaksi]);
     
@@ -55,7 +55,7 @@ try {
         
     } elseif ($action === 'tolak') {
         // UPDATE STATUS DITOLAK
-        $alasan_tolak = $_GET['alasan'] ?? 'Tidak ada kesalahan input (Ditolak Admin)';
+        $alasan_tolak = $_GET['alasan_admin'] ?? 'Tidak ada kesalahan input (Ditolak Admin)';
         
         executeQuery("
             UPDATE tb_pelanggaran_header 
@@ -67,7 +67,7 @@ try {
             'id' => $id_transaksi
         ]);
         
-        $_SESSION['success_message'] = "❌ Report ditolak.";
+        $_SESSION['success_message'] = "✅ Report untuk transaksi {$transaksi['nama_siswa']} telah ditolak.";
     }
     
 } catch (Exception $e) {
@@ -76,4 +76,3 @@ try {
 
 header('Location: ../views/admin/kelola_report.php');
 exit;
-?>

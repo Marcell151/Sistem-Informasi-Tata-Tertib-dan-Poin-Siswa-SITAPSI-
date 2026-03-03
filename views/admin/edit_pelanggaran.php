@@ -18,17 +18,17 @@ if (!$id_transaksi) {
     exit;
 }
 
-// Ambil data transaksi header
+// Ambil data transaksi header (DISESUAIKAN NO INDUK)
 $transaksi = fetchOne("
     SELECT 
         h.*,
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         k.nama_kelas,
         a.id_anggota
     FROM tb_pelanggaran_header h
     JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE h.id_transaksi = :id
 ", ['id' => $id_transaksi]);
@@ -105,7 +105,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     </div>
                     <div>
                         <h3 class="text-xl font-extrabold text-slate-800"><?= htmlspecialchars($transaksi['nama_siswa']) ?></h3>
-                        <p class="text-sm font-medium text-slate-600"><?= $transaksi['nama_kelas'] ?> • <?= $transaksi['nis'] ?></p>
+                        <p class="text-sm font-medium text-slate-600"><?= $transaksi['nama_kelas'] ?> • No Induk: <?= $transaksi['no_induk'] ?></p>
                         <p class="text-xs font-bold text-slate-400 mt-1">
                             <?= date('d M Y', strtotime($transaksi['tanggal'])) ?> - <?= substr($transaksi['waktu'], 0, 5) ?> 
                             • <span class="text-[#000080]"><?= $transaksi['tipe_form'] ?></span>
@@ -236,19 +236,15 @@ const sanksiData = <?= $sanksi_json ?>;
 const selectedSanksiDefault = <?= json_encode($selected_sanksi) ?>;
 
 function switchCategory(category) {
-    // Sembunyikan semua konten
     document.querySelectorAll('.category-content').forEach(content => content.classList.add('hidden'));
     
-    // Reset semua tab ke state inactive
     document.querySelectorAll('.category-tab').forEach(tab => {
         tab.classList.remove('bg-red-600', 'bg-blue-600', 'bg-yellow-500', 'text-white', 'border-red-700', 'border-blue-700', 'border-yellow-600', 'font-extrabold');
         tab.classList.add('text-slate-500', 'border-transparent', 'font-bold');
     });
     
-    // Tampilkan konten aktif
     document.getElementById('content-' + category).classList.remove('hidden');
     
-    // Set style tab aktif
     const activeTab = document.getElementById('tab-' + category);
     activeTab.classList.remove('text-slate-500', 'border-transparent', 'font-bold');
     activeTab.classList.add('text-white', 'font-extrabold');

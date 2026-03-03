@@ -29,7 +29,7 @@ try {
         'id_sp' => $id_sp
     ]);
     
-    $_SESSION['success_message'] = '✅ SP berhasil divalidasi';
+    $_SESSION['success_message'] = '✅ Surat Peringatan (SP) berhasil divalidasi dan ditandatangani.';
     
 } catch (Exception $e) {
     $_SESSION['error_message'] = '❌ Gagal validasi: ' . $e->getMessage();
@@ -37,4 +37,3 @@ try {
 
 header('Location: ../views/admin/manajemen_sp.php');
 exit;
-?>

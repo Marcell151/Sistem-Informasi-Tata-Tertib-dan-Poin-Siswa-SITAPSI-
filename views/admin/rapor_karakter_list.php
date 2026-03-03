@@ -29,20 +29,19 @@ if (!$kelas) {
     exit;
 }
 
-// Ambil siswa dalam kelas
+// Ambil siswa dalam kelas (FOTO PROFIL DIHAPUS DARI QUERY)
 $siswa_list = fetchAll("
     SELECT 
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         s.jenis_kelamin,
-        s.foto_profil,
         a.id_anggota,
         a.poin_kelakuan,
         a.poin_kerajinan,
         a.poin_kerapian,
         a.total_poin_umum
     FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     WHERE a.id_kelas = :id_kelas
     AND a.id_tahun = :id_tahun
     AND s.status_aktif = 'Aktif'
@@ -107,17 +106,13 @@ $siswa_list = fetchAll("
                         
                         <div class="p-5 flex items-center space-x-4 border-b border-[#E2E8F0] bg-slate-50/50">
                             <div class="w-14 h-14 bg-[#000080] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 text-white font-extrabold text-xl shadow-sm">
-                                <?php if($siswa['foto_profil']): ?>
-                                    <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
-                                <?php else: ?>
-                                    <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
-                                <?php endif; ?>
+                                <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-sm font-extrabold text-slate-800 truncate group-hover:text-[#000080] transition-colors">
                                     <?= htmlspecialchars($siswa['nama_siswa']) ?>
                                 </h3>
-                                <p class="text-[11px] font-medium text-slate-500 mt-0.5"><?= $siswa['nis'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
+                                <p class="text-[11px] font-medium text-slate-500 mt-0.5"><?= $siswa['no_induk'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
                             </div>
                         </div>
 

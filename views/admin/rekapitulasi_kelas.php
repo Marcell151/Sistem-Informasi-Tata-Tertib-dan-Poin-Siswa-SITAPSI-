@@ -29,10 +29,10 @@ if (!$id_kelas && !empty($kelas_list)) {
 if ($id_kelas) {
     $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
     
-    // LOGIKA BARU: Tambah sub-query total_tahunan
+    // LOGIKA BARU: Tambah sub-query total_tahunan & Sesuaikan no_induk
     $siswa_kelas = fetchAll("
         SELECT 
-            s.nis,
+            s.no_induk,
             s.nama_siswa,
             a.id_anggota,
             a.poin_kelakuan,
@@ -48,7 +48,7 @@ if ($id_kelas) {
              JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
              WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
         FROM tb_siswa s
-        JOIN tb_anggota_kelas a ON s.nis = a.nis
+        JOIN tb_anggota_kelas a ON s.no_induk = a.no_induk
         WHERE s.status_aktif = 'Aktif' 
         AND a.id_tahun = :id_tahun
         AND a.id_kelas = :id_kelas
@@ -182,13 +182,13 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 </td>
                                 
                                 <td class="p-3 text-center bg-red-50/30">
-                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded-md text-[11px] font-extrabold border border-red-200 shadow-sm"><?= $siswa['poin_kelakuan'] ?></span>
+                                    <span class="px-2 py-1 <?= $siswa['poin_kelakuan'] > 0 ? 'bg-red-100 text-red-700 border border-red-200 shadow-sm' : 'text-slate-400 border border-transparent' ?> rounded-md text-[11px] font-extrabold"><?= $siswa['poin_kelakuan'] ?></span>
                                 </td>
                                 <td class="p-3 text-center bg-blue-50/30">
-                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-[11px] font-extrabold border border-blue-200 shadow-sm"><?= $siswa['poin_kerajinan'] ?></span>
+                                    <span class="px-2 py-1 <?= $siswa['poin_kerajinan'] > 0 ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm' : 'text-slate-400 border border-transparent' ?> rounded-md text-[11px] font-extrabold"><?= $siswa['poin_kerajinan'] ?></span>
                                 </td>
                                 <td class="p-3 text-center bg-yellow-50/30">
-                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md text-[11px] font-extrabold border border-yellow-200 shadow-sm"><?= $siswa['poin_kerapian'] ?></span>
+                                    <span class="px-2 py-1 <?= $siswa['poin_kerapian'] > 0 ? 'bg-yellow-100 text-yellow-700 border border-yellow-200 shadow-sm' : 'text-slate-400 border border-transparent' ?> rounded-md text-[11px] font-extrabold"><?= $siswa['poin_kerapian'] ?></span>
                                 </td>
                                 
                                 <td class="p-3 text-center bg-slate-50 border-l border-[#E2E8F0]">

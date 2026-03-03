@@ -19,13 +19,14 @@ if (!$id_sp) {
     exit;
 }
 
-// Query SP dengan detail lengkap siswa
+// Query SP dengan detail lengkap siswa (FIX: Hapus s.nama_ortu, ganti dengan s.nama_ayah dan s.nama_ibu)
 $sp = fetchOne("
     SELECT 
         sp.*,
         s.nama_siswa,
-        s.nis,
-        s.nama_ortu,
+        s.no_induk,
+        s.nama_ayah,
+        s.nama_ibu,
         k.nama_kelas,
         a.poin_kelakuan,
         a.poin_kerajinan,
@@ -33,7 +34,7 @@ $sp = fetchOne("
         a.total_poin_umum
     FROM tb_riwayat_sp sp
     JOIN tb_anggota_kelas a ON sp.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE sp.id_sp = :id
 ", ['id' => $id_sp]);
@@ -75,6 +76,9 @@ $poin_pemicu = 0;
 if ($sp['kategori_pemicu'] === 'KELAKUAN') $poin_pemicu = $sp['poin_kelakuan'];
 elseif ($sp['kategori_pemicu'] === 'KERAJINAN') $poin_pemicu = $sp['poin_kerajinan'];
 elseif ($sp['kategori_pemicu'] === 'KERAPIAN') $poin_pemicu = $sp['poin_kerapian'];
+
+// Nama Orang Tua (Bisa Ayah atau Ibu)
+$nama_orang_tua = !empty($sp['nama_ayah']) ? $sp['nama_ayah'] : (!empty($sp['nama_ibu']) ? $sp['nama_ibu'] : 'Orang Tua / Wali');
 
 // UI Configuration untuk tampilan Web (Non-Print)
 $btn_primary = "px-6 py-2.5 bg-[#000080] text-white text-sm font-semibold rounded-lg shadow-md hover:bg-blue-900 transition-all flex items-center justify-center";
@@ -225,16 +229,16 @@ $btn_outline = "px-6 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 text
         <div class="border-2 border-black p-5 text-[14px]">
             <h3 class="text-center font-bold text-lg mb-4">Bukti Penerimaan Surat Peringatan</h3>
             
-            <p class="mb-3">Kami telah menerima <strong>SURAT PERINGATAN <?= $tingkat_sp_romawi ?></strong> tertanggal <strong><?= $tanggal_indo ?></strong> atas nama putra kami :</p>
+            <p class="mb-3">Kami telah menerima <strong>SURAT PERINGATAN <?= $tingkat_sp_romawi ?></strong> tertanggal <strong><?= $tanggal_indo ?></strong> atas nama putra/putri kami :</p>
             
             <table class="w-full mb-6">
                 <tr>
                     <td class="w-32 py-1">Nama</td>
-                    <td class="py-1">: ......................................................................................................................................</td>
+                    <td class="py-1">: <strong><?= mb_strtoupper($sp['nama_siswa']) ?></strong></td>
                 </tr>
                 <tr>
-                    <td class="py-1">Kelas / No.urut</td>
-                    <td class="py-1">: ......................................................................................................................................</td>
+                    <td class="w-32 py-1">Kelas / No.urut</td>
+                    <td class="py-1">: <strong><?= mb_strtoupper($sp['nama_kelas']) ?> / -</strong></td>
                 </tr>
             </table>
             

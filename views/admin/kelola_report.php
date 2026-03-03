@@ -12,7 +12,7 @@ requireAdmin();
 
 $filter_status = $_GET['status'] ?? 'Pending';
 
-// Query report dengan detail lengkap
+// Query report dengan detail lengkap (DISESUAIKAN NO INDUK)
 $sql = "
     SELECT 
         h.id_transaksi,
@@ -21,7 +21,7 @@ $sql = "
         h.semester,
         h.status_revisi,
         h.alasan_revisi,
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         k.nama_kelas,
         g.nama_guru as pelapor,
@@ -31,7 +31,7 @@ $sql = "
         SUM(d.poin_saat_itu) as total_poin
     FROM tb_pelanggaran_header h
     JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     JOIN tb_guru g ON h.id_guru = g.id_guru
     LEFT JOIN tb_guru g_wali ON k.id_kelas = g_wali.id_kelas
@@ -139,7 +139,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 </td>
                                 <td class="p-4">
                                     <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($row['nama_siswa']) ?></p>
-                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $row['nama_kelas'] ?> • <?= $row['nis'] ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $row['nama_kelas'] ?> • <?= $row['no_induk'] ?></p>
                                 </td>
                                 <td class="p-4">
                                     <p class="font-bold text-slate-700 text-xs"><?= htmlspecialchars($row['wali_kelas'] ?? 'Tidak Diketahui') ?></p>

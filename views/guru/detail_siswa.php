@@ -30,7 +30,7 @@ $tahun_aktif = fetchOne("
 
 $filter_semester = $_GET['semester'] ?? $tahun_aktif['semester_aktif'];
 
-// Query siswa dengan SP per kategori
+// Query siswa dengan SP per kategori (nis diubah ke no_induk)
 $siswa = fetchOne("
     SELECT 
         s.*,
@@ -46,7 +46,7 @@ $siswa = fetchOne("
         k.nama_kelas,
         k.id_kelas
     FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE a.id_anggota = :id
 ", ['id' => $id_anggota]);
@@ -153,7 +153,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             </a>
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Detail Siswa</h1>
-                <p class="text-sm font-medium text-slate-500"><?= $siswa['nama_kelas'] ?> • NIS: <?= $siswa['nis'] ?></p>
+                <p class="text-sm font-medium text-slate-500"><?= $siswa['nama_kelas'] ?> • No Induk: <?= $siswa['no_induk'] ?></p>
             </div>
         </div>
 
@@ -206,7 +206,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 
                 <div class="relative z-10 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                     <div class="w-28 h-28 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-4 border-white/20 shadow-lg">
-                        <?php if($siswa['foto_profil']): ?>
+                        <?php if($siswa['foto_profil'] ?? null): ?>
                             <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
                         <?php else: ?>
                             <span class="text-[#000080] font-extrabold text-4xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
@@ -215,7 +215,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     
                     <div class="flex-1 text-center md:text-left">
                         <h2 class="text-3xl font-extrabold mb-1"><?= htmlspecialchars($siswa['nama_siswa']) ?></h2>
-                        <p class="text-blue-200 font-medium text-sm mb-4"><?= $siswa['nis'] ?> • Kelas <?= $siswa['nama_kelas'] ?></p>
+                        <p class="text-blue-200 font-medium text-sm mb-4"><?= $siswa['no_induk'] ?> • Kelas <?= $siswa['nama_kelas'] ?></p>
                         
                         <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-medium">
                             <span class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 flex items-center">

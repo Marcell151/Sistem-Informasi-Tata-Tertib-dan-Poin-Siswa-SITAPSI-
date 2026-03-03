@@ -22,11 +22,11 @@ if (!$tahun_aktif) {
 // 1. Ambil daftar kelas
 $kelas_list = fetchAll("SELECT id_kelas, nama_kelas, tingkat FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
-// 2. Ambil daftar siswa dan kelompokkan berdasarkan id_kelas menggunakan PHP Array
+// 2. Ambil daftar siswa dan kelompokkan berdasarkan id_kelas menggunakan PHP Array (nis diubah ke no_induk)
 $siswa_raw = fetchAll("
-    SELECT s.nis, s.nama_siswa, a.id_kelas, a.id_anggota
+    SELECT s.no_induk, s.nama_siswa, a.id_kelas, a.id_anggota
     FROM tb_siswa s
-    JOIN tb_anggota_kelas a ON s.nis = a.nis
+    JOIN tb_anggota_kelas a ON s.no_induk = a.no_induk
     WHERE s.status_aktif = 'Aktif' 
     AND a.id_tahun = :id_tahun
     ORDER BY s.nama_siswa
@@ -36,7 +36,7 @@ $siswa_by_kelas = [];
 foreach ($siswa_raw as $s) {
     $siswa_by_kelas[$s['id_kelas']][] = [
         'id_anggota' => $s['id_anggota'],
-        'nis' => $s['nis'],
+        'no_induk' => $s['no_induk'],
         'nama_siswa' => $s['nama_siswa']
     ];
 }
@@ -287,16 +287,16 @@ tsKelas.on('change', function(val) {
     tsSiswa.clearOptions();
     
     if (val && siswaData[val]) {
-        // Ambil data array siswa sesuai id_kelas
+        // Ambil data array siswa sesuai id_kelas (Diubah format title text dari NIS jadi No Induk)
         const options = siswaData[val].map(s => ({
             id: s.id_anggota,
-            title: s.nama_siswa + ' (' + s.nis + ')'
+            title: s.nama_siswa + ' (' + s.no_induk + ')'
         }));
         
         tsSiswa.addOptions(options);
         tsSiswa.enable();
-        tsSiswa.settings.placeholder = "Ketik Nama / NIS Siswa...";
-        tsSiswa.control_input.placeholder = "Ketik Nama / NIS Siswa...";
+        tsSiswa.settings.placeholder = "Ketik Nama / No Induk Siswa...";
+        tsSiswa.control_input.placeholder = "Ketik Nama / No Induk Siswa...";
     } else {
         tsSiswa.disable();
         tsSiswa.settings.placeholder = "Pilih kelas terlebih dahulu...";

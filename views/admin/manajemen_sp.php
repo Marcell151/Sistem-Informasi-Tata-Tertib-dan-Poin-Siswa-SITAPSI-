@@ -19,17 +19,17 @@ $filter_semester = $_GET['semester'] ?? $tahun_aktif['semester_aktif'];
 
 $kelas_list = fetchAll("SELECT * FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
-// Query riwayat SP
+// Query riwayat SP (FOTO PROFIL DIHAPUS DARI QUERY & NIS JADI NO INDUK)
 $sql = "
     SELECT 
-        s.nis, s.nama_siswa, s.foto_profil,
+        s.no_induk, s.nama_siswa,
         k.nama_kelas,
         a.total_poin_umum, a.status_sp_terakhir, a.status_sp_kelakuan, a.status_sp_kerajinan, a.status_sp_kerapian,
         a.poin_kelakuan, a.poin_kerajinan, a.poin_kerapian,
         sp.id_sp, sp.tingkat_sp, sp.kategori_pemicu, sp.tanggal_terbit, sp.tanggal_validasi, sp.status
     FROM tb_riwayat_sp sp
     JOIN tb_anggota_kelas a ON sp.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE a.id_tahun = :id_tahun
 ";
@@ -191,15 +191,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 <td class="p-4">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-[#000080] rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm text-white font-extrabold">
-                                            <?php if($sp['foto_profil']): ?>
-                                                <img src="../../assets/uploads/siswa/<?= htmlspecialchars($sp['foto_profil']) ?>" class="w-full h-full object-cover">
-                                            <?php else: ?>
-                                                <?= strtoupper(substr($sp['nama_siswa'], 0, 1)) ?>
-                                            <?php endif; ?>
+                                            <?= strtoupper(substr($sp['nama_siswa'], 0, 1)) ?>
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($sp['nama_siswa']) ?></p>
-                                            <p class="text-[10px] font-medium text-slate-500"><?= $sp['nama_kelas'] ?> • <?= $sp['nis'] ?></p>
+                                            <p class="text-[10px] font-medium text-slate-500"><?= $sp['nama_kelas'] ?> • No Induk: <?= $sp['no_induk'] ?></p>
                                         </div>
                                     </div>
                                 </td>
@@ -257,7 +253,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <div class="flex gap-2 justify-center">
                                         <a href="cetak_sp.php?id=<?= $sp['id_sp'] ?>" target="_blank"
                                            class="p-1.5 bg-white border border-[#E2E8F0] text-[#000080] rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Cetak Surat">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                                         </a>
                                         <?php if ($sp['status'] === 'Pending'): ?>
                                         <a href="../../actions/validasi_sp.php?id=<?= $sp['id_sp'] ?>" 

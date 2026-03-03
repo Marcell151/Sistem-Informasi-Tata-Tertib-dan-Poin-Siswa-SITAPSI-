@@ -22,10 +22,10 @@ $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE 
 // Ambil nama kelas
 $kelas_info = fetchOne("SELECT nama_kelas FROM tb_kelas WHERE id_kelas = :id_kelas", ['id_kelas' => $id_kelas]);
 
-// Ambil data siswa
+// Ambil data siswa (nis diubah ke no_induk)
 $siswa_kelas = fetchAll("
     SELECT 
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         a.poin_kelakuan,
         a.poin_kerajinan,
@@ -33,7 +33,7 @@ $siswa_kelas = fetchAll("
         a.total_poin_umum,
         a.status_sp_terakhir
     FROM tb_siswa s
-    JOIN tb_anggota_kelas a ON s.nis = a.nis
+    JOIN tb_anggota_kelas a ON s.no_induk = a.no_induk
     WHERE s.status_aktif = 'Aktif' 
     AND a.id_tahun = :id_tahun
     AND a.id_kelas = :id_kelas
@@ -55,12 +55,13 @@ fputcsv($output, ['REKAPITULASI KELAS ' . $kelas_info['nama_kelas']]);
 fputcsv($output, ['Tahun Ajaran: ' . $tahun_aktif['nama_tahun']]);
 fputcsv($output, ['Tanggal Cetak: ' . date('d-m-Y H:i:s')]);
 fputcsv($output, []);
-fputcsv($output, ['NIS', 'Nama Siswa', 'Poin Kelakuan', 'Poin Kerajinan', 'Poin Kerapian', 'Total Poin', 'Status SP']);
+// Diubah header NIS menjadi No Induk
+fputcsv($output, ['No Induk', 'Nama Siswa', 'Poin Kelakuan', 'Poin Kerajinan', 'Poin Kerapian', 'Total Poin', 'Status SP']);
 
 // Data siswa
 foreach ($siswa_kelas as $siswa) {
     fputcsv($output, [
-        $siswa['nis'],
+        $siswa['no_induk'],
         $siswa['nama_siswa'],
         $siswa['poin_kelakuan'],
         $siswa['poin_kerajinan'],

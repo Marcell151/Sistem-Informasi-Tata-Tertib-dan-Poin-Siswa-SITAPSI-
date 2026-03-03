@@ -76,7 +76,7 @@ if (!$id_tahun) {
                 <?php foreach ($tahun_arsip as $t): 
                     $stats = fetchOne("
                         SELECT 
-                            COUNT(DISTINCT a.nis) as total_siswa,
+                            COUNT(DISTINCT a.no_induk) as total_siswa,
                             COUNT(DISTINCT h.id_transaksi) as total_pelanggaran,
                             SUM(a.total_poin_umum) as total_poin
                         FROM tb_anggota_kelas a
@@ -161,14 +161,14 @@ $kategori_list = fetchAll("SELECT * FROM tb_kategori_pelanggaran");
 $sql = "
     SELECT 
         h.id_transaksi, h.tanggal, h.waktu, h.tipe_form,
-        s.nis, s.nama_siswa,
+        s.no_induk, s.nama_siswa,
         k.nama_kelas,
         g.nama_guru,
         GROUP_CONCAT(DISTINCT jp.nama_pelanggaran SEPARATOR ', ') as pelanggaran_list,
         SUM(d.poin_saat_itu) as total_poin
     FROM tb_pelanggaran_header h
     JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     JOIN tb_guru g ON h.id_guru = g.id_guru
     LEFT JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
@@ -183,7 +183,7 @@ if ($filter_kelas !== 'all') {
     $params['kelas'] = $filter_kelas;
 }
 if (!empty($filter_search)) {
-    $sql .= " AND (s.nama_siswa LIKE :search OR s.nis LIKE :search)";
+    $sql .= " AND (s.nama_siswa LIKE :search OR s.no_induk LIKE :search)";
     $params['search'] = "%$filter_search%";
 }
 if ($filter_kategori !== 'all') {
@@ -197,7 +197,7 @@ $pelanggaran_list = fetchAll($sql, $params);
 // 6. Hitung Statistik
 $stats = fetchOne("
     SELECT 
-        COUNT(DISTINCT a.nis) as total_siswa,
+        COUNT(DISTINCT a.no_induk) as total_siswa,
         COUNT(DISTINCT h.id_transaksi) as total_pelanggaran,
         SUM(a.total_poin_umum) as total_poin
     FROM tb_anggota_kelas a
@@ -252,7 +252,7 @@ $stats = fetchOne("
                     <input type="hidden" name="tahun" value="<?= $id_tahun ?>">
                     
                     <div class="md:col-span-4">
-                        <label class="<?= $label_class ?>">Cari Siswa (Nama/NIS)</label>
+                        <label class="<?= $label_class ?>">Cari Siswa (Nama/No Induk)</label>
                         <div class="relative">
                             <input type="text" name="search" value="<?= htmlspecialchars($filter_search) ?>" placeholder="Contoh: Budi / 12345" class="<?= $input_class ?> pl-9">
                             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -329,7 +329,7 @@ $stats = fetchOne("
                                 </td>
                                 <td class="p-4">
                                     <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($log['nama_siswa']) ?></p>
-                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $log['nama_kelas'] ?> • <?= $log['nis'] ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $log['nama_kelas'] ?> • <?= $log['no_induk'] ?></p>
                                 </td>
                                 <td class="p-4 max-w-xs">
                                     <p class="text-xs text-slate-700 truncate" title="<?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?>"><?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?></p>

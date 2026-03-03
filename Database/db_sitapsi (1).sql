@@ -47,19 +47,17 @@ CREATE TABLE tb_guru (
     FOREIGN KEY (id_kelas) REFERENCES tb_kelas(id_kelas) ON DELETE SET NULL
 );
 
--- Tabel Siswa (Data Statis / Induk) -> DISESUAIKAN DENGAN FORMAT EXCEL
+-- Tabel Siswa (Data Statis / Induk)
 CREATE TABLE tb_siswa (
-    no_induk VARCHAR(50) PRIMARY KEY,
+    nis VARCHAR(20) PRIMARY KEY,
     nama_siswa VARCHAR(100) NOT NULL,
     jenis_kelamin ENUM('L', 'P') NOT NULL,
-    kota VARCHAR(100),
+    tempat_lahir VARCHAR(50),
     tanggal_lahir DATE,
-    alamat TEXT,
-    nama_ayah VARCHAR(150),
-    pekerjaan_ayah VARCHAR(100),
-    nama_ibu VARCHAR(150),
-    pekerjaan_ibu VARCHAR(100),
+    alamat_ortu TEXT,
+    nama_ortu VARCHAR(100),
     no_hp_ortu VARCHAR(15), -- Notifikasi WA
+    foto_profil VARCHAR(255),
     -- Status 'Lulus' ditambahkan untuk alumni (Arsip 3 Tahun)
     status_aktif ENUM('Aktif', 'Lulus', 'Keluar', 'Dikeluarkan') DEFAULT 'Aktif'
 );
@@ -71,7 +69,7 @@ CREATE TABLE tb_siswa (
 -- Tabel Anggota Kelas (Jantung Sistem - Per Tahun)
 CREATE TABLE tb_anggota_kelas (
     id_anggota BIGINT AUTO_INCREMENT PRIMARY KEY,
-    no_induk VARCHAR(50) NOT NULL, -- DISESUAIKAN (Sebelumnya nis)
+    nis VARCHAR(20) NOT NULL,
     id_kelas INT NOT NULL,
     id_tahun INT NOT NULL,
     
@@ -93,7 +91,7 @@ CREATE TABLE tb_anggota_kelas (
     -- Penanda Reward
     status_reward ENUM('None', 'Kandidat Reward Ganjil','Kandidat Sertifikat') DEFAULT 'None',
     
-    FOREIGN KEY (no_induk) REFERENCES tb_siswa(no_induk) ON DELETE CASCADE,
+    FOREIGN KEY (nis) REFERENCES tb_siswa(nis) ON DELETE CASCADE,
     FOREIGN KEY (id_kelas) REFERENCES tb_kelas(id_kelas),
     FOREIGN KEY (id_tahun) REFERENCES tb_tahun_ajaran(id_tahun)
 );
@@ -343,40 +341,11 @@ INSERT INTO tb_tahun_ajaran (nama_tahun, status, semester_aktif) VALUES
 
 INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('7A', 7), ('7B', 7);
 
--- INSERT GURU (DATA LENGKAP DARI SEKOLAH)
--- Menggunakan format NIP: 100xx (Sesuai dengan Kode di gambar untuk kemudahan Testing), Semua PIN: 123456
+-- Insert Guru (Kolom id_kelas dibiarkan NULL dulu, atau bisa diisi '1' jika jadi wali kelas 7A)
 INSERT INTO tb_guru (nama_guru, nip, id_kelas, pin_validasi) VALUES 
-('Sr. M. Elfrida Suhartati, SPM, S.Psi.,MM', '10001', NULL, '123456'),
-('Antonetta Maria Kuntodiati, S.Pd', '10002', NULL, '123456'),
-('Dra. Maria Marsiti', '10003', NULL, '123456'),
-('Trianto Thomas, S.Pd', '10004', NULL, '123456'),
-('Agustina Peni Sarasati, S.Pd', '10005', NULL, '123456'),
-('Y. Pamungkas, S.Pd', '10006', NULL, '123456'),
-('Joseph Andiek Kristian, S.Pd, S.Kom', '10007', NULL, '123456'),
-('Albertha Yulanti Susetyo, M.Pd', '10008', NULL, '123456'),
-('Galang Bagus Afridianto, M.Pd', '10009', NULL, '123456'),
-('Hendrik Kiswanto, S.Pd.', '10010', NULL, '123456'),
-('Margareta Esti Wulan, S.Pd.', '10011', NULL, '123456'),
-('Theresia Sri Wahyuni, S.Pd, M.M.', '10012', NULL, '123456'),
-('Yosua Beni Setiawan, S.Pd.', '10014', NULL, '123456'),
-('God Life Endob Mesak, S.Pd', '10015', NULL, '123456'),
-('Agnes Herawaty Sinurat, S.E., M.M.', '10016', NULL, '123456'),
-('Deka Nanda Kurniawati, S.Pd.', '10017', NULL, '123456'),
-('Agatha Novenia Bintang Prieska, S.Pd.', '10018', NULL, '123456'),
-('Bernadetha Devia Tindy Noveyra, S.Pd.', '10019', NULL, '123456'),
-('Drs. Albertus Magnus Meo Depa', '10020', NULL, '123456'),
-('Giovani Bimby Dwiantonio, S.Pd', '10021', NULL, '123456'),
-('Arnoldus Kobe Tegar Felix Sai, S.Pd.', '10022', NULL, '123456'),
-('Haniar Mey Sila Kinanti, S.Pd.', '10023', NULL, '123456'),
-('Anjelina Wulandari Sitina De Sareng, S.Pd', '10024', NULL, '123456'),
-('Lydia Uli Permatasari, S.Pd.', '10025', NULL, '123456'),
-('Albertus Bayu Seto, S.Pd', '10026', NULL, '123456'),
-('Brigita Natalia Setyaningrum, S.Pd.', '10027', NULL, '123456'),
-('Amelia Rangel Da Silva, S.Pd', '10028', NULL, '123456');
+('Budi Santoso, S.Pd', '198501012010011001', NULL, '123456');
 
--- DISESUAIKAN DENGAN STRUKTUR SISWA BARU
-INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu) VALUES 
-('2024001', 'Ahmad Dani', 'L', 'Malang', '2010-05-15', 'Jl. Merdeka No. 1', 'Bpk. Dani', 'Swasta', 'Ibu Dani', 'Ibu Rumah Tangga', '081234567890');
+INSERT INTO tb_siswa (nis, nama_siswa, jenis_kelamin, nama_ortu, no_hp_ortu) VALUES 
+('2024001', 'Ahmad Dani', 'L', 'Bpk. Dani', '081234567890');
 
--- DISESUAIKAN NIS MENJADI NO INDUK
-INSERT INTO tb_anggota_kelas (no_induk, id_kelas, id_tahun) VALUES ('2024001', 1, 1);
+INSERT INTO tb_anggota_kelas (nis, id_kelas, id_tahun) VALUES ('2024001', 1, 1);

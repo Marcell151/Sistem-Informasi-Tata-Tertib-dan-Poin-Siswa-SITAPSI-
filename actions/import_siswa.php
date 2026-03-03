@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Import Siswa dari Excel/CSV
+ * Disesuaikan dengan struktur database baru
  */
 
 session_start();
@@ -38,114 +39,85 @@ try {
     $tahun_aktif = fetchOne("SELECT id_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
     
     if (!$tahun_aktif) {
-        throw new Exception('Tidak ada tahun ajaran aktif');
+        throw new Exception('Tidak ada Tahun Ajaran Aktif. Silakan set di Pengaturan Akademik.');
     }
     
     $id_tahun = $tahun_aktif['id_tahun'];
-    
-    // Parse CSV
-    $handle = fopen($file['tmp_name'], 'r');
-    
-    if (!$handle) {
-        throw new Exception('Gagal membuka file');
-    }
-    
     $pdo->beginTransaction();
     
-    $row = 0;
-    $success = 0;
-    $failed = 0;
+    $handle = fopen($file['tmp_name'], 'r');
     
-    // Skip header row
-    fgetcsv($handle);
+    // Lewati baris header (baris pertama)
+    fgetcsv($handle, 1000, ',');
+    
+    $success = 0;
     
     while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
-        $row++;
+        // Asumsi format kolom CSV sesuai dengan template yang di-download
+        // 0:No Induk, 1:Nama, 2:JK, 3:Kota, 4:Tgl Lahir, 5:Alamat, 6:Nama Ayah, 7:Pek Ayah, 8:Nama Ibu, 9:Pek Ibu, 10:HP, 11:Kelas
         
-        // Format: NIS | Nama | JK | Tempat Lahir | Tanggal Lahir | Alamat | Nama Ortu | No HP | Kelas
-        if (count($data) < 9) {
-            $failed++;
-            continue;
-        }
+        if (empty($data[0]) || empty($data[1])) continue; // Skip jika no_induk atau nama kosong
         
-        $nis = trim($data[0]);
+        $no_induk = trim($data[0]);
         $nama_siswa = trim($data[1]);
-        $jk = strtoupper(trim($data[2]));
-        $tempat_lahir = trim($data[3]);
-        $tanggal_lahir = trim($data[4]);
+        $jk = strtoupper(trim($data[2])) === 'P' ? 'P' : 'L';
+        $kota = trim($data[3]);
+        $tanggal_lahir = !empty(trim($data[4])) ? trim($data[4]) : null;
         $alamat = trim($data[5]);
-        $nama_ortu = trim($data[6]);
-        $no_hp_ortu = trim($data[7]);
-        $nama_kelas = trim($data[8]);
+        $nama_ayah = trim($data[6]);
+        $pekerjaan_ayah = trim($data[7]);
+        $nama_ibu = trim($data[8]);
+        $pekerjaan_ibu = trim($data[9]);
+        $no_hp_ortu = trim($data[10]);
+        $nama_kelas = trim($data[11]);
         
-        // Validasi
-        if (empty($nis) || empty($nama_siswa)) {
-            $failed++;
-            continue;
-        }
+        // Cari ID kelas berdasarkan nama kelas
+        $kelas = fetchOne("SELECT id_kelas FROM tb_kelas WHERE nama_kelas = :nama LIMIT 1", ['nama' => $nama_kelas]);
         
-        // Cari id_kelas
-        $kelas = fetchOne("SELECT id_kelas FROM tb_kelas WHERE nama_kelas = :nama_kelas", ['nama_kelas' => $nama_kelas]);
+        if (!$kelas) continue; // Skip jika kelas tidak valid
         
-        if (!$kelas) {
-            $failed++;
-            continue;
-        }
+        // Insert atau Update tb_siswa
+        $siswa_exist = fetchOne("SELECT no_induk FROM tb_siswa WHERE no_induk = :no_induk", ['no_induk' => $no_induk]);
         
-        // Cek apakah siswa sudah ada
-        $existing = fetchOne("SELECT nis FROM tb_siswa WHERE nis = :nis", ['nis' => $nis]);
-        
-        if ($existing) {
-            // Update
+        if ($siswa_exist) {
             executeQuery("
-                UPDATE tb_siswa 
-                SET nama_siswa = :nama_siswa,
-                    jenis_kelamin = :jk,
-                    tempat_lahir = :tempat_lahir,
-                    tanggal_lahir = :tanggal_lahir,
-                    alamat_ortu = :alamat,
-                    nama_ortu = :nama_ortu,
-                    no_hp_ortu = :no_hp_ortu
-                WHERE nis = :nis
+                UPDATE tb_siswa SET 
+                    nama_siswa = :nama_siswa, jenis_kelamin = :jk, kota = :kota, tanggal_lahir = :tanggal_lahir,
+                    alamat = :alamat, nama_ayah = :nama_ayah, pekerjaan_ayah = :pekerjaan_ayah,
+                    nama_ibu = :nama_ibu, pekerjaan_ibu = :pekerjaan_ibu, no_hp_ortu = :no_hp_ortu
+                WHERE no_induk = :no_induk
             ", [
-                'nama_siswa' => $nama_siswa,
-                'jk' => $jk,
-                'tempat_lahir' => $tempat_lahir,
-                'tanggal_lahir' => $tanggal_lahir,
-                'alamat' => $alamat,
-                'nama_ortu' => $nama_ortu,
-                'no_hp_ortu' => $no_hp_ortu,
-                'nis' => $nis
+                'nama_siswa' => $nama_siswa, 'jk' => $jk, 'kota' => $kota, 'tanggal_lahir' => $tanggal_lahir,
+                'alamat' => $alamat, 'nama_ayah' => $nama_ayah, 'pekerjaan_ayah' => $pekerjaan_ayah,
+                'nama_ibu' => $nama_ibu, 'pekerjaan_ibu' => $pekerjaan_ibu, 'no_hp_ortu' => $no_hp_ortu, 'no_induk' => $no_induk
             ]);
         } else {
-            // Insert baru
             executeQuery("
-                INSERT INTO tb_siswa (nis, nama_siswa, jenis_kelamin, tempat_lahir, tanggal_lahir, alamat_ortu, nama_ortu, no_hp_ortu, status_aktif)
-                VALUES (:nis, :nama_siswa, :jk, :tempat_lahir, :tanggal_lahir, :alamat, :nama_ortu, :no_hp_ortu, 'Aktif')
+                INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu, status_aktif)
+                VALUES (:no_induk, :nama_siswa, :jk, :kota, :tanggal_lahir, :alamat, :nama_ayah, :pekerjaan_ayah, :nama_ibu, :pekerjaan_ibu, :no_hp_ortu, 'Aktif')
             ", [
-                'nis' => $nis,
-                'nama_siswa' => $nama_siswa,
-                'jk' => $jk,
-                'tempat_lahir' => $tempat_lahir,
-                'tanggal_lahir' => $tanggal_lahir,
-                'alamat' => $alamat,
-                'nama_ortu' => $nama_ortu,
-                'no_hp_ortu' => $no_hp_ortu
+                'no_induk' => $no_induk, 'nama_siswa' => $nama_siswa, 'jk' => $jk, 'kota' => $kota, 'tanggal_lahir' => $tanggal_lahir,
+                'alamat' => $alamat, 'nama_ayah' => $nama_ayah, 'pekerjaan_ayah' => $pekerjaan_ayah,
+                'nama_ibu' => $nama_ibu, 'pekerjaan_ibu' => $pekerjaan_ibu, 'no_hp_ortu' => $no_hp_ortu
             ]);
         }
         
         // Insert/Update tb_anggota_kelas
-        $anggota = fetchOne("SELECT id_anggota FROM tb_anggota_kelas WHERE nis = :nis AND id_tahun = :id_tahun", [
-            'nis' => $nis,
+        $anggota = fetchOne("SELECT id_anggota FROM tb_anggota_kelas WHERE no_induk = :no_induk AND id_tahun = :id_tahun", [
+            'no_induk' => $no_induk,
             'id_tahun' => $id_tahun
         ]);
         
-        if (!$anggota) {
+        if ($anggota) {
+            executeQuery("UPDATE tb_anggota_kelas SET id_kelas = :id_kelas WHERE no_induk = :no_induk AND id_tahun = :id_tahun", [
+                'id_kelas' => $kelas['id_kelas'], 'no_induk' => $no_induk, 'id_tahun' => $id_tahun
+            ]);
+        } else {
             executeQuery("
-                INSERT INTO tb_anggota_kelas (nis, id_kelas, id_tahun)
-                VALUES (:nis, :id_kelas, :id_tahun)
+                INSERT INTO tb_anggota_kelas (no_induk, id_kelas, id_tahun)
+                VALUES (:no_induk, :id_kelas, :id_tahun)
             ", [
-                'nis' => $nis,
+                'no_induk' => $no_induk,
                 'id_kelas' => $kelas['id_kelas'],
                 'id_tahun' => $id_tahun
             ]);
@@ -157,7 +129,7 @@ try {
     fclose($handle);
     $pdo->commit();
     
-    $_SESSION['success_message'] = "✅ Import selesai! Berhasil: $success, Gagal: $failed";
+    $_SESSION['success_message'] = "✅ Berhasil import $success data siswa!";
     
 } catch (Exception $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
@@ -168,4 +140,3 @@ try {
 
 header('Location: ../views/admin/data_siswa.php');
 exit;
-?>

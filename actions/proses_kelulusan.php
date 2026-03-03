@@ -26,15 +26,15 @@ try {
     $kelas_ids = array_column($kelas_9, 'id_kelas');
     $placeholders = implode(',', array_fill(0, count($kelas_ids), '?'));
     
-    // Update status siswa kelas 9 menjadi Lulus
+    // Update status siswa kelas 9 menjadi Lulus (DISESUAIKAN NO INDUK)
     $params = $kelas_ids;
     $params[] = $tahun_aktif['id_tahun'];
     
     $stmt = $pdo->prepare("
         UPDATE tb_siswa 
         SET status_aktif = 'Lulus' 
-        WHERE nis IN (
-            SELECT DISTINCT nis 
+        WHERE no_induk IN (
+            SELECT DISTINCT no_induk 
             FROM tb_anggota_kelas 
             WHERE id_kelas IN ($placeholders)
             AND id_tahun = ?
@@ -52,9 +52,8 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $_SESSION['error_message'] = '❌ Gagal proses kelulusan: ' . $e->getMessage();
+    $_SESSION['error_message'] = '❌ Gagal: ' . $e->getMessage();
 }
 
 header('Location: ../views/admin/pengaturan_akademik.php');
 exit;
-?>

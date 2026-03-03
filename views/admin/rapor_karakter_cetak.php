@@ -20,7 +20,7 @@ if (!$id_anggota) {
 
 $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 
-// Ambil data siswa
+// Ambil data siswa (DISESUAIKAN: NO INDUK & ORTU)
 $siswa = fetchOne("
     SELECT 
         s.*,
@@ -32,7 +32,7 @@ $siswa = fetchOne("
         k.nama_kelas,
         k.id_kelas
     FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE a.id_anggota = :id
 ", ['id' => $id_anggota]);
@@ -106,7 +106,7 @@ $btn_outline = "px-4 py-2 bg-white border border-[#E2E8F0] text-slate-700 text-s
             Kembali
         </a>
         <button onclick="window.print()" class="<?= $btn_primary ?>">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             Cetak PDF / A4
         </button>
     </div>
@@ -130,8 +130,8 @@ $btn_outline = "px-4 py-2 bg-white border border-[#E2E8F0] text-slate-700 text-s
                         <span class="flex-1 text-slate-800">: <strong class="text-base"><?= htmlspecialchars($siswa['nama_siswa']) ?></strong></span>
                     </div>
                     <div class="flex">
-                        <span class="w-32 text-slate-500 font-bold uppercase tracking-wider">NIS</span>
-                        <span class="flex-1 text-slate-800 font-medium">: <?= $siswa['nis'] ?></span>
+                        <span class="w-32 text-slate-500 font-bold uppercase tracking-wider">No Induk</span>
+                        <span class="flex-1 text-slate-800 font-medium">: <?= $siswa['no_induk'] ?></span>
                     </div>
                     <div class="flex">
                         <span class="w-32 text-slate-500 font-bold uppercase tracking-wider">Kelas</span>
@@ -145,7 +145,7 @@ $btn_outline = "px-4 py-2 bg-white border border-[#E2E8F0] text-slate-700 text-s
                     </div>
                     <div class="flex">
                         <span class="w-32 text-slate-500 font-bold uppercase tracking-wider">Nama Orang Tua</span>
-                        <span class="flex-1 text-slate-800 font-medium">: <?= htmlspecialchars($siswa['nama_ortu']) ?></span>
+                        <span class="flex-1 text-slate-800 font-medium">: <?= htmlspecialchars($siswa['nama_ayah'] ?? $siswa['nama_ibu'] ?? '-') ?></span>
                     </div>
                     <div class="flex mt-2 pt-2 border-t border-slate-200">
                         <span class="w-32 text-slate-800 font-extrabold uppercase tracking-wider">Total Poin</span>

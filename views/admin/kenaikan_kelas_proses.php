@@ -29,15 +29,15 @@ if (!$kelas_asal) {
     exit;
 }
 
-// Ambil siswa di kelas asal (tahun ini)
+// Ambil siswa di kelas asal (tahun ini) - DISESUAIKAN NO INDUK
 $siswa_list = fetchAll("
     SELECT 
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         s.jenis_kelamin,
         a.id_anggota
     FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     WHERE a.id_kelas = :id_kelas
     AND a.id_tahun = :id_tahun
     AND s.status_aktif = 'Aktif'
@@ -148,11 +148,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <?php foreach ($siswa_list as $siswa): ?>
                             <label class="flex items-center space-x-3 p-3.5 border border-[#E2E8F0] rounded-xl hover:border-[#000080]/30 cursor-pointer transition-all hover:bg-slate-50 shadow-sm group">
-                                <input type="checkbox" name="siswa[]" value="<?= $siswa['nis'] ?>" 
+                                <input type="checkbox" name="siswa[]" value="<?= $siswa['no_induk'] ?>" 
                                        class="w-5 h-5 text-[#000080] border-slate-300 rounded focus:ring-[#000080]">
                                 <div class="flex-1 min-w-0">
                                     <p class="font-bold text-slate-800 text-sm truncate group-hover:text-[#000080]"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
-                                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider mt-0.5"><?= $siswa['nis'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider mt-0.5"><?= $siswa['no_induk'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
                                 </div>
                             </label>
                             <?php endforeach; ?>

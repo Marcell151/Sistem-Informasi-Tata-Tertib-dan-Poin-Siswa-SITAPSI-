@@ -21,24 +21,24 @@ $kelas_list = fetchAll("SELECT id_kelas, nama_kelas FROM tb_kelas ORDER BY tingk
 
 $sql = "
     SELECT 
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         s.jenis_kelamin,
-        s.nama_ortu,
+        s.nama_ayah,
+        s.nama_ibu,
         s.no_hp_ortu,
         s.status_aktif,
-        s.foto_profil,
         k.nama_kelas,
         k.id_kelas,
         a.id_anggota
     FROM tb_siswa s
     LEFT JOIN tb_anggota_kelas a ON (
-        a.nis = s.nis 
+        a.no_induk = s.no_induk 
         AND a.id_tahun = :id_tahun
         AND a.id_anggota = (
             SELECT MAX(a2.id_anggota) 
             FROM tb_anggota_kelas a2 
-            WHERE a2.nis = s.nis 
+            WHERE a2.no_induk = s.no_induk 
             AND a2.id_tahun = a.id_tahun
         )
     )
@@ -52,7 +52,7 @@ $params = [
 ];
 
 if (!empty($search)) {
-    $sql .= " AND (s.nama_siswa LIKE :search OR s.nis LIKE :search)";
+    $sql .= " AND (s.nama_siswa LIKE :search OR s.no_induk LIKE :search)";
     $params['search'] = "%$search%";
 }
 
@@ -135,7 +135,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     <div>
                         <label class="<?= $label_class ?>">Pencarian</label>
                         <div class="relative">
-                            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau NIS..." class="<?= $input_class ?> pl-10">
+                            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Nama atau No Induk..." class="<?= $input_class ?> pl-10">
                             <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         </div>
                     </div>
@@ -195,15 +195,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 <td class="p-4">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-[#000080] rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
-                                            <?php if($siswa['foto_profil']): ?>
-                                                <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
-                                            <?php else: ?>
-                                                <span class="text-white font-bold text-sm"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
-                                            <?php endif; ?>
+                                            <span class="text-white font-bold text-sm"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
-                                            <p class="text-[10px] font-medium text-slate-500">NIS: <?= htmlspecialchars($siswa['nis']) ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan' ?></p>
+                                            <p class="text-[10px] font-medium text-slate-500">No Induk: <?= htmlspecialchars($siswa['no_induk']) ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan' ?></p>
                                         </div>
                                     </div>
                                 </td>
@@ -211,8 +207,9 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <?= $siswa['nama_kelas'] ? htmlspecialchars($siswa['nama_kelas']) : '<span class="text-slate-400">-</span>' ?>
                                 </td>
                                 <td class="p-4">
-                                    <p class="font-medium text-slate-700 text-xs"><?= htmlspecialchars($siswa['nama_ortu'] ?? '-') ?></p>
-                                    <p class="text-[10px] text-slate-400"><?= htmlspecialchars($siswa['no_hp_ortu'] ?? '-') ?></p>
+                                    <p class="font-medium text-slate-700 text-xs">Ayah: <?= htmlspecialchars($siswa['nama_ayah'] ?? '-') ?></p>
+                                    <p class="font-medium text-slate-700 text-xs">Ibu: <?= htmlspecialchars($siswa['nama_ibu'] ?? '-') ?></p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">HP: <?= htmlspecialchars($siswa['no_hp_ortu'] ?? '-') ?></p>
                                 </td>
                                 <td class="p-4 text-center">
                                     <span class="px-2.5 py-1 rounded-md text-[10px] font-bold 
@@ -223,19 +220,20 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 <td class="p-4 text-center">
                                     <div class="flex items-center justify-center space-x-2">
                                         <button onclick='editSiswa(<?= json_encode([
-                                            "nis" => $siswa["nis"],
+                                            "no_induk" => $siswa["no_induk"],
                                             "id_anggota" => $siswa["id_anggota"],
                                             "nama_siswa" => $siswa["nama_siswa"],
                                             "jenis_kelamin" => $siswa["jenis_kelamin"],
                                             "status_aktif" => $siswa["status_aktif"],
-                                            "nama_ortu" => $siswa["nama_ortu"] ?? "",
+                                            "nama_ayah" => $siswa["nama_ayah"] ?? "",
+                                            "nama_ibu" => $siswa["nama_ibu"] ?? "",
                                             "no_hp_ortu" => $siswa["no_hp_ortu"] ?? "",
                                             "id_kelas" => $siswa["id_kelas"]
                                         ]) ?>)'
                                                 class="p-1.5 bg-white border border-[#E2E8F0] text-slate-600 rounded-md hover:bg-slate-50 transition-colors shadow-sm" title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </button>
-                                        <button onclick="hapusSiswa('<?= htmlspecialchars($siswa['nis'], ENT_QUOTES) ?>', '<?= htmlspecialchars($siswa['nama_siswa'], ENT_QUOTES) ?>')"
+                                        <button onclick="hapusSiswa('<?= htmlspecialchars($siswa['no_induk'], ENT_QUOTES) ?>', '<?= htmlspecialchars($siswa['nama_siswa'], ENT_QUOTES) ?>')"
                                                 class="p-1.5 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50 transition-colors shadow-sm" title="Hapus">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
@@ -268,7 +266,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-lg">
                 <p class="text-xs text-blue-800 leading-relaxed font-medium">
                     Format Kolom Excel yang dibutuhkan:<br>
-                    <span class="font-mono text-slate-600 mt-1 block">NIS | Nama | JK | Tempat Lahir | Tgl Lahir | Alamat | Nama Ortu | No HP | Kelas</span>
+                    <span class="font-mono text-slate-600 mt-1 block">No Induk | Nama | JK | Tempat Lahir | Tgl Lahir | Alamat | Nama Ayah | Nama Ibu | No HP | Kelas</span>
                 </p>
             </div>
             <div class="flex gap-3 pt-2">
@@ -290,8 +288,8 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             <form action="../../actions/tambah_siswa.php" method="POST" id="formTambah" class="space-y-5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label class="<?= $label_class ?>">NIS *</label>
-                        <input type="text" name="nis" required class="<?= $input_class ?>" placeholder="Nomor Induk Siswa">
+                        <label class="<?= $label_class ?>">No Induk *</label>
+                        <input type="text" name="no_induk" required class="<?= $input_class ?>" placeholder="Nomor Induk Siswa">
                     </div>
                     <div>
                         <label class="<?= $label_class ?>">Nama Lengkap *</label>
@@ -318,10 +316,14 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         <h4 class="text-sm font-bold text-slate-800 mb-4">Informasi Orang Tua / Wali</h4>
                     </div>
                     <div>
-                        <label class="<?= $label_class ?>">Nama Orang Tua *</label>
-                        <input type="text" name="nama_ortu" required class="<?= $input_class ?>" placeholder="Nama lengkap ortu/wali">
+                        <label class="<?= $label_class ?>">Nama Ayah *</label>
+                        <input type="text" name="nama_ayah" required class="<?= $input_class ?>" placeholder="Nama lengkap Ayah">
                     </div>
                     <div>
+                        <label class="<?= $label_class ?>">Nama Ibu *</label>
+                        <input type="text" name="nama_ibu" required class="<?= $input_class ?>" placeholder="Nama lengkap Ibu">
+                    </div>
+                    <div class="sm:col-span-2">
                         <label class="<?= $label_class ?>">No. HP (WhatsApp) *</label>
                         <input type="text" name="no_hp_ortu" required class="<?= $input_class ?>" placeholder="Contoh: 08123...">
                     </div>
@@ -344,13 +346,13 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
         </div>
         <div class="overflow-y-auto p-6">
             <form action="../../actions/edit_siswa.php" method="POST" id="formEdit" class="space-y-5">
-                <input type="hidden" name="nis" id="edit-nis">
+                <input type="hidden" name="no_induk" id="edit-no-induk">
                 <input type="hidden" name="id_anggota" id="edit-id-anggota">
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label class="<?= $label_class ?>">NIS (Read Only)</label>
-                        <input type="text" id="edit-nis-display" readonly class="<?= $input_class ?> bg-slate-50 cursor-not-allowed">
+                        <label class="<?= $label_class ?>">No Induk (Read Only)</label>
+                        <input type="text" id="edit-no-induk-display" readonly class="<?= $input_class ?> bg-slate-50 cursor-not-allowed">
                     </div>
                     <div>
                         <label class="<?= $label_class ?>">Nama Lengkap *</label>
@@ -389,10 +391,14 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         <h4 class="text-sm font-bold text-slate-800 mb-4">Informasi Orang Tua / Wali</h4>
                     </div>
                     <div>
-                        <label class="<?= $label_class ?>">Nama Orang Tua *</label>
-                        <input type="text" name="nama_ortu" id="edit-nama-ortu" required class="<?= $input_class ?>">
+                        <label class="<?= $label_class ?>">Nama Ayah *</label>
+                        <input type="text" name="nama_ayah" id="edit-nama-ayah" required class="<?= $input_class ?>">
                     </div>
                     <div>
+                        <label class="<?= $label_class ?>">Nama Ibu *</label>
+                        <input type="text" name="nama_ibu" id="edit-nama-ibu" required class="<?= $input_class ?>">
+                    </div>
+                    <div class="sm:col-span-2">
                         <label class="<?= $label_class ?>">No. HP (WhatsApp) *</label>
                         <input type="text" name="no_hp_ortu" id="edit-no-hp-ortu" required class="<?= $input_class ?>">
                     </div>
@@ -415,21 +421,22 @@ function closeModalTambah() { document.getElementById('modal-tambah').classList.
 function closeModalEdit() { document.getElementById('modal-edit').classList.add('hidden'); }
 
 function editSiswa(data) {
-    document.getElementById('edit-nis').value = data.nis;
+    document.getElementById('edit-no-induk').value = data.no_induk;
     document.getElementById('edit-id-anggota').value = data.id_anggota || '';
-    document.getElementById('edit-nis-display').value = data.nis;
+    document.getElementById('edit-no-induk-display').value = data.no_induk;
     document.getElementById('edit-nama-siswa').value = data.nama_siswa;
     document.getElementById('edit-jenis-kelamin').value = data.jenis_kelamin;
     document.getElementById('edit-status-aktif').value = data.status_aktif;
-    document.getElementById('edit-nama-ortu').value = data.nama_ortu;
+    document.getElementById('edit-nama-ayah').value = data.nama_ayah;
+    document.getElementById('edit-nama-ibu').value = data.nama_ibu;
     document.getElementById('edit-no-hp-ortu').value = data.no_hp_ortu;
     document.getElementById('edit-id-kelas').value = data.id_kelas || '';
     document.getElementById('modal-edit').classList.remove('hidden');
 }
 
-function hapusSiswa(nis, nama) {
-    if (confirm(`⚠️ Hapus siswa: ${nama} (${nis})?\n\nSiswa yang memiliki riwayat pelanggaran tidak dapat dihapus.\nDisarankan ubah status menjadi Lulus/Keluar.`)) {
-        window.location.href = '../../actions/hapus_siswa.php?nis=' + encodeURIComponent(nis);
+function hapusSiswa(no_induk, nama) {
+    if (confirm(`⚠️ Hapus siswa: ${nama} (${no_induk})?\n\nSiswa yang memiliki riwayat pelanggaran tidak dapat dihapus.\nDisarankan ubah status menjadi Lulus/Keluar.`)) {
+        window.location.href = '../../actions/hapus_siswa.php?no_induk=' + encodeURIComponent(no_induk);
     }
 }
 

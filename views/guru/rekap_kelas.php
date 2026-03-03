@@ -35,10 +35,10 @@ $siswa_kelas = [];
 if ($id_kelas) {
     $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
     
-    // LOGIKA CODING: Ditambahkan sub-query total_tahunan
+    // LOGIKA CODING: Ditambahkan sub-query total_tahunan (nis diubah ke no_induk)
     $siswa_kelas = fetchAll("
         SELECT 
-            s.nis,
+            s.no_induk,
             s.nama_siswa,
             a.id_anggota,
             a.poin_kelakuan,
@@ -54,7 +54,7 @@ if ($id_kelas) {
              JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
              WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
         FROM tb_siswa s
-        JOIN tb_anggota_kelas a ON s.nis = a.nis
+        JOIN tb_anggota_kelas a ON s.no_induk = a.no_induk
         WHERE s.status_aktif = 'Aktif' 
         AND a.id_tahun = :id_tahun
         AND a.id_kelas = :id_kelas

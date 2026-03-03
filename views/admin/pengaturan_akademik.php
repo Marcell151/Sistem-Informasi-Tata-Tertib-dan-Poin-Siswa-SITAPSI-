@@ -16,10 +16,11 @@ $ada_transaksi = $cek_transaksi['total'] > 0;
 $kenaikan_kelas_locked = $ada_transaksi;
 
 $tahun_list = fetchAll("SELECT id_tahun, nama_tahun, semester_aktif, status FROM tb_tahun_ajaran ORDER BY id_tahun DESC");
+// DISESUAIKAN NO INDUK PADA QUERY STATISTIK
 $stats = fetchOne("
     SELECT 
-        COUNT(DISTINCT a.nis) as total_siswa,
-        COUNT(DISTINCT CASE WHEN a.status_sp_terakhir != 'Aman' THEN a.nis END) as siswa_sp,
+        COUNT(DISTINCT a.no_induk) as total_siswa,
+        COUNT(DISTINCT CASE WHEN a.status_sp_terakhir != 'Aman' THEN a.no_induk END) as siswa_sp,
         SUM(a.total_poin_umum) as total_poin
     FROM tb_anggota_kelas a
     WHERE a.id_tahun = :id_tahun

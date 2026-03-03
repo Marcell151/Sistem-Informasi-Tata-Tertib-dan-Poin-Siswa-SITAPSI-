@@ -20,8 +20,8 @@ $tahun_aktif = fetchOne("
 // Statistik umum (Memanfaatkan total poin yang sudah difilter oleh sistem semester)
 $stats = fetchOne("
     SELECT 
-        COUNT(DISTINCT a.nis) as total_siswa,
-        COUNT(DISTINCT CASE WHEN a.status_sp_terakhir != 'Aman' THEN a.nis END) as siswa_sp,
+        COUNT(DISTINCT a.no_induk) as total_siswa,
+        COUNT(DISTINCT CASE WHEN a.status_sp_terakhir != 'Aman' THEN a.no_induk END) as siswa_sp,
         SUM(a.total_poin_umum) as total_poin
     FROM tb_anggota_kelas a
     WHERE a.id_tahun = :id_tahun
@@ -58,7 +58,7 @@ $aktivitas_30_hari = fetchAll("
 $top_siswa = fetchAll("
     SELECT 
         s.nama_siswa,
-        s.nis,
+        s.no_induk,
         k.nama_kelas,
         a.total_poin_umum,
         a.status_sp_terakhir,
@@ -66,7 +66,7 @@ $top_siswa = fetchAll("
         a.status_sp_kerajinan,
         a.status_sp_kerapian
     FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     WHERE a.id_tahun = :id_tahun
     AND a.total_poin_umum > 0
@@ -232,7 +232,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
                                 </td>
                                 <td class="p-4">
                                     <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
-                                    <p class="text-[10px] font-medium text-slate-400"><?= $siswa['nis'] ?></p>
+                                    <p class="text-[10px] font-medium text-slate-400"><?= htmlspecialchars($siswa['no_induk']) ?></p>
                                 </td>
                                 <td class="p-4 text-slate-600 font-medium"><?= $siswa['nama_kelas'] ?></td>
                                 <td class="p-4 text-center">

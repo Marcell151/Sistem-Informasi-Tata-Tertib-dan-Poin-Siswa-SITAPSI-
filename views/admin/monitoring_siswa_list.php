@@ -19,10 +19,10 @@ if (!$id_kelas) {
 $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
 
-// Query siswa dengan pengecekan total poin TAHUNAN (Ganjil + Genap)
+// Query siswa dengan pengecekan total poin TAHUNAN (Ganjil + Genap) - DISESUAIKAN NO INDUK
 $siswa_list = fetchAll("
     SELECT 
-        s.nis, s.nama_siswa, s.jenis_kelamin, s.foto_profil,
+        s.no_induk, s.nama_siswa, s.jenis_kelamin,
         a.id_anggota, a.poin_kelakuan, a.poin_kerajinan, a.poin_kerapian, a.total_poin_umum,
         a.status_sp_terakhir, a.status_sp_kelakuan, a.status_sp_kerajinan, a.status_sp_kerapian,
         (SELECT COALESCE(SUM(d.poin_saat_itu), 0) 
@@ -30,7 +30,7 @@ $siswa_list = fetchAll("
          JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
          WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
     FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     WHERE a.id_kelas = :id_kelas AND a.id_tahun = :id_tahun AND s.status_aktif = 'Aktif'
     ORDER BY s.nama_siswa
 ", ['id_kelas' => $id_kelas, 'id_tahun' => $tahun_aktif['id_tahun']]);
@@ -40,7 +40,7 @@ $siswa_list = fetchAll("
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Kelas <?= $kelas_info['nama_kelas'] ?> - SITAPSI</title>
+    <title>Monitoring Kelas <?= htmlspecialchars($kelas_info['nama_kelas']) ?> - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#F8FAFC]">
@@ -64,7 +64,7 @@ $siswa_list = fetchAll("
                 <svg class="absolute right-0 top-0 text-white/5 w-48 h-48 transform translate-x-8 -translate-y-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 <div class="relative z-10 flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-extrabold mb-1">Daftar Siswa Kelas <?= $kelas_info['nama_kelas'] ?></h2>
+                        <h2 class="text-2xl font-extrabold mb-1">Daftar Siswa Kelas <?= htmlspecialchars($kelas_info['nama_kelas']) ?></h2>
                         <p class="text-blue-200 font-medium text-sm">Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?></p>
                     </div>
                     <div class="text-right">
@@ -96,7 +96,7 @@ $siswa_list = fetchAll("
 
                     <div class="p-5 flex items-center space-x-4 border-b border-[#E2E8F0] bg-slate-50/50">
                         <div class="w-14 h-14 bg-[#000080] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 text-white font-extrabold text-xl shadow-sm <?= $is_bersih ? 'ring-2 ring-amber-400 ring-offset-2' : '' ?>">
-                            <?php if($siswa['foto_profil']): ?>
+                            <?php if(isset($siswa['foto_profil']) && $siswa['foto_profil']): ?>
                                 <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
                             <?php else: ?>
                                 <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
@@ -104,7 +104,7 @@ $siswa_list = fetchAll("
                         </div>
                         <div class="flex-1 min-w-0">
                             <h3 class="font-extrabold text-slate-800 truncate text-sm group-hover:text-[#000080] transition-colors"><?= htmlspecialchars($siswa['nama_siswa']) ?></h3>
-                            <p class="text-[11px] font-medium text-slate-500 mt-0.5">NIS: <?= $siswa['nis'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
+                            <p class="text-[11px] font-medium text-slate-500 mt-0.5">No Induk: <?= $siswa['no_induk'] ?> • <?= $siswa['jenis_kelamin'] === 'L' ? 'L' : 'P' ?></p>
                         </div>
                     </div>
 

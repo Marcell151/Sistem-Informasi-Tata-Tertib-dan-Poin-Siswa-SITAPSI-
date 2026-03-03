@@ -13,18 +13,17 @@ if (!$id_transaksi) {
     exit;
 }
 
-// Ambil header transaksi
+// Ambil header transaksi (DISESUAIKAN NO INDUK)
 $transaksi = fetchOne("
     SELECT 
         h.*,
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
-        s.foto_profil,
         k.nama_kelas,
         g.nama_guru
     FROM tb_pelanggaran_header h
     JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     LEFT JOIN tb_guru g ON h.id_guru = g.id_guru
     WHERE h.id_transaksi = :id
@@ -62,7 +61,7 @@ $detail_sanksi = fetchAll("
 // Hitung total poin
 $total_poin = array_sum(array_column($detail_pelanggaran, 'poin_saat_itu'));
 
-// Parse foto (JSON array) -> LOGIKA ASLI DIKEMBALIKAN
+// Parse foto (JSON array)
 $foto_array = [];
 if (!empty($transaksi['bukti_foto'])) {
     $foto_array = json_decode($transaksi['bukti_foto'], true) ?: [];
@@ -73,7 +72,7 @@ if (!empty($transaksi['bukti_foto'])) {
 
     <div class="bg-slate-50 border border-[#E2E8F0] rounded-xl p-5 flex items-start space-x-4 shadow-sm">
         <div class="w-16 h-16 bg-[#000080] rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-sm flex-shrink-0 overflow-hidden">
-            <?php if($transaksi['foto_profil']): ?>
+            <?php if(isset($transaksi['foto_profil']) && $transaksi['foto_profil']): ?>
                 <img src="../../assets/uploads/siswa/<?= htmlspecialchars($transaksi['foto_profil']) ?>" class="w-full h-full object-cover">
             <?php else: ?>
                 <?= strtoupper(substr($transaksi['nama_siswa'], 0, 1)) ?>
@@ -82,7 +81,7 @@ if (!empty($transaksi['bukti_foto'])) {
         
         <div class="flex-1">
             <h3 class="text-xl font-extrabold text-slate-800"><?= htmlspecialchars($transaksi['nama_siswa']) ?></h3>
-            <p class="text-sm font-medium text-slate-600 mb-2.5"><?= htmlspecialchars($transaksi['nama_kelas']) ?> • NIS: <?= htmlspecialchars($transaksi['nis']) ?></p>
+            <p class="text-sm font-medium text-slate-600 mb-2.5"><?= htmlspecialchars($transaksi['nama_kelas']) ?> • No Induk: <?= htmlspecialchars($transaksi['no_induk']) ?></p>
             
             <div class="flex flex-wrap gap-2">
                 <span class="px-2.5 py-1 bg-white border border-[#E2E8F0] text-slate-600 rounded-md text-xs font-bold flex items-center shadow-sm">

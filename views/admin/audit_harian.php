@@ -27,7 +27,7 @@ $sql = "
         h.waktu,
         h.tipe_form,
         h.bukti_foto,
-        s.nis,
+        s.no_induk,
         s.nama_siswa,
         k.nama_kelas,
         g.nama_guru,
@@ -36,7 +36,7 @@ $sql = "
         SUM(d.poin_saat_itu) as total_poin
     FROM tb_pelanggaran_header h
     JOIN tb_anggota_kelas a ON h.id_anggota = a.id_anggota
-    JOIN tb_siswa s ON a.nis = s.nis
+    JOIN tb_siswa s ON a.no_induk = s.no_induk
     JOIN tb_kelas k ON a.id_kelas = k.id_kelas
     JOIN tb_guru g ON h.id_guru = g.id_guru
     LEFT JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
@@ -183,7 +183,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 </td>
                                 <td class="p-4">
                                     <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($log['nama_siswa']) ?></p>
-                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $log['nama_kelas'] ?> • <?= $log['nis'] ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= $log['nama_kelas'] ?> • <?= $log['no_induk'] ?></p>
                                 </td>
                                 <td class="p-4 text-slate-700 max-w-xs">
                                     <div class="truncate text-xs" title="<?= htmlspecialchars($log['pelanggaran_list'] ?: '-') ?>">

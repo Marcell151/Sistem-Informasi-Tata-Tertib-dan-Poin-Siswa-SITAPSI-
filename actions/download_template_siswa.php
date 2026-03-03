@@ -16,15 +16,18 @@ $output = fopen('php://output', 'w');
 // Tulis BOM untuk UTF-8
 fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
-// Header kolom
+// Header kolom disesuaikan dengan Database Baru
 fputcsv($output, [
-    'NIS',
+    'No Induk',
     'Nama Lengkap',
     'Jenis Kelamin (L/P)',
-    'Tempat Lahir',
+    'Kota (Tempat Lahir)',
     'Tanggal Lahir (YYYY-MM-DD)',
     'Alamat',
-    'Nama Orang Tua',
+    'Nama Ayah',
+    'Pekerjaan Ayah',
+    'Nama Ibu',
+    'Pekerjaan Ibu',
     'No HP Orang Tua',
     'Kelas (contoh: 7A, 8B)'
 ]);
@@ -36,24 +39,14 @@ fputcsv($output, [
     'L',
     'Malang',
     '2010-05-15',
-    'Jl. Mawar No. 10 Malang',
+    'Jl. Merdeka No. 1',
     'Bpk. Dani',
+    'Swasta',
+    'Ibu Dani',
+    'Ibu Rumah Tangga',
     '081234567890',
     '7A'
 ]);
 
-fputcsv($output, [
-    '2024002',
-    'Siti Nurhaliza',
-    'P',
-    'Surabaya',
-    '2010-08-20',
-    'Jl. Melati No. 5 Surabaya',
-    'Ibu. Haliza',
-    '081987654321',
-    '7B'
-]);
-
 fclose($output);
 exit;
-?>
