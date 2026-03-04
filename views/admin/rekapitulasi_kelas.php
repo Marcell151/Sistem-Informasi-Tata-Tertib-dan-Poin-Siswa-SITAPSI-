@@ -77,19 +77,24 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 
     <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex justify-between items-center">
+        <div class="bg-white border-b border-[#E2E8F0] px-6 pl-16 lg:pl-6 py-4 sticky top-0 z-30 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Rekapitulasi Kelas</h1>
                 <p class="text-sm font-medium text-slate-500">Matriks poin dan SP per kategori</p>
             </div>
             <?php if ($id_kelas): ?>
-            <a href="../../actions/export_rekap_admin.php?kelas=<?= $id_kelas ?>" target="_blank"
-               class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center space-x-2 transition-colors shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-                <span class="hidden sm:inline">Export Excel</span>
-            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="../../actions/cetak_rekap_kelas.php?kelas=<?= $id_kelas ?>" target="_blank"
+                   class="bg-white border border-[#E2E8F0] hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center shadow-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span class="hidden sm:inline">Preview & Download PDF</span>
+                </a>
+                <a href="../../actions/export_rekap_admin.php?kelas=<?= $id_kelas ?>" target="_blank"
+                   class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center shadow-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Export Excel
+                </a>
+            </div>
             <?php endif; ?>
         </div>
 

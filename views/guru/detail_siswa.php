@@ -147,14 +147,21 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <div class="mb-6 flex items-center space-x-4">
-            <a href="rekap_kelas.php?kelas=<?= $siswa['id_kelas'] ?>" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-transparent hover:border-[#E2E8F0] transition-colors bg-white shadow-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </a>
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Detail Siswa</h1>
-                <p class="text-sm font-medium text-slate-500"><?= $siswa['nama_kelas'] ?> • No Induk: <?= $siswa['no_induk'] ?></p>
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <a href="rekap_kelas.php?kelas=<?= $siswa['id_kelas'] ?>" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-transparent hover:border-[#E2E8F0] transition-colors bg-white shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Detail Siswa</h1>
+                    <p class="text-sm font-medium text-slate-500"><?= $siswa['nama_kelas'] ?> • No Induk: <?= $siswa['no_induk'] ?></p>
+                </div>
             </div>
+            
+            <a href="../../actions/cetak_detail_siswa.php?id=<?= $id_anggota ?>" target="_blank" class="px-4 py-2 bg-white border border-[#E2E8F0] text-slate-700 hover:bg-slate-50 text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                <span class="hidden sm:inline">Preview & Download Buku</span>
+            </a>
         </div>
 
         <div class="space-y-6">

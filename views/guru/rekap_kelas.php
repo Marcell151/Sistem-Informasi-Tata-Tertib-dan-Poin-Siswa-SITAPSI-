@@ -86,12 +86,19 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 <p class="text-sm font-medium text-slate-500">Lihat total pelanggaran dan status SP siswa</p>
             </div>
             
-            <?php if ($id_kelas): ?>
-            <a href="export_rekap.php?kelas=<?= $id_kelas ?>" target="_blank"
-               class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center justify-center transition-colors shadow-sm">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                Export Excel
-            </a>
+            <?php if ($id_kelas && $id_kelas == $id_kelas_wali): ?>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="../../actions/cetak_rekap_kelas.php?kelas=<?= $id_kelas ?>" target="_blank"
+                   class="bg-white border border-[#E2E8F0] hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center shadow-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span class="hidden sm:inline">Preview & Download PDF</span>
+                </a>
+                <a href="export_rekap.php?kelas=<?= $id_kelas ?>" target="_blank"
+                   class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Export Excel
+                </a>
+            </div>
             <?php endif; ?>
         </div>
 

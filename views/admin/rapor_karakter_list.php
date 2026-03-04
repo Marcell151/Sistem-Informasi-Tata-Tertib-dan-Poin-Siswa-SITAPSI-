@@ -101,7 +101,7 @@ $siswa_list = fetchAll("
                 </div>
                 <?php else: ?>
                 <?php foreach ($siswa_list as $siswa): ?>
-                <a href="rapor_karakter_cetak.php?id=<?= $siswa['id_anggota'] ?>" class="block group">
+                <a href="../../actions/cetak_rapor_karakter.php?id=<?= $siswa['id_anggota'] ?>" target="_blank" class="block group">
                     <div class="bg-white rounded-xl shadow-sm border border-[#E2E8F0] transition-all hover:shadow-lg hover:border-[#000080] transform hover:-translate-y-1 overflow-hidden flex flex-col h-full">
                         
                         <div class="p-5 flex items-center space-x-4 border-b border-[#E2E8F0] bg-slate-50/50">
