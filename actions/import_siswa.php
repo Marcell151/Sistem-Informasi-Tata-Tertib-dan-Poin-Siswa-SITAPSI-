@@ -91,8 +91,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['file_excel'])) {
             die("Tidak ada tahun ajaran aktif!");
         $id_tahun = $tahun_aktif['id_tahun'];
 
+        // ... (kode atasnya biarkan sama) ...
+        // ... (biarkan kode atasnya sama persis) ...
+
         $sukses = 0;
-        global $pdo;
+
+        // =======================================================
+        // KONEKSI MANDIRI ANTI-GAGAL (KHUSUS IMPORT)
+        // =======================================================
+        try {
+            $db_import = new PDO("mysql:host=localhost;dbname=db_sitapsi;charset=utf8", "root", "");
+            $db_import->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        }
+        catch (PDOException $e) {
+            die("Koneksi database import gagal: " . $e->getMessage());
+        }
 
         // 3. EKSEKUSI BACA BARIS DATA
         while (($row = fgetcsv($handle, 10000, $delimiter)) !== FALSE) {
@@ -116,8 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['file_excel'])) {
             $no_hp = isset($map['no_hp']) && isset($row[$map['no_hp']]) ? trim($row[$map['no_hp']]) : null;
             $nama_kelas_xls = isset($map['kelas']) && isset($row[$map['kelas']]) ? trim($row[$map['kelas']]) : null;
 
-            // A. Simpan ke tb_siswa
-            $stmt = $pdo->prepare("
+            // A. Simpan ke tb_siswa (MENGGUNAKAN $db_import)
+            $stmt = $db_import->prepare("
                 INSERT INTO tb_siswa 
                 (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu, status_aktif) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Aktif')
@@ -129,23 +142,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['file_excel'])) {
             ");
             $stmt->execute([$no_induk, $nama, $jk, $kota, $tgl_lahir, $alamat, $nama_ayah, $pekerjaan_ayah, $nama_ibu, $pekerjaan_ibu, $no_hp]);
 
-            // B. Simpan ke tb_anggota_kelas
+            // B. Simpan ke tb_anggota_kelas (MENGGUNAKAN $db_import)
             if (!empty($nama_kelas_xls)) {
-                $stmt_kelas = $pdo->prepare("SELECT id_kelas FROM tb_kelas WHERE nama_kelas = ? LIMIT 1");
+                $stmt_kelas = $db_import->prepare("SELECT id_kelas FROM tb_kelas WHERE nama_kelas = ? LIMIT 1");
                 $stmt_kelas->execute([$nama_kelas_xls]);
                 $kelas_db = $stmt_kelas->fetch(PDO::FETCH_ASSOC);
 
                 if ($kelas_db) {
                     $id_kelas = $kelas_db['id_kelas'];
-                    $stmt_cek = $pdo->prepare("SELECT id_anggota FROM tb_anggota_kelas WHERE no_induk = ? AND id_tahun = ?");
+                    $stmt_cek = $db_import->prepare("SELECT id_anggota FROM tb_anggota_kelas WHERE no_induk = ? AND id_tahun = ?");
                     $stmt_cek->execute([$no_induk, $id_tahun]);
 
                     if ($stmt_cek->rowCount() == 0) {
-                        $stmt_ins_kls = $pdo->prepare("INSERT INTO tb_anggota_kelas (no_induk, id_kelas, id_tahun) VALUES (?, ?, ?)");
+                        $stmt_ins_kls = $db_import->prepare("INSERT INTO tb_anggota_kelas (no_induk, id_kelas, id_tahun) VALUES (?, ?, ?)");
                         $stmt_ins_kls->execute([$no_induk, $id_kelas, $id_tahun]);
                     }
                     else {
-                        $stmt_upd_kls = $pdo->prepare("UPDATE tb_anggota_kelas SET id_kelas = ? WHERE no_induk = ? AND id_tahun = ?");
+                        $stmt_upd_kls = $db_import->prepare("UPDATE tb_anggota_kelas SET id_kelas = ? WHERE no_induk = ? AND id_tahun = ?");
                         $stmt_upd_kls->execute([$id_kelas, $no_induk, $id_tahun]);
                     }
                 }
