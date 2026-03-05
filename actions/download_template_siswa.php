@@ -45,7 +45,7 @@ fputcsv($output, [
     'Ibu Dani',
     'Ibu Rumah Tangga',
     '081234567890',
-    '7A'
+    'VIIA'
 ]);
 
 fclose($output);
