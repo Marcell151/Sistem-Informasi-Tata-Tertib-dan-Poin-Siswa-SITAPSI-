@@ -177,8 +177,8 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             </div>
             <div>
                 <label class="<?= $label_class ?>">Nama Kelas *</label>
-                <input type="text" name="nama_kelas" required placeholder="Contoh: 7A, 8B, 9C" class="<?= $input_class ?>">
-                <p class="text-[10px] text-slate-500 mt-1.5 font-medium">Format umum: [Tingkat][Nama], misal: 7A, 8B</p>
+                <input type="text" name="nama_kelas" required placeholder="Contoh: VIIA, VIIIB, IXC" class="<?= $input_class ?>">
+                <p class="text-[10px] text-slate-500 mt-1.5 font-medium">Format umum: [Tingkat][Nama], misal: VIIA, VIIIB</p>
             </div>
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="closeModal('modal-tambah')" class="<?= $btn_outline ?> flex-1">Batal</button>
