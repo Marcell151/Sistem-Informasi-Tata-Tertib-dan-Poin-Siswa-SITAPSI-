@@ -1,52 +1,46 @@
 <?php
 /**
- * SITAPSI - Download Template Import Siswa
- * Generate file Excel template untuk import siswa
+ * SITAPSI - Download Template CSV Import Siswa
+ * PURE PHP - Pemisah menggunakan KOMA (,) agar langsung terpotong di Excel English/US
  */
 
+session_start();
 require_once '../config/database.php';
 
-// Set header untuk download CSV
-header('Content-Type: text/csv; charset=utf-8');
-header('Content-Disposition: attachment; filename="Template_Import_Siswa_SITAPSI.csv"');
+// Validasi Keamanan
+if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'SuperAdmin' && $_SESSION['role'] !== 'Admin')) {
+    die("Akses ditolak!");
+}
 
-// Buat output stream
+// 1. SET HEADER AGAR BROWSER MENDOWNLOAD FILE CSV
+header('Content-Type: text/csv; charset=utf-8');
+header('Content-Disposition: attachment; filename=Template_Import_Siswa_SITAPSI.csv');
+header('Cache-Control: max-age=0');
+
 $output = fopen('php://output', 'w');
 
-// Tulis BOM untuk UTF-8
-fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+// 2. MAGIC TRICK: Tambahkan BOM agar Microsoft Excel membaca file ini dengan rapi
+fputs($output, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
 
-// Header kolom disesuaikan dengan Database Baru
-fputcsv($output, [
-    'No Induk',
-    'Nama Lengkap',
-    'Jenis Kelamin (L/P)',
-    'Kota (Tempat Lahir)',
-    'Tanggal Lahir (YYYY-MM-DD)',
-    'Alamat',
-    'Nama Ayah',
-    'Pekerjaan Ayah',
-    'Nama Ibu',
-    'Pekerjaan Ibu',
-    'No HP Orang Tua',
-    'Kelas (contoh: VII A, VIII B)'
-]);
+// 3. SET JUDUL KOLOM (HEADER) - Standar Dapodik
+$headers = [
+    'No Induk', 'Nama Peserta Didik', 'L/P', 'Tempat Lahir', 'Tanggal Lahir',
+    'Alamat Jalan', 'Nama Ayah', 'Pekerjaan Ayah', 'Nama Ibu', 'Pekerjaan Ibu',
+    'No HP', 'Kelas'
+];
+// KITA UBAH MENJADI KOMA (,)
+fputcsv($output, $headers, ',');
 
-// Data contoh
-fputcsv($output, [
-    '2024001',
-    'Ahmad Dani',
-    'L',
-    'Malang',
-    '2010-05-15',
-    'Jl. Merdeka No. 1',
-    'Bpk. Dani',
-    'Swasta',
-    'Ibu Dani',
-    'Ibu Rumah Tangga',
-    '081234567890',
-    'VIIA'
-]);
+
+// 4. SET CONTOH DATA SEBAGAI PANDUAN TU
+$contoh_data = [
+    '2025001', 'Ahmad Dani', 'L', 'Malang', '2010-05-15',
+    'Jl. Merdeka No. 1, Malang', 'Budi Santoso', 'Wiraswasta', 'Siti Aminah', 'Ibu Rumah Tangga',
+    '081234567890', 'VII A' // Ingat: Format Romawi!
+];
+// KITA UBAH MENJADI KOMA (,)
+fputcsv($output, $contoh_data, ',');
 
 fclose($output);
 exit;
+?>
