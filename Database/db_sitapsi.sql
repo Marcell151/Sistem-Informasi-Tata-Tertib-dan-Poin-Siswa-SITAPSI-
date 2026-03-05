@@ -19,7 +19,7 @@ CREATE TABLE tb_admin (
 -- Tabel Tahun Ajaran
 CREATE TABLE tb_tahun_ajaran (
     id_tahun INT AUTO_INCREMENT PRIMARY KEY,
-    nama_tahun VARCHAR(20) NOT NULL, -- Contoh: "2024/2025"
+    nama_tahun VARCHAR(20) NOT NULL, -- Contoh: "2025/2026"
     status ENUM('Aktif', 'Arsip') DEFAULT 'Aktif', 
     semester_aktif ENUM('Ganjil', 'Genap') DEFAULT 'Ganjil'
 );
@@ -28,26 +28,27 @@ CREATE TABLE tb_tahun_ajaran (
 -- 2. GROUP: MASTER DATA UTAMA (MANUSIA)
 -- ================================================================
 
--- Tabel Kelas (Dipindah ke atas agar bisa di-referensikan oleh Wali Kelas)
+-- Tabel Kelas
 CREATE TABLE tb_kelas (
     id_kelas INT AUTO_INCREMENT PRIMARY KEY,
-    nama_kelas VARCHAR(10) NOT NULL, -- 7A, 8B
+    nama_kelas VARCHAR(10) NOT NULL, -- Format Romawi: VII A, VIII B
     tingkat INT NOT NULL -- 7, 8, 9
 );
 
--- Tabel Guru (Login SSO dengan PIN) + Fitur Wali Kelas
+-- Tabel Guru (Login SSO dengan PIN) + Fitur Wali Kelas & Kode Jadwal
 CREATE TABLE tb_guru (
     id_guru INT AUTO_INCREMENT PRIMARY KEY,
     nama_guru VARCHAR(100) NOT NULL,
     nip VARCHAR(30),
-    id_kelas INT NULL, -- [MODIFIKASI: Jika berisi ID Kelas, maka dia Wali Kelas. Jika NULL, guru biasa]
+    kode_guru VARCHAR(10), -- [MODIFIKASI BARU: Kode khusus untuk Integrasi Sistem Jadwal/Presensi]
+    id_kelas INT NULL, -- Jika berisi ID Kelas, maka dia Wali Kelas. Jika NULL, guru biasa
     pin_validasi VARCHAR(6) NOT NULL, -- PIN 6 Digit
     status ENUM('Aktif', 'Non-Aktif') DEFAULT 'Aktif',
     
     FOREIGN KEY (id_kelas) REFERENCES tb_kelas(id_kelas) ON DELETE SET NULL
 );
 
--- Tabel Siswa (Data Statis / Induk) -> DISESUAIKAN DENGAN FORMAT EXCEL
+-- Tabel Siswa (Data Statis / Induk)
 CREATE TABLE tb_siswa (
     no_induk VARCHAR(50) PRIMARY KEY,
     nama_siswa VARCHAR(100) NOT NULL,
@@ -60,7 +61,6 @@ CREATE TABLE tb_siswa (
     nama_ibu VARCHAR(150),
     pekerjaan_ibu VARCHAR(100),
     no_hp_ortu VARCHAR(15), -- Notifikasi WA
-    -- Status 'Lulus' ditambahkan untuk alumni (Arsip 3 Tahun)
     status_aktif ENUM('Aktif', 'Lulus', 'Keluar', 'Dikeluarkan') DEFAULT 'Aktif'
 );
 
@@ -71,7 +71,7 @@ CREATE TABLE tb_siswa (
 -- Tabel Anggota Kelas (Jantung Sistem - Per Tahun)
 CREATE TABLE tb_anggota_kelas (
     id_anggota BIGINT AUTO_INCREMENT PRIMARY KEY,
-    no_induk VARCHAR(50) NOT NULL, -- DISESUAIKAN (Sebelumnya nis)
+    no_induk VARCHAR(50) NOT NULL, 
     id_kelas INT NOT NULL,
     id_tahun INT NOT NULL,
     
@@ -82,12 +82,12 @@ CREATE TABLE tb_anggota_kelas (
     
     total_poin_umum INT DEFAULT 0, -- Total Gabungan Tahunan
     
-    -- [MODIFIKASI: 3 Silo Status SP Independen]
+    -- 3 Silo Status SP Independen
     status_sp_kelakuan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     status_sp_kerajinan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     status_sp_kerapian ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     
-    -- [Summary Status Tertinggi]
+    -- Summary Status Tertinggi
     status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
     
     -- Penanda Reward
@@ -158,14 +158,14 @@ CREATE TABLE tb_pelanggaran_header (
     id_transaksi BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_anggota BIGINT NOT NULL,
     id_guru INT NOT NULL,
-    id_tahun INT NOT NULL, -- Field Baru: Mengunci pelanggaran ke tahun tertentu
+    id_tahun INT NOT NULL, 
     tanggal DATE NOT NULL,
     waktu TIME NOT NULL,
-    semester ENUM('Ganjil', 'Genap') NOT NULL, -- Kunci logika "Lembar Kosong" Genap
+    semester ENUM('Ganjil', 'Genap') NOT NULL, 
     tipe_form ENUM('Piket', 'Kelas') NOT NULL,
     bukti_foto VARCHAR(255),
     
-    -- [MODIFIKASI: Fitur Laporan/Revisi Wali Kelas]
+    -- Fitur Laporan/Revisi Wali Kelas
     status_revisi ENUM('None', 'Pending', 'Disetujui', 'Ditolak') DEFAULT 'None',
     alasan_revisi TEXT NULL,
     
@@ -235,8 +235,8 @@ INSERT INTO tb_sanksi_ref (kode_sanksi, deskripsi) VALUES
 ('9', 'Menjalani pembinaan khusus oleh Tim Tatib'),
 ('10', 'Diserahkan kembali pendidikannya kepada orang tua (Dikeluarkan)');
 
--- 3. INSERT JENIS PELANGGARAN (LENGKAP)
--- === A. ASPEK KELAKUAN (ID: 1) ===
+-- 3. INSERT JENIS PELANGGARAN
+-- A. ASPEK KELAKUAN (ID: 1)
 INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, poin_default, sanksi_default) VALUES 
 (1, '01. Kegiatan Sekolah', 'Tidak mengikuti kegiatan wajib sekolah / upacara tanpa keterangan.', 100, '5'),
 (1, '01. Kegiatan Sekolah', 'Bergurau/tidak tertib saat kegiatan berlangsung', 100, '5'),
@@ -253,7 +253,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (1, '02. Sikap & Moral', 'Memicu keributan di medsos/sekolah', 100, '1,2,7,8'),
 (1, '02. Sikap & Moral', 'Membiarkan/mendorong kerusakan fasilitas', 100, '1,3'),
 (1, '02. Sikap & Moral', 'Membiarkan teman celaka/sakit', 100, '1,2,7,8'),
-(1, '03. Dokumen', 'Memalsukan surat/tanda tangan/03. Dokumen', 300, '7'),
+(1, '03. Dokumen', 'Memalsukan surat/tanda tangan', 300, '7'),
 (1, '04. Rokok & Miras', 'Membawa rokok', 300, '7,8'),
 (1, '04. Rokok & Miras', 'Merokok (langsung/medsos)', 500, '7,8,9,10'),
 (1, '04. Rokok & Miras', 'Membawa minuman keras', 300, '7,8'),
@@ -276,7 +276,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (1, '11. 10 K', 'Tidak mendukung 10 K', 50, '1,2,6'),
 (1, '12. Kendaraan', 'Mengendarai kendaraan bermotor sendiri', 300, '1,7,8,9');
 
--- === B. ASPEK KERAJINAN (ID: 2) ===
+-- B. ASPEK KERAJINAN (ID: 2)
 INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, poin_default, sanksi_default) VALUES 
 (2, '01. Kehadiran', 'Terlambat sekolah/tambahan/ekstra', 25, '2,5,7,8'),
 (2, '02. Efektif Sekolah', 'Tidak hadir tanpa keterangan (Alpa)', 75, '7,8'),
@@ -294,7 +294,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (2, '06. Ekstrakurikuler', 'Ramai saat kegiatan ekstra', 50, '2'),
 (2, '06. Ekstrakurikuler', 'Tidak ikut tambahan pelajaran', 50, '7');
 
--- === C. ASPEK KERAPIAN (ID: 3) ===
+-- C. ASPEK KERAPIAN (ID: 3)
 INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, poin_default, sanksi_default) VALUES 
 (3, '01. Seragam', 'Seragam tidak sesuai ketentuan', 75, '1,2,5,7'),
 (3, '01. Seragam', 'Pakai rompi/jaket hanya aksesoris', 75, '1,2,5,7'),
@@ -317,62 +317,56 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 
 -- 4. INSERT ATURAN SP
 INSERT INTO tb_aturan_sp (id_kategori, level_sp, batas_bawah_poin) VALUES 
--- Kelakuan (ID: 1)
 (1, 'SP1', 250), (1, 'SP2', 750), (1, 'SP3', 1500), (1, 'Dikeluarkan', 2000),
--- Kerajinan (ID: 2)
 (2, 'SP1', 75), (2, 'SP2', 300), (2, 'SP3', 450), (2, 'Dikeluarkan', 600),
--- Kerapian (ID: 3)
 (3, 'SP1', 100), (3, 'SP2', 300), (3, 'SP3', 450), (3, 'Dikeluarkan', 600);
 
 -- 5. INSERT PREDIKAT NILAI RAPOR
 INSERT INTO tb_predikat_nilai (id_kategori, huruf_mutu, batas_bawah, batas_atas, keterangan) VALUES 
--- Kelakuan (ID: 1)
 (1, 'A', 0, 49, 'Sangat Baik'), (1, 'B', 50, 249, 'Baik'), (1, 'C', 250, 1499, 'Cukup (SP1/SP2)'), (1, 'D', 1500, 9999, 'Kurang (SP3/Berat)'),
--- Kerajinan (ID: 2)
 (2, 'A', 0, 24, 'Sangat Baik'), (2, 'B', 25, 74, 'Baik'), (2, 'C', 75, 449, 'Cukup (SP1/SP2)'), (2, 'D', 450, 9999, 'Kurang (SP3/Berat)'),
--- Kerapian (ID: 3)
 (3, 'A', 0, 49, 'Sangat Baik'), (3, 'B', 50, 99, 'Baik'), (3, 'C', 100, 449, 'Cukup (SP1/SP2)'), (3, 'D', 450, 9999, 'Kurang (SP3/Berat)');
 
 -- 6. INSERT USER TESTING (Contoh Data)
 INSERT INTO tb_admin (username, password, nama_lengkap, role) VALUES 
 ('admin', 'admin123', 'Super Admin Tatib', 'SuperAdmin');
 
--- Insert Data Tahun & Kelas DULU agar Foreign Key Guru aman
+-- Insert Data Tahun 
 INSERT INTO tb_tahun_ajaran (nama_tahun, status, semester_aktif) VALUES 
-('2024/2025', 'Aktif', 'Ganjil');
+('2025/2026', 'Aktif', 'Ganjil');
 
-INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('7A', 7), ('7B', 7);
+-- [PENYESUAIAN 1: FORMAT ROMAWI UNTUK KELAS]
+INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('VII A', 7), ('VII B', 7);
 
--- INSERT GURU (DATA LENGKAP DARI SEKOLAH)
--- Menggunakan format NIP: 100xx (Sesuai dengan Kode di gambar untuk kemudahan Testing), Semua PIN: 123456
-INSERT INTO tb_guru (nama_guru, nip, id_kelas, pin_validasi) VALUES 
-('Sr. M. Elfrida Suhartati, SPM, S.Psi.,MM', '10001', NULL, '123456'),
-('Antonetta Maria Kuntodiati, S.Pd', '10002', NULL, '123456'),
-('Dra. Maria Marsiti', '10003', NULL, '123456'),
-('Trianto Thomas, S.Pd', '10004', NULL, '123456'),
-('Agustina Peni Sarasati, S.Pd', '10005', NULL, '123456'),
-('Y. Pamungkas, S.Pd', '10006', NULL, '123456'),
-('Joseph Andiek Kristian, S.Pd, S.Kom', '10007', NULL, '123456'),
-('Albertha Yulanti Susetyo, M.Pd', '10008', NULL, '123456'),
-('Galang Bagus Afridianto, M.Pd', '10009', NULL, '123456'),
-('Hendrik Kiswanto, S.Pd.', '10010', NULL, '123456'),
-('Margareta Esti Wulan, S.Pd.', '10011', NULL, '123456'),
-('Theresia Sri Wahyuni, S.Pd, M.M.', '10012', NULL, '123456'),
-('Yosua Beni Setiawan, S.Pd.', '10014', NULL, '123456'),
-('God Life Endob Mesak, S.Pd', '10015', NULL, '123456'),
-('Agnes Herawaty Sinurat, S.E., M.M.', '10016', NULL, '123456'),
-('Deka Nanda Kurniawati, S.Pd.', '10017', NULL, '123456'),
-('Agatha Novenia Bintang Prieska, S.Pd.', '10018', NULL, '123456'),
-('Bernadetha Devia Tindy Noveyra, S.Pd.', '10019', NULL, '123456'),
-('Drs. Albertus Magnus Meo Depa', '10020', NULL, '123456'),
-('Giovani Bimby Dwiantonio, S.Pd', '10021', NULL, '123456'),
-('Arnoldus Kobe Tegar Felix Sai, S.Pd.', '10022', NULL, '123456'),
-('Haniar Mey Sila Kinanti, S.Pd.', '10023', NULL, '123456'),
-('Anjelina Wulandari Sitina De Sareng, S.Pd', '10024', NULL, '123456'),
-('Lydia Uli Permatasari, S.Pd.', '10025', NULL, '123456'),
-('Albertus Bayu Seto, S.Pd', '10026', NULL, '123456'),
-('Brigita Natalia Setyaningrum, S.Pd.', '10027', NULL, '123456'),
-('Amelia Rangel Da Silva, S.Pd', '10028', NULL, '123456');
+-- [PENYESUAIAN 2: INSERT GURU DENGAN KOLOM 'kode_guru' SESUAI FOTO PAPAN JADWAL]
+INSERT INTO tb_guru (nama_guru, nip, kode_guru, id_kelas, pin_validasi) VALUES 
+('Sr. M. Elfrida Suhartati, SPM, S.Psi.,MM', '10001', '1', NULL, '123456'),
+('Antonetta Maria Kuntodiati, S.Pd', '10002', '2', NULL, '123456'),
+('Dra. Maria Marsiti', '10003', '3', NULL, '123456'),
+('Trianto Thomas, S.Pd', '10004', '4', NULL, '123456'),
+('Agustina Peni Sarasati, S.Pd', '10005', '5', NULL, '123456'),
+('Y. Pamungkas, S.Pd', '10006', '6', NULL, '123456'),
+('Joseph Andiek Kristian, S.Pd, S.Kom', '10007', '7', NULL, '123456'),
+('Albertha Yulanti Susetyo, M.Pd', '10008', '8', NULL, '123456'),
+('Galang Bagus Afridianto, M.Pd', '10009', '9', NULL, '123456'),
+('Hendrik Kiswanto, S.Pd.', '10010', '10', NULL, '123456'),
+('Margareta Esti Wulan, S.Pd.', '10011', '11', NULL, '123456'),
+('Theresia Sri Wahyuni, S.Pd, M.M.', '10012', '12', NULL, '123456'),
+('Yosua Beni Setiawan, S.Pd.', '10014', '14', NULL, '123456'),
+('God Life Endob Mesak, S.Pd', '10015', '15', NULL, '123456'),
+('Agnes Herawaty Sinurat, S.E., M.M.', '10016', '16', NULL, '123456'),
+('Deka Nanda Kurniawati, S.Pd.', '10017', '17', NULL, '123456'),
+('Agatha Novenia Bintang Prieska, S.Pd.', '10018', '18', NULL, '123456'),
+('Bernadetha Devia Tindy Noveyra, S.Pd.', '10019', '19', NULL, '123456'),
+('Drs. Albertus Magnus Meo Depa', '10020', '20', NULL, '123456'),
+('Giovani Bimby Dwiantonio, S.Pd', '10021', '21', NULL, '123456'),
+('Arnoldus Kobe Tegar Felix Sai, S.Pd.', '10022', '22', NULL, '123456'),
+('Haniar Mey Sila Kinanti, S.Pd.', '10023', '23', NULL, '123456'),
+('Anjelina Wulandari Sitina De Sareng, S.Pd', '10024', '24', NULL, '123456'),
+('Lydia Uli Permatasari, S.Pd.', '10025', '25', NULL, '123456'),
+('Albertus Bayu Seto, S.Pd', '10026', '26', NULL, '123456'),
+('Brigita Natalia Setyaningrum, S.Pd.', '10027', '27', NULL, '123456'),
+('Amelia Rangel Da Silva, S.Pd', '10028', '28', NULL, '123456');
 
 -- DISESUAIKAN DENGAN STRUKTUR SISWA BARU
 INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu) VALUES 
