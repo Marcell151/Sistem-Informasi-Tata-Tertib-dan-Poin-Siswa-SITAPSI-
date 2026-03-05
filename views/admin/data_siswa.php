@@ -260,7 +260,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
         </div>
         <form action="../../actions/import_siswa.php" method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
             <div>
-                <label class="<?= $label_class ?>">File (.xlsx / .csv)</label>
+                <label class="<?= $label_class ?>">File (.csv)</label>
                 <input type="file" name="file_excel" accept=".xlsx,.xls,.csv" required class="<?= $input_class ?> text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-[#000080] hover:file:bg-blue-100 cursor-pointer">
             </div>
             <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-lg">
