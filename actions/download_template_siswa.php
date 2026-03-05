@@ -14,7 +14,7 @@ header('Content-Disposition: attachment; filename="Template_Import_Siswa_SITAPSI
 $output = fopen('php://output', 'w');
 
 // Tulis BOM untuk UTF-8
-fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
 // Header kolom disesuaikan dengan Database Baru
 fputcsv($output, [
@@ -29,7 +29,7 @@ fputcsv($output, [
     'Nama Ibu',
     'Pekerjaan Ibu',
     'No HP Orang Tua',
-    'Kelas (contoh: 7A, 8B)'
+    'Kelas (contoh: VII A, VIII B)'
 ]);
 
 // Data contoh
