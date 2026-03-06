@@ -336,7 +336,7 @@ INSERT INTO tb_tahun_ajaran (nama_tahun, status, semester_aktif) VALUES
 ('2025/2026', 'Aktif', 'Ganjil');
 
 -- [PENYESUAIAN 1: FORMAT ROMAWI UNTUK KELAS]
-INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('VII A', 7), ('VII B', 7);
+INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('VII A', 7), ('VII B', 7), ('VII C', 7), ('VII D', 7), ('VII E', 7), ('VIII A', 8), ('VIII B', 8), ('VIII C', 8), ('VIII D', 8), ('VIII E', 8), ('IX A', 9), ('IX B', 9), ('IX C', 9), ('IX D', 9), ('IX E', 9);
 
 -- [PENYESUAIAN 2: INSERT GURU DENGAN KOLOM 'kode_guru' SESUAI FOTO PAPAN JADWAL]
 INSERT INTO tb_guru (nama_guru, nip, kode_guru, id_kelas, pin_validasi) VALUES 
