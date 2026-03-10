@@ -416,7 +416,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     <li>SP1 : Peringatan Tahap 1</li>
                     <li>SP2 : Peringatan Tahap 2</li>
                     <li>SP3 : Peringatan Tahap Akhir</li>
-                    <li class="text-red-600">Dikeluarkan : Sanksi Maksimal</li>
+                    <li class="text-red-600">Sanksi oleh Sekolah : Sanksi Maksimal & Penindakan Kebijakan Sekolah</li>
                 </ul>
             </div>
             <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl shadow-sm">

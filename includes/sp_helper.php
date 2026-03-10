@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - SP Helper (FIXED - Insert per Kategori)
+ * Penyesuaian: Mengganti 'Dikeluarkan' menjadi 'Sanksi oleh Sekolah' pada level_order
  */
 
 function recalculateStatusSP($id_anggota) {
@@ -33,7 +34,8 @@ function recalculateStatusSP($id_anggota) {
         $aturan_by_kategori[$a['id_kategori']][] = $a;
     }
     
-    $level_order = ['Aman' => 0, 'SP1' => 1, 'SP2' => 2, 'SP3' => 3, 'Dikeluarkan' => 4];
+    // FIX: Sesuaikan 'Dikeluarkan' menjadi 'Sanksi oleh Sekolah'
+    $level_order = ['Aman' => 0, 'SP1' => 1, 'SP2' => 2, 'SP3' => 3, 'Sanksi oleh Sekolah' => 4];
     
     $poin_by_kategori = [
         1 => $siswa['poin_kelakuan'],

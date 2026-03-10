@@ -82,13 +82,13 @@ CREATE TABLE tb_anggota_kelas (
     
     total_poin_umum INT DEFAULT 0, -- Total Gabungan Tahunan
     
-    -- 3 Silo Status SP Independen
-    status_sp_kelakuan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
-    status_sp_kerajinan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
-    status_sp_kerapian ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
+    -- 3 Silo Status SP Independen [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+    status_sp_kelakuan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
+    status_sp_kerajinan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
+    status_sp_kerapian ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     
-    -- Summary Status Tertinggi
-    status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Dikeluarkan') DEFAULT 'Aman',
+    -- Summary Status Tertinggi [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+    status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     
     -- Penanda Reward
     status_reward ENUM('None', 'Kandidat Reward Ganjil','Kandidat Sertifikat') DEFAULT 'None',
@@ -127,11 +127,11 @@ CREATE TABLE tb_jenis_pelanggaran (
     FOREIGN KEY (id_kategori) REFERENCES tb_kategori_pelanggaran(id_kategori)
 );
 
--- Aturan Ambang Batas SP
+-- Aturan Ambang Batas SP [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
 CREATE TABLE tb_aturan_sp (
     id_aturan_sp INT AUTO_INCREMENT PRIMARY KEY,
     id_kategori INT NOT NULL, 
-    level_sp ENUM('SP1', 'SP2', 'SP3', 'Dikeluarkan') NOT NULL,
+    level_sp ENUM('SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') NOT NULL,
     batas_bawah_poin INT NOT NULL, 
     
     FOREIGN KEY (id_kategori) REFERENCES tb_kategori_pelanggaran(id_kategori)
@@ -199,11 +199,11 @@ CREATE TABLE tb_pelanggaran_sanksi (
 -- 6. GROUP: MANAJEMEN SP
 -- ================================================================
 
--- Riwayat SP
+-- Riwayat SP [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
 CREATE TABLE tb_riwayat_sp (
     id_sp INT AUTO_INCREMENT PRIMARY KEY,
     id_anggota BIGINT NOT NULL,
-    tingkat_sp ENUM('SP1', 'SP2', 'SP3', 'Dikeluarkan') NOT NULL,
+    tingkat_sp ENUM('SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') NOT NULL,
     kategori_pemicu VARCHAR(50), 
     tanggal_terbit DATE NOT NULL,
     tanggal_validasi DATE, 
@@ -267,7 +267,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (1, '08. Gank', 'Terlibat Gank negatif', 300, '1,7,8'),
 (1, '09. Sarana Prasarana', 'Mencorat-coret/merusak sarana sekolah', 75, '1,3'),
 (1, '09. Sarana Prasarana', 'Bermain alat PBM/sapu di kelas', 75, '1,3'),
-(1, '09. Sarana Prasarana', 'Makan dan minum di dalam kelas', 50, '1,2'),
+(1, '09. Sarana Prasarana', 'Makan dan饮 di dalam kelas', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Ramai/tidak memperhatikan saat PBM', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Keluar kelas saat PBM tanpa izin', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Menyontek saat ulangan', 300, '1,5'),
@@ -315,11 +315,11 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (3, '04. Kegiatan', 'Tidak rapi/bersepatu saat ekstra/tambahan', 50, '1'),
 (3, '05. Sepeda', 'Parkir sepeda tidak teratur/tidak dikunci', 25, '1');
 
--- 4. INSERT ATURAN SP
+-- 4. INSERT ATURAN SP [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
 INSERT INTO tb_aturan_sp (id_kategori, level_sp, batas_bawah_poin) VALUES 
-(1, 'SP1', 250), (1, 'SP2', 750), (1, 'SP3', 1500), (1, 'Dikeluarkan', 2000),
-(2, 'SP1', 75), (2, 'SP2', 300), (2, 'SP3', 450), (2, 'Dikeluarkan', 600),
-(3, 'SP1', 100), (3, 'SP2', 300), (3, 'SP3', 450), (3, 'Dikeluarkan', 600);
+(1, 'SP1', 250), (1, 'SP2', 750), (1, 'SP3', 1500), (1, 'Sanksi oleh Sekolah', 2000),
+(2, 'SP1', 75), (2, 'SP2', 300), (2, 'SP3', 450), (2, 'Sanksi oleh Sekolah', 600),
+(3, 'SP1', 100), (3, 'SP2', 300), (3, 'SP3', 450), (3, 'Sanksi oleh Sekolah', 600);
 
 -- 5. INSERT PREDIKAT NILAI RAPOR
 INSERT INTO tb_predikat_nilai (id_kategori, huruf_mutu, batas_bawah, batas_atas, keterangan) VALUES 
