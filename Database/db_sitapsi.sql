@@ -91,7 +91,7 @@ CREATE TABLE tb_anggota_kelas (
     status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     
     -- Penanda Reward
-    status_reward ENUM('None', 'Kandidat Reward Ganjil','Kandidat Sertifikat') DEFAULT 'None',
+    status_reward ENUM('None', 'Kandidat Reward Semester','Kandidat Sertifikat') DEFAULT 'None',
     
     FOREIGN KEY (no_induk) REFERENCES tb_siswa(no_induk) ON DELETE CASCADE,
     FOREIGN KEY (id_kelas) REFERENCES tb_kelas(id_kelas),

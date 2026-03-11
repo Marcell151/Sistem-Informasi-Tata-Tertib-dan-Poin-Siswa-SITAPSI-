@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Detail Siswa (FIX TABLE WRAP + UI GLOBAL)
- * FIX LOGIKA: Kandidat Reward mengecek poin 1 Tahun Penuh
+ * FIX LOGIKA: Spanduk Kandidat Reward dinamis (Semester / Sertifikat Tahunan)
  */
 
 session_start();
@@ -48,15 +48,22 @@ if (!$siswa) {
     exit;
 }
 
-// LOGIKA BARU: Cek histori 1 tahun
+// LOGIKA BARU: Cek histori 1 tahun dan semester berjalan
 $cek_history = fetchOne("
-    SELECT COALESCE(SUM(d.poin_saat_itu), 0) as total_tahunan
+    SELECT 
+        COALESCE(SUM(d.poin_saat_itu), 0) as total_tahunan,
+        COALESCE(SUM(CASE WHEN h.semester = :semester_berjalan THEN d.poin_saat_itu ELSE 0 END), 0) as total_semester
     FROM tb_pelanggaran_header h
     JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
     WHERE h.id_anggota = :id_anggota AND h.id_tahun = :id_tahun
-", ['id_anggota' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
+", [
+    'id_anggota' => $id_anggota, 
+    'id_tahun' => $tahun_aktif['id_tahun'],
+    'semester_berjalan' => $tahun_aktif['semester_aktif']
+]);
 
-$is_bersih = ($cek_history['total_tahunan'] == 0);
+$is_kandidat_sertifikat = ($cek_history['total_tahunan'] == 0);
+$is_kandidat_semester = (!$is_kandidat_sertifikat && $cek_history['total_semester'] == 0);
 
 // Hitung poin per semester
 $poin_ganjil = fetchOne("
@@ -166,15 +173,27 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             </div>
             <?php endif; ?>
 
-            <?php if ($is_bersih): ?>
+            <?php if ($is_kandidat_sertifikat): ?>
             <div class="bg-amber-100 border border-amber-300 rounded-xl p-5 shadow-sm flex items-center shadow-amber-900/5 animate-pulse">
                 <div class="flex-shrink-0 bg-white p-3 rounded-full mr-5 shadow-sm border border-amber-200 text-amber-500">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 15l-3.09 1.63.59-3.45L7 10.74l3.46-.5L12 7l1.54 3.24 3.46.5-2.5 2.44.59 3.45L12 15z"></path></svg>
                 </div>
                 <div>
-                    <h4 class="font-extrabold text-amber-800 text-lg mb-1">🌟 Kandidat Siswa Teladan 🌟</h4>
+                    <h4 class="font-extrabold text-amber-800 text-lg mb-1">🌟 Kandidat Sertifikat Teladan 🌟</h4>
                     <p class="text-sm text-amber-700 font-medium">
-                        Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong>. Kandidat penerima Sertifikat Bebas Pelanggaran! 🎓
+                        Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong>. Kandidat kuat penerima Sertifikat Bebas Pelanggaran! 🎓
+                    </p>
+                </div>
+            </div>
+            <?php elseif ($is_kandidat_semester): ?>
+            <div class="bg-emerald-100 border border-emerald-300 rounded-xl p-5 shadow-sm flex items-center shadow-emerald-900/5 animate-pulse">
+                <div class="flex-shrink-0 bg-white p-3 rounded-full mr-5 shadow-sm border border-emerald-200 text-emerald-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-emerald-800 text-lg mb-1">🏅 Kandidat Reward Semester</h4>
+                    <p class="text-sm text-emerald-700 font-medium">
+                        Siswa ini memiliki <strong>0 Poin Pelanggaran di Semester ini</strong>. Pertahankan kedisiplinan ini hingga akhir semester! ✨
                     </p>
                 </div>
             </div>
@@ -185,11 +204,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 
                 <div class="relative z-10 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                     <div class="w-28 h-28 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-4 border-white/20 shadow-lg">
-                        <?php if(isset($siswa['foto_profil']) && $siswa['foto_profil']): ?>
-                            <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
-                        <?php else: ?>
-                            <span class="text-[#000080] font-extrabold text-4xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
-                        <?php endif; ?>
+                        <span class="text-[#000080] font-extrabold text-4xl"><?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?></span>
                     </div>
                     
                     <div class="flex-1 text-center md:text-left">
@@ -300,11 +315,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 <div class="flex items-center space-x-3 w-full sm:w-auto">
                     <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Pilih Semester:</span>
                     <a href="?id=<?= $id_anggota ?>&semester=Ganjil"
-                       class="px-4 py-2 rounded-lg font-bold text-xs transition-colors flex-1 text-center <?= $filter_semester === 'Ganjil' ? 'bg-[#000080] text-white shadow-md' : 'bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-100' ?>">
+                        class="px-4 py-2 rounded-lg font-bold text-xs transition-colors flex-1 text-center <?= $filter_semester === 'Ganjil' ? 'bg-[#000080] text-white shadow-md' : 'bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-100' ?>">
                         Ganjil
                     </a>
                     <a href="?id=<?= $id_anggota ?>&semester=Genap"
-                       class="px-4 py-2 rounded-lg font-bold text-xs transition-colors flex-1 text-center <?= $filter_semester === 'Genap' ? 'bg-[#000080] text-white shadow-md' : 'bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-100' ?>">
+                        class="px-4 py-2 rounded-lg font-bold text-xs transition-colors flex-1 text-center <?= $filter_semester === 'Genap' ? 'bg-[#000080] text-white shadow-md' : 'bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-100' ?>">
                         Genap
                     </a>
                 </div>

@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Monitoring Siswa List (UI GLOBAL PORTAL)
- * FIX LOGIKA: Kandidat Reward mengecek poin 1 Tahun Penuh, bukan per semester
+ * FIX LOGIKA: Lencana Kandidat Reward dinamis (Semester / Sertifikat Tahunan)
  */
 
 session_start();
@@ -16,10 +16,11 @@ if (!$id_kelas) {
     exit;
 }
 
-$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
+$tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 $kelas_info = fetchOne("SELECT * FROM tb_kelas WHERE id_kelas = :id", ['id' => $id_kelas]);
+$semester_berjalan = $tahun_aktif['semester_aktif'];
 
-// Query siswa dengan pengecekan total poin TAHUNAN (Ganjil + Genap) - DISESUAIKAN NO INDUK
+// Query siswa dengan pengecekan total poin TAHUNAN dan poin SEMESTER BERJALAN
 $siswa_list = fetchAll("
     SELECT 
         s.no_induk, s.nama_siswa, s.jenis_kelamin,
@@ -28,12 +29,16 @@ $siswa_list = fetchAll("
         (SELECT COALESCE(SUM(d.poin_saat_itu), 0) 
          FROM tb_pelanggaran_header h 
          JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
-         WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan
+         WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun) as total_tahunan,
+        (SELECT COALESCE(SUM(d.poin_saat_itu), 0) 
+         FROM tb_pelanggaran_header h 
+         JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi 
+         WHERE h.id_anggota = a.id_anggota AND h.id_tahun = a.id_tahun AND h.semester = :semester) as total_semester
     FROM tb_anggota_kelas a
     JOIN tb_siswa s ON a.no_induk = s.no_induk
     WHERE a.id_kelas = :id_kelas AND a.id_tahun = :id_tahun AND s.status_aktif = 'Aktif'
     ORDER BY s.nama_siswa
-", ['id_kelas' => $id_kelas, 'id_tahun' => $tahun_aktif['id_tahun']]);
+", ['id_kelas' => $id_kelas, 'id_tahun' => $tahun_aktif['id_tahun'], 'semester' => $semester_berjalan]);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -81,26 +86,27 @@ $siswa_list = fetchAll("
                 </div>
                 <?php else: ?>
                 <?php foreach ($siswa_list as $siswa): 
-                    // LOGIKA BARU: Cek dari total_tahunan, bukan total_poin_umum yang bisa ter-reset
-                    $is_bersih = ($siswa['total_tahunan'] == 0);
+                    // LOGIKA BARU LENCANA REWARD
+                    $is_kandidat_sertifikat = ($siswa['total_tahunan'] == 0); // 0 poin full 1 tahun
+                    $is_kandidat_semester = (!$is_kandidat_sertifikat && $siswa['total_semester'] == 0); // 0 poin di semester ini saja
+                    $is_bersih = ($is_kandidat_sertifikat || $is_kandidat_semester);
                 ?>
                 <a href="detail_siswa.php?id=<?= $siswa['id_anggota'] ?>" 
                    class="block bg-white rounded-xl shadow-sm border <?= $is_bersih ? 'border-amber-400' : 'border-[#E2E8F0]' ?> hover:shadow-lg transition-all transform hover:-translate-y-1 overflow-hidden relative group">
                     
-                    <?php if ($is_bersih): ?>
+                    <?php if ($is_kandidat_sertifikat): ?>
                     <div class="absolute top-0 right-0 bg-amber-400 text-amber-900 text-[10px] font-extrabold px-3 py-1 rounded-bl-xl shadow-sm z-10 flex items-center">
-                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                        Kandidat Reward
+                        🏆 Kandidat Sertifikat
+                    </div>
+                    <?php elseif ($is_kandidat_semester): ?>
+                    <div class="absolute top-0 right-0 bg-emerald-400 text-emerald-900 text-[10px] font-extrabold px-3 py-1 rounded-bl-xl shadow-sm z-10 flex items-center">
+                        🏅 Kandidat Reward Semester
                     </div>
                     <?php endif; ?>
 
-                    <div class="p-5 flex items-center space-x-4 border-b border-[#E2E8F0] bg-slate-50/50">
-                        <div class="w-14 h-14 bg-[#000080] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 text-white font-extrabold text-xl shadow-sm <?= $is_bersih ? 'ring-2 ring-amber-400 ring-offset-2' : '' ?>">
-                            <?php if(isset($siswa['foto_profil']) && $siswa['foto_profil']): ?>
-                                <img src="../../assets/uploads/siswa/<?= htmlspecialchars($siswa['foto_profil']) ?>" class="w-full h-full object-cover">
-                            <?php else: ?>
-                                <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
-                            <?php endif; ?>
+                    <div class="p-5 flex items-center space-x-4 border-b border-[#E2E8F0] bg-slate-50/50 mt-4">
+                        <div class="w-14 h-14 bg-[#000080] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 text-white font-extrabold text-xl shadow-sm <?= $is_kandidat_sertifikat ? 'ring-2 ring-amber-400 ring-offset-2' : ($is_kandidat_semester ? 'ring-2 ring-emerald-400 ring-offset-2' : '') ?>">
+                            <?= strtoupper(substr($siswa['nama_siswa'], 0, 1)) ?>
                         </div>
                         <div class="flex-1 min-w-0">
                             <h3 class="font-extrabold text-slate-800 truncate text-sm group-hover:text-[#000080] transition-colors"><?= htmlspecialchars($siswa['nama_siswa']) ?></h3>

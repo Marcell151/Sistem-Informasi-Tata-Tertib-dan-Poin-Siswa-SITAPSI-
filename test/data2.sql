@@ -62,7 +62,7 @@ CREATE TABLE `tb_anggota_kelas` (
   `status_sp_kerajinan` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
   `status_sp_kerapian` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
   `status_sp_terakhir` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
-  `status_reward` enum('None','Kandidat Reward Ganjil','Kandidat Sertifikat') DEFAULT 'None'
+  `status_reward` enum('None','Kandidat Reward Semester','Kandidat Sertifikat') DEFAULT 'None'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
