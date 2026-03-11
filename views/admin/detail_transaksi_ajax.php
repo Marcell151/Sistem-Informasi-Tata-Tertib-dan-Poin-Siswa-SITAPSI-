@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Detail Transaksi (AJAX - UI GLOBAL)
  * Dipanggil via AJAX untuk menampilkan detail di modal
+ * PENYESUAIAN: Penampil Cerdas untuk Link Eksternal, PDF, Word, dan Gambar
  */
 
 require_once '../../config/database.php';
@@ -13,7 +14,7 @@ if (!$id_transaksi) {
     exit;
 }
 
-// Ambil header transaksi (DISESUAIKAN NO INDUK)
+// Ambil header transaksi (DISESUAIKAN NO INDUK + lampiran_link)
 $transaksi = fetchOne("
     SELECT 
         h.*,
@@ -65,6 +66,12 @@ $total_poin = array_sum(array_column($detail_pelanggaran, 'poin_saat_itu'));
 $foto_array = [];
 if (!empty($transaksi['bukti_foto'])) {
     $foto_array = json_decode($transaksi['bukti_foto'], true) ?: [];
+}
+
+// Helper untuk cek apakah file adalah gambar
+function isImage($filename) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    return in_array($ext, ['jpg', 'jpeg', 'png', 'webp']);
 }
 ?>
 
@@ -142,21 +149,57 @@ if (!empty($transaksi['bukti_foto'])) {
     </div>
     <?php endif; ?>
 
-    <?php if(!empty($foto_array)): ?>
+    <?php if(!empty($transaksi['lampiran_link']) || !empty($foto_array)): ?>
     <div>
         <h4 class="font-extrabold text-slate-800 text-sm mb-3 flex items-center uppercase tracking-wide mt-6">
-            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            Bukti Foto (<?= count($foto_array) ?>)
+            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+            Lampiran Bukti
         </h4>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <?php foreach ($foto_array as $foto): ?>
-            <a href="../../assets/uploads/bukti/<?= htmlspecialchars($foto) ?>" target="_blank" class="block group relative rounded-xl overflow-hidden border border-[#E2E8F0] shadow-sm">
-                <img src="../../assets/uploads/bukti/<?= htmlspecialchars($foto) ?>" class="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110">
-                <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+        
+        <div class="space-y-3">
+            
+            <?php if(!empty($transaksi['lampiran_link'])): ?>
+                <a href="<?= htmlspecialchars($transaksi['lampiran_link']) ?>" target="_blank" rel="noopener noreferrer" 
+                   class="flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors shadow-sm group">
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm text-blue-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-extrabold text-blue-900">Tautan Eksternal</p>
+                            <p class="text-xs text-blue-700 truncate max-w-[200px] sm:max-w-xs"><?= htmlspecialchars($transaksi['lampiran_link']) ?></p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-blue-400 group-hover:text-blue-600 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
+            <?php endif; ?>
+
+            <?php if(!empty($foto_array)): ?>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <?php foreach ($foto_array as $file): ?>
+                        
+                        <?php if (isImage($file)): ?>
+                            <a href="../../assets/uploads/bukti/<?= htmlspecialchars($file) ?>" target="_blank" class="block group relative rounded-xl overflow-hidden border border-[#E2E8F0] shadow-sm">
+                                <img src="../../assets/uploads/bukti/<?= htmlspecialchars($file) ?>" class="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </div>
+                            </a>
+                        <?php else: ?>
+                            <a href="../../assets/uploads/bukti/<?= htmlspecialchars($file) ?>" target="_blank" class="flex flex-col items-center justify-center p-4 h-32 bg-slate-50 border border-[#E2E8F0] hover:bg-slate-100 hover:border-slate-300 rounded-xl transition-colors shadow-sm group">
+                                <?php if(strtolower(pathinfo($file, PATHINFO_EXTENSION)) == 'pdf'): ?>
+                                    <svg class="w-10 h-10 text-red-500 mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <?php else: ?>
+                                    <svg class="w-10 h-10 text-blue-500 mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <?php endif; ?>
+                                <p class="text-[10px] font-bold text-slate-600 text-center truncate w-full px-2" title="<?= htmlspecialchars($file) ?>"><?= htmlspecialchars($file) ?></p>
+                            </a>
+                        <?php endif; ?>
+
+                    <?php endforeach; ?>
                 </div>
-            </a>
-            <?php endforeach; ?>
+            <?php endif; ?>
+
         </div>
     </div>
     <?php endif; ?>

@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Audit Harian (LOGIKA ASLI + UI GLOBAL + FIX LAYOUT)
+ * PENYESUAIAN: Pemanggilan kolom lampiran_link
  */
 
 session_start();
@@ -19,7 +20,7 @@ $filter_tipe = $_GET['tipe'] ?? 'all';
 $filter_dari = $_GET['dari'] ?? date('Y-m-01'); // Awal bulan ini
 $filter_sampai = $_GET['sampai'] ?? date('Y-m-d'); // Hari ini
 
-// Query log transaksi dengan RANGE DATE (LOGIKA ASLI)
+// Query log transaksi dengan RANGE DATE (LOGIKA ASLI) + lampiran_link
 $sql = "
     SELECT 
         h.id_transaksi,
@@ -27,6 +28,7 @@ $sql = "
         h.waktu,
         h.tipe_form,
         h.bukti_foto,
+        h.lampiran_link,
         s.no_induk,
         s.nama_siswa,
         k.nama_kelas,
@@ -206,7 +208,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 <td class="p-4 text-center">
                                     <div class="flex items-center justify-center space-x-2">
                                         <button onclick="viewDetail(<?= $log['id_transaksi'] ?>)" 
-                                                class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Detail">
+                                                class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Lihat Bukti/Detail">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         </button>
                                         <button onclick="editTransaction(<?= $log['id_transaksi'] ?>)" 

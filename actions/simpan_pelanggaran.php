@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Simpan Pelanggaran (FIX - Upload Foto Bukti & No Induk)
+ * PENYESUAIAN: Perbaikan Path Folder (../assets/) & Security Filter untuk Gambar, PDF, WORD
  */
 
 date_default_timezone_set('Asia/Jakarta');
@@ -25,6 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sanksi_ids = $_POST['sanksi'] ?? [];
         $tipe_form = $_POST['tipe_form'] ?? 'Piket';
         
+        // Cek apakah ada inputan Link Eksternal
+        $lampiran_link = !empty($_POST['lampiran_link']) ? trim($_POST['lampiran_link']) : null;
+        
+        // Sanitasi dan Validasi Link jika ada
+        if ($lampiran_link !== null) {
+            if (!filter_var($lampiran_link, FILTER_VALIDATE_URL)) {
+                throw new Exception('Format URL/Link Lampiran tidak valid.');
+            }
+        }
+
         $id_guru = $_SESSION['user_id'] ?? null;
 
         $tanggal = !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d');
@@ -42,45 +53,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id_tahun = $akademik['id_tahun'];
         $semester = $akademik['semester_aktif'];
 
-        // PROSES UPLOAD MULTIPLE FOTO
-        if (isset($_FILES['bukti_foto']) && is_array($_FILES['bukti_foto']['name']) && $_FILES['bukti_foto']['name'][0] !== '') {
-            $upload_dir = '../../assets/uploads/bukti/';
+        // PROSES UPLOAD MULTIPLE FILE (FOTO, PDF, WORD)
+        // Hanya proses file jika tidak ada link (mencegah double input)
+        if ($lampiran_link === null && isset($_FILES['bukti_foto']) && is_array($_FILES['bukti_foto']['name']) && $_FILES['bukti_foto']['name'][0] !== '') {
+            
+            // FIX FOLDER PATH: Mundur 1 langkah (../) menuju root project, lalu masuk ke assets
+            $upload_dir = '../assets/uploads/bukti/'; 
+            
             if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
             
             $files = $_FILES['bukti_foto'];
             $jumlah_file = count($files['name']);
             
+            // Inisialisasi finfo untuk cek MIME Type asli (DNA file)
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            
             for ($i = 0; $i < $jumlah_file; $i++) {
                 if ($files['error'][$i] === UPLOAD_ERR_OK) {
-                    $file_ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-                    $allowed_ext = ['jpg', 'jpeg', 'png', 'webp'];
                     
-                    if (in_array($file_ext, $allowed_ext)) {
-                        // Format: [timestamp]_[random].[ext]
-                        $new_filename = time() . '_' . rand(1000,9999) . '.' . $file_ext;
-                        $target_file = $upload_dir . $new_filename;
-                        
-                        if (move_uploaded_file($files['tmp_name'][$i], $target_file)) {
-                            $foto_filenames[] = $new_filename;
-                        } else {
-                            throw new Exception("Gagal mengupload foto ke-$i.");
-                        }
+                    // 1. Validasi Ukuran (Max 2MB di sisi Server)
+                    $max_size = 2 * 1024 * 1024; // 2 MB
+                    if ($files['size'][$i] > $max_size) {
+                        throw new Exception("File ke-" . ($i+1) . " terlalu besar (Maks 2MB).");
+                    }
+                    
+                    // 2. Validasi Ekstensi File
+                    $file_ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                    $allowed_ext = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'doc', 'docx'];
+                    
+                    if (!in_array($file_ext, $allowed_ext)) {
+                        throw new Exception("Format file ke-" . ($i+1) . " tidak didukung (Hanya Gambar, PDF, dan Word).");
+                    }
+                    
+                    // 3. Validasi MIME Type (Cegah Hacker menyamar)
+                    $mime_type = finfo_file($finfo, $files['tmp_name'][$i]);
+                    $allowed_mimes = [
+                        'image/jpeg', 
+                        'image/png', 
+                        'image/webp', 
+                        'application/pdf',
+                        'application/msword', // doc
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // docx
+                    ];
+                    
+                    if (!in_array($mime_type, $allowed_mimes)) {
+                        throw new Exception("Isi file ke-" . ($i+1) . " korup atau berbahaya (MIME Type Mismatch).");
+                    }
+                    
+                    // Format: [timestamp]_[random].[ext]
+                    $new_filename = time() . '_' . rand(1000,9999) . '.' . $file_ext;
+                    $target_file = $upload_dir . $new_filename;
+                    
+                    if (move_uploaded_file($files['tmp_name'][$i], $target_file)) {
+                        $foto_filenames[] = $new_filename;
                     } else {
-                        throw new Exception("Format foto tidak didukung (hanya JPG/PNG/WEBP).");
+                        throw new Exception("Gagal mengupload file ke-$i.");
                     }
                 }
             }
+            finfo_close($finfo);
         }
         
         // Konversi array foto ke JSON untuk disimpan di database, simpan NULL jika kosong
         $bukti_foto_json = !empty($foto_filenames) ? json_encode($foto_filenames) : null;
 
-        // 1. Insert Header
+        // 1. Insert Header (Menambahkan parameter lampiran_link)
         $sql_header = "
             INSERT INTO tb_pelanggaran_header 
-            (id_anggota, id_guru, id_tahun, tanggal, waktu, semester, tipe_form, bukti_foto) 
+            (id_anggota, id_guru, id_tahun, tanggal, waktu, semester, tipe_form, bukti_foto, lampiran_link) 
             VALUES 
-            (:id_anggota, :id_guru, :id_tahun, :tanggal, :waktu, :semester, :tipe_form, :bukti_foto)
+            (:id_anggota, :id_guru, :id_tahun, :tanggal, :waktu, :semester, :tipe_form, :bukti_foto, :lampiran_link)
         ";
         executeQuery($sql_header, [
             'id_anggota' => $id_anggota,
@@ -90,7 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'waktu' => $waktu,
             'semester' => $semester,
             'tipe_form' => $tipe_form,
-            'bukti_foto' => $bukti_foto_json
+            'bukti_foto' => $bukti_foto_json,
+            'lampiran_link' => $lampiran_link
         ]);
         
         $id_transaksi = $pdo->lastInsertId();
@@ -154,10 +197,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->rollBack();
         }
         
-        // CLEANUP: Hapus foto fisik jika database gagal disimpan agar tidak menumpuk sampah
+        // CLEANUP: FIX PATH UNTUK PENGHAPUSAN FILE GAGAL
         if (!empty($foto_filenames)) {
             foreach ($foto_filenames as $f) {
-                $path = "../../assets/uploads/bukti/" . $f;
+                $path = "../assets/uploads/bukti/" . $f;
                 if (file_exists($path)) {
                     unlink($path);
                 }

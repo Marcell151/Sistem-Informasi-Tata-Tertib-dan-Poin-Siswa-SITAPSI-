@@ -164,6 +164,7 @@ CREATE TABLE tb_pelanggaran_header (
     semester ENUM('Ganjil', 'Genap') NOT NULL, 
     tipe_form ENUM('Piket', 'Kelas') NOT NULL,
     bukti_foto VARCHAR(255),
+    lampiran_link TEXT NULL, -- [PENAMBAHAN BARU: Opsi lampiran berupa URL (Google Drive, dll)]
     
     -- Fitur Laporan/Revisi Wali Kelas
     status_revisi ENUM('None', 'Pending', 'Disetujui', 'Ditolak') DEFAULT 'None',
@@ -267,7 +268,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (1, '08. Gank', 'Terlibat Gank negatif', 300, '1,7,8'),
 (1, '09. Sarana Prasarana', 'Mencorat-coret/merusak sarana sekolah', 75, '1,3'),
 (1, '09. Sarana Prasarana', 'Bermain alat PBM/sapu di kelas', 75, '1,3'),
-(1, '09. Sarana Prasarana', 'Makan dan饮 di dalam kelas', 50, '1,2'),
+(1, '09. Sarana Prasarana', 'Makan dan minum di dalam kelas', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Ramai/tidak memperhatikan saat PBM', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Keluar kelas saat PBM tanpa izin', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Menyontek saat ulangan', 300, '1,5'),

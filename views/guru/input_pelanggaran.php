@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Input Pelanggaran (UI GLOBAL PORTAL)
  * FIX: Filter 2 Tahap (Pilih Kelas -> Pilih Siswa), Waktu Live
+ * PENYESUAIAN: Fitur Upload diperluas (Gambar, PDF, Word, atau Link Eksternal)
  */
 
 session_start();
@@ -42,7 +43,6 @@ foreach ($siswa_raw as $s) {
 }
 // Encode ke JSON agar bisa dibaca oleh JavaScript
 $siswa_json = json_encode($siswa_by_kelas);
-
 
 // Ambil daftar jenis pelanggaran per kategori
 $pelanggaran_kelakuan = fetchAll("SELECT * FROM tb_jenis_pelanggaran WHERE id_kategori = 1 ORDER BY sub_kategori, nama_pelanggaran");
@@ -103,6 +103,13 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-2xl shadow-sm";
         </div>
         <?php endif; ?>
 
+        <?php if ($error): ?>
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm flex items-center mb-6">
+            <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <p class="font-medium text-sm"><?= htmlspecialchars($error) ?></p>
+        </div>
+        <?php endif; ?>
+
         <form action="../../actions/simpan_pelanggaran.php" method="POST" enctype="multipart/form-data" id="form-pelanggaran">
             <input type="hidden" name="tipe_form" value="<?= $mode === 'piket' ? 'Piket' : 'Kelas' ?>">
             
@@ -131,7 +138,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-2xl shadow-sm";
                                 <label class="<?= $label_class ?>">2. Cari Siswa *</label>
                                 <select id="select-siswa" name="id_anggota" required placeholder="Pilih kelas terlebih dahulu...">
                                     <option value="">-- Pilih Siswa --</option>
-                                    </select>
+                                </select>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
@@ -157,22 +164,44 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-2xl shadow-sm";
 
                     <div class="<?= $card_class ?> p-6">
                         <h2 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-5 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                            Bukti Foto (Opsional)
+                            <svg class="w-4 h-4 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+                            Lampiran Bukti (Opsional)
                         </h2>
                         
-                        <div class="space-y-4">
+                        <div class="flex bg-slate-100 p-1 rounded-xl mb-4 shadow-inner">
+                            <button type="button" id="btn-mode-file" onclick="switchAttachmentMode('file')" class="flex-1 py-2 text-[11px] font-extrabold rounded-lg bg-white text-[#000080] shadow-sm transition-all uppercase tracking-wider">
+                                Upload File
+                            </button>
+                            <button type="button" id="btn-mode-link" onclick="switchAttachmentMode('link')" class="flex-1 py-2 text-[11px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all uppercase tracking-wider">
+                                Link Drive
+                            </button>
+                        </div>
+
+                        <div id="area-file" class="space-y-4">
                             <button type="button" onclick="document.getElementById('input-foto').click()" 
                                     class="w-full border-2 border-dashed border-[#000080]/30 hover:border-[#000080] hover:bg-blue-50 text-[#000080] bg-white rounded-xl p-6 text-center transition-all cursor-pointer">
                                 <svg class="w-8 h-8 mx-auto mb-2 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                <span class="font-bold text-sm">Klik untuk tambah foto</span>
-                                <p class="text-[10px] font-medium text-slate-500 mt-1">Bisa pilih beberapa foto sekaligus</p>
+                                <span class="font-bold text-sm">Klik untuk tambah File</span>
+                                <p class="text-[10px] font-medium text-slate-500 mt-1">Maks 2MB per file (Foto, PDF, Word)</p>
                             </button>
                             
-                            <input type="file" id="input-foto" multiple accept="image/*" class="hidden">
-                            
+                            <input type="file" id="input-foto" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" multiple class="hidden">
                             <div id="file-list-container" class="space-y-2 empty:hidden"></div>
                         </div>
+
+                        <div id="area-link" class="hidden space-y-3">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tautkan Link (Google Drive, dll)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                </div>
+                                <input type="url" name="lampiran_link" id="input-link" placeholder="https://drive.google.com/..." class="w-full pl-9 pr-4 py-3 border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-700 bg-white transition-all">
+                            </div>
+                            <p class="text-[10px] text-amber-600 font-medium leading-relaxed bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                ⚠️ <strong>Pastikan:</strong> Akses link telah dibuka (Public) agar tim Disiplin dapat melihat buktinya.
+                            </p>
+                        </div>
+
                     </div>
                 </div>
 
@@ -287,7 +316,6 @@ tsKelas.on('change', function(val) {
     tsSiswa.clearOptions();
     
     if (val && siswaData[val]) {
-        // Ambil data array siswa sesuai id_kelas (Diubah format title text dari NIS jadi No Induk)
         const options = siswaData[val].map(s => ({
             id: s.id_anggota,
             title: s.nama_siswa + ' (' + s.no_induk + ')'
@@ -316,7 +344,7 @@ setInterval(() => {
     
     document.getElementById('live-clock').textContent = timeStr;
     document.getElementById('waktu-input').value = timeStr;
-}, 10000); // Update setiap 10 detik
+}, 10000);
 
 // UI TABS LOGIC
 function switchTab(tab) {
@@ -335,6 +363,44 @@ function switchTab(tab) {
     if(tab === 'kelakuan') activeBtn.classList.add('bg-red-600', 'border-red-700');
     if(tab === 'kerajinan') activeBtn.classList.add('bg-blue-600', 'border-blue-700');
     if(tab === 'kerapian') activeBtn.classList.add('bg-yellow-500', 'border-yellow-600');
+}
+
+// LOGIKA TAB LAMPIRAN (FILE vs LINK)
+function switchAttachmentMode(mode) {
+    const btnFile = document.getElementById('btn-mode-file');
+    const btnLink = document.getElementById('btn-mode-link');
+    const areaFile = document.getElementById('area-file');
+    const areaLink = document.getElementById('area-link');
+    const inputLink = document.getElementById('input-link');
+
+    if (mode === 'file') {
+        btnFile.classList.replace('text-slate-500', 'text-[#000080]');
+        btnFile.classList.replace('font-bold', 'font-extrabold');
+        btnFile.classList.add('bg-white', 'shadow-sm');
+        
+        btnLink.classList.replace('text-[#000080]', 'text-slate-500');
+        btnLink.classList.replace('font-extrabold', 'font-bold');
+        btnLink.classList.remove('bg-white', 'shadow-sm');
+
+        areaFile.classList.remove('hidden');
+        areaLink.classList.add('hidden');
+        inputLink.value = ''; 
+    } else {
+        btnLink.classList.replace('text-slate-500', 'text-[#000080]');
+        btnLink.classList.replace('font-bold', 'font-extrabold');
+        btnLink.classList.add('bg-white', 'shadow-sm');
+        
+        btnFile.classList.replace('text-[#000080]', 'text-slate-500');
+        btnFile.classList.replace('font-extrabold', 'font-bold');
+        btnFile.classList.remove('bg-white', 'shadow-sm');
+
+        areaLink.classList.remove('hidden');
+        areaFile.classList.add('hidden');
+        
+        dt.items.clear();
+        inputFoto.files = dt.files;
+        updateFileDisplay();
+    }
 }
 
 // SANCTION LOGIC
@@ -359,13 +425,17 @@ function updateSanksi() {
     });
 }
 
-// MULTIPLE FILE UPLOAD LOGIC (KUMULATIF)
+// MULTIPLE FILE UPLOAD LOGIC (KUMULATIF & DETEKSI EXT)
 const dt = new DataTransfer(); 
 const inputFoto = document.getElementById('input-foto');
 const fileListContainer = document.getElementById('file-list-container');
 
 inputFoto.addEventListener('change', function(e) {
     for(let i = 0; i < this.files.length; i++){
+        if (this.files[i].size > 2 * 1024 * 1024) {
+            alert(`File "${this.files[i].name}" terlalu besar! Maksimal 2MB.`);
+            continue;
+        }
         dt.items.add(this.files[i]);
     }
     this.files = dt.files; 
@@ -377,11 +447,21 @@ function updateFileDisplay() {
     const files = dt.files;
     for(let i = 0; i < files.length; i++) {
         const file = files[i];
+        
+        // Ganti Icon Berdasarkan Tipe File
+        let iconHtml = '<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+        
+        if(file.type === 'application/pdf') {
+            iconHtml = '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
+        } else if(file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            iconHtml = '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
+        }
+
         fileListContainer.innerHTML += `
             <div class="flex items-center justify-between p-3 bg-white border border-[#E2E8F0] rounded-xl shadow-sm">
                 <div class="flex items-center space-x-3 overflow-hidden">
                     <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        ${iconHtml}
                     </div>
                     <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
                 </div>
