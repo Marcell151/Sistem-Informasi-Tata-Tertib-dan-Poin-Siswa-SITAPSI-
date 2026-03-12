@@ -2,7 +2,7 @@
 /**
  * SITAPSI - Dashboard Hub Orang Tua (SUPER-APP)
  * Fitur: Menampilkan daftar anak (Relasi Kakak-Adik) & Tombol Modul Sistem
- * [FIX]: Menghapus pemanggilan kolom foto_profil yang tidak ada di database
+ * PENYESUAIAN: Penambahan Fitur Ganti Password di Navbar
  */
 
 session_start();
@@ -16,6 +16,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Ortu') {
 
 $id_ortu = $_SESSION['ortu_id'];
 $nama_ortu = $_SESSION['nama_user'];
+
+// Tangkap Notifikasi (Success/Error) dari proses ganti password
+$success_msg = $_SESSION['success_message'] ?? '';
+$error_msg = $_SESSION['error_message'] ?? '';
+unset($_SESSION['success_message'], $_SESSION['error_message']);
 
 // Ambil tahun ajaran aktif untuk memastikan kita mengambil data kelas tahun ini
 $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
@@ -61,19 +66,40 @@ if ($tahun_aktif) {
                     </div>
                     <div>
                         <h1 class="text-lg font-extrabold text-slate-800 leading-tight">Portal Terpadu</h1>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">SMPK Santa Maria 2</p>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden sm:block">SMPK Santa Maria 2</p>
                     </div>
                 </div>
-                <a href="../../actions/logout_ortu.php" onclick="return confirm('Yakin ingin keluar dari portal?')" class="flex items-center px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    Keluar
-                </a>
+                
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <button onclick="openPasswordModal()" class="flex items-center px-3 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <span class="hidden sm:inline">Ganti Sandi</span>
+                    </button>
+                    <a href="../../actions/logout_ortu.php" onclick="return confirm('Yakin ingin keluar dari portal?')" class="flex items-center px-3 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span class="hidden sm:inline">Keluar</span>
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
 
     <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         
+        <?php if ($success_msg): ?>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl mb-6 shadow-sm flex items-center animate-pulse">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <p class="font-bold text-sm"><?= htmlspecialchars($success_msg) ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($error_msg): ?>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                <p class="font-bold text-sm"><?= htmlspecialchars($error_msg) ?></p>
+            </div>
+        <?php endif; ?>
+
         <div class="mb-8">
             <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Selamat datang, <?= htmlspecialchars($nama_ortu) ?>! 👋</h2>
             <p class="text-slate-500 font-medium mt-2 text-sm lg:text-base">Silakan pilih profil putra/putri Anda untuk memantau perkembangan kedisiplinan dan akademik mereka.</p>
@@ -159,5 +185,44 @@ if ($tahun_aktif) {
         </div>
     </footer>
 
+    <div id="modal-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePasswordModal()"></div>
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full relative z-10 overflow-hidden transform transition-all">
+            <div class="p-6 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-extrabold text-slate-800 flex items-center text-lg">
+                    <svg class="w-6 h-6 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Ubah Kata Sandi
+                </h3>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            
+            <form action="../../actions/update_pass_ortu.php" method="POST" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-500 mb-2 uppercase tracking-wide">Kata Sandi Lama</label>
+                    <input type="password" name="old_password" required placeholder="Masukkan sandi saat ini" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-800 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-500 mb-2 uppercase tracking-wide">Kata Sandi Baru</label>
+                    <input type="password" name="new_password" required placeholder="Minimal 6 karakter" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-800 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-500 mb-2 uppercase tracking-wide">Konfirmasi Kata Sandi Baru</label>
+                    <input type="password" name="confirm_password" required placeholder="Ketik ulang sandi baru" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#000080]/20 focus:border-[#000080] text-sm text-slate-800 transition-all">
+                </div>
+                
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closePasswordModal()" class="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors">Batal</button>
+                    <button type="submit" class="flex-1 py-3 bg-[#000080] text-white font-bold rounded-xl shadow-lg hover:bg-blue-900 transition-colors">Simpan Sandi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openPasswordModal() { document.getElementById('modal-password').classList.remove('hidden'); }
+        function closePasswordModal() { document.getElementById('modal-password').classList.add('hidden'); }
+    </script>
 </body>
 </html>

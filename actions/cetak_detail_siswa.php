@@ -2,13 +2,14 @@
 /**
  * SITAPSI - Cetak Detail Pelanggaran Siswa (Format Buku Pembinaan 3 Kolom)
  * FIXED: Lebar kolom 'Denda' diperbesar agar teks header tidak turun/terpotong.
+ * PENYESUAIAN AKSES: Mengizinkan Orang Tua mencetak rapor dengan validasi IDOR.
  */
 
 session_start();
 require_once '../config/database.php';
 
-// Validasi Keamanan
-if (!isset($_SESSION['user_id']) && !isset($_SESSION['role'])) {
+// Validasi Keamanan Lintas Peran (Admin, Guru, atau Ortu)
+if (!isset($_SESSION['role'])) {
     die("Akses ditolak. Silakan login terlebih dahulu.");
 }
 
@@ -21,20 +22,40 @@ if (!$id_anggota) {
 // 1. Ambil tahun ajaran aktif
 $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 
-// 2. Ambil data siswa
-$siswa = fetchOne("
-    SELECT 
-        s.no_induk,
-        s.nama_siswa,
-        k.nama_kelas
-    FROM tb_anggota_kelas a
-    JOIN tb_siswa s ON a.no_induk = s.no_induk
-    JOIN tb_kelas k ON a.id_kelas = k.id_kelas
-    WHERE a.id_anggota = :id
-", ['id' => $id_anggota]);
-
-if (!$siswa) {
-    die("Data siswa tidak ditemukan.");
+// 2. Ambil data siswa & LAKUKAN VALIDASI KEPEMILIKAN JIKA YANG LOGIN ADALAH ORTU
+if ($_SESSION['role'] === 'Ortu') {
+    $id_ortu_login = $_SESSION['ortu_id'];
+    $siswa = fetchOne("
+        SELECT 
+            s.no_induk,
+            s.nama_siswa,
+            k.nama_kelas
+        FROM tb_anggota_kelas a
+        JOIN tb_siswa s ON a.no_induk = s.no_induk
+        JOIN tb_kelas k ON a.id_kelas = k.id_kelas
+        WHERE a.id_anggota = :id AND s.id_ortu = :id_ortu
+    ", ['id' => $id_anggota, 'id_ortu' => $id_ortu_login]);
+    
+    // Jika tidak ditemukan, berarti Ortu ini mencoba akses ID anak orang lain (Mencegah IDOR)
+    if (!$siswa) {
+        die("<div style='font-family:sans-serif;text-align:center;margin-top:50px;color:red;'><h2>Akses Ditolak!</h2><p>Data anak tidak ditemukan atau Anda tidak memiliki hak akses untuk mencetak profil ini.</p></div>");
+    }
+} else {
+    // Jika Admin atau Guru, bebas akses siapa saja
+    $siswa = fetchOne("
+        SELECT 
+            s.no_induk,
+            s.nama_siswa,
+            k.nama_kelas
+        FROM tb_anggota_kelas a
+        JOIN tb_siswa s ON a.no_induk = s.no_induk
+        JOIN tb_kelas k ON a.id_kelas = k.id_kelas
+        WHERE a.id_anggota = :id
+    ", ['id' => $id_anggota]);
+    
+    if (!$siswa) {
+        die("Data siswa tidak ditemukan.");
+    }
 }
 
 // 3. Ambil seluruh pelanggaran siswa ini pada tahun aktif
