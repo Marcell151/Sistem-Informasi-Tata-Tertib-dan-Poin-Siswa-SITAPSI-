@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Data Siswa (UI ALIGNED WITH GLOBAL PORTAL)
  * [FIXED]: XSS Vulnerability pada tombol Edit & Hapus
+ * [PENYESUAIAN BARU]: Relasi id_ortu dengan Dropdown TomSelect
  */
 
 session_start();
@@ -20,6 +21,10 @@ $tahun_aktif = fetchOne("
 
 $kelas_list = fetchAll("SELECT id_kelas, nama_kelas FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
+// AMBIL DATA ORANG TUA UNTUK DROPDOWN
+$ortu_list = fetchAll("SELECT id_ortu, nik_ortu, nama_ayah, nama_ibu FROM tb_orang_tua ORDER BY nama_ayah ASC");
+
+// [PENYESUAIAN] Tambah JOIN ke tb_orang_tua untuk memanggil NIK ortu
 $sql = "
     SELECT 
         s.no_induk,
@@ -28,6 +33,8 @@ $sql = "
         s.nama_ayah,
         s.nama_ibu,
         s.no_hp_ortu,
+        s.id_ortu,
+        o.nik_ortu,
         s.status_aktif,
         k.nama_kelas,
         k.id_kelas,
@@ -44,6 +51,7 @@ $sql = "
         )
     )
     LEFT JOIN tb_kelas k ON a.id_kelas = k.id_kelas
+    LEFT JOIN tb_orang_tua o ON s.id_ortu = o.id_ortu
     WHERE s.status_aktif = :status
 ";
 
@@ -89,6 +97,12 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Siswa - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <style>
+        /* Styling TomSelect agar mirip Tailwind Input */
+        .ts-control { border-radius: 0.5rem !important; padding: 0.625rem 1rem !important; border-color: #E2E8F0 !important; font-size: 0.875rem !important;}
+        .ts-control.focus { border-color: #000080 !important; box-shadow: 0 0 0 2px rgba(0,0,128,0.1) !important; }
+    </style>
 </head>
 <body class="bg-[#F8FAFC]">
 
@@ -184,7 +198,8 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                             <tr>
                                 <th class="p-4 font-bold">Siswa</th>
                                 <th class="p-4 font-bold">Kelas</th>
-                                <th class="p-4 font-bold">Orang Tua</th>
+                                <th class="p-4 font-bold">Data Orang Tua</th>
+                                <th class="p-4 font-bold text-center">Akses Wali</th>
                                 <th class="p-4 font-bold text-center">Status</th>
                                 <th class="p-4 font-bold text-center">Aksi</th>
                             </tr>
@@ -192,7 +207,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         <tbody class="divide-y divide-[#E2E8F0]">
                             <?php if(empty($siswa_list)): ?>
                             <tr>
-                                <td colspan="5" class="p-8 text-center text-slate-400 text-sm font-medium">Tidak ada data siswa ditemukan</td>
+                                <td colspan="6" class="p-8 text-center text-slate-400 text-sm font-medium">Tidak ada data siswa ditemukan</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach($siswa_list as $siswa): ?>
@@ -217,6 +232,19 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <p class="text-[10px] text-slate-400 mt-0.5">HP: <?= htmlspecialchars($siswa['no_hp_ortu'] ?? '-') ?></p>
                                 </td>
                                 <td class="p-4 text-center">
+                                    <?php if(!empty($siswa['id_ortu'])): ?>
+                                        <span class="inline-flex flex-col items-center px-2.5 py-1 rounded bg-blue-50 text-blue-700 border border-blue-200" title="Terhubung dengan NIK: <?= htmlspecialchars($siswa['nik_ortu']) ?>">
+                                            <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                            <span class="text-[9px] font-extrabold uppercase">Terkait</span>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex flex-col items-center px-2.5 py-1 rounded bg-slate-100 text-slate-500 border border-slate-200" title="Akun orang tua belum disetting">
+                                            <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            <span class="text-[9px] font-extrabold uppercase">Belum</span>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="p-4 text-center">
                                     <span class="px-2.5 py-1 rounded-md text-[10px] font-bold 
                                         <?= $siswa['status_aktif'] === 'Aktif' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
                                         <?= $siswa['status_aktif'] ?>
@@ -224,8 +252,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 </td>
                                 <td class="p-4 text-center">
                                     <?php 
-                                        // [KEAMANAN XSS & DOM BREAK FIX]
-                                        // 1. Data Edit dibungkus JSON, lalu di-htmlspecialchars agar tidak bentrok dengan attribute HTML (onclick="...")
+                                        // [KEAMANAN XSS & DOM BREAK FIX] Ditambah data id_ortu
                                         $edit_data = json_encode([
                                             "no_induk" => $siswa["no_induk"],
                                             "id_anggota" => $siswa["id_anggota"],
@@ -235,11 +262,11 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                             "nama_ayah" => $siswa["nama_ayah"] ?? "",
                                             "nama_ibu" => $siswa["nama_ibu"] ?? "",
                                             "no_hp_ortu" => $siswa["no_hp_ortu"] ?? "",
-                                            "id_kelas" => $siswa["id_kelas"]
+                                            "id_kelas" => $siswa["id_kelas"],
+                                            "id_ortu" => $siswa["id_ortu"] // <--- BARU
                                         ]);
                                         $safe_edit_data = htmlspecialchars($edit_data, ENT_QUOTES, 'UTF-8');
                                         
-                                        // 2. Data Hapus diamankan. json_encode otomatis menambahkan tanda kutip ("") di sekitar teks!
                                         $safe_js_id = htmlspecialchars(json_encode($siswa['no_induk']), ENT_QUOTES, 'UTF-8');
                                         $safe_js_nama = htmlspecialchars(json_encode($siswa['nama_siswa']), ENT_QUOTES, 'UTF-8');
                                     ?>
@@ -281,7 +308,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-lg">
                 <p class="text-xs text-blue-800 leading-relaxed font-medium">
                     Format Kolom Excel yang dibutuhkan:<br>
-                    <span class="font-mono text-slate-600 mt-1 block">No Induk | Nama | JK | Tempat Lahir | Tgl Lahir | Alamat | Nama Ayah | Nama Ibu | No HP | Kelas</span>
+                    <span class="font-mono text-slate-600 mt-1 block">No Induk | Nama | JK | Tempat Lahir | Tgl Lahir | Alamat | Nama Ayah | Nama Ibu | No HP | NIK Orang Tua | Kelas</span>
                 </p>
             </div>
             <div class="flex gap-3 pt-2">
@@ -328,7 +355,18 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         </select>
                     </div>
                     <div class="sm:col-span-2 pt-4 border-t border-[#E2E8F0]">
-                        <h4 class="text-sm font-bold text-slate-800 mb-4">Informasi Orang Tua / Wali</h4>
+                        <h4 class="text-sm font-bold text-slate-800 mb-2">Informasi Orang Tua / Wali</h4>
+                        <p class="text-xs text-slate-500 mb-4">Cari dari data yang sudah ada, atau kosongi jika akan diisi manual di form bawahnya.</p>
+                        
+                        <div class="mb-4">
+                            <label class="<?= $label_class ?>">Hubungkan dengan Akun Orang Tua (Opsional)</label>
+                            <select name="id_ortu" id="select-ortu-tambah" placeholder="Cari NIK atau Nama Ayah/Ibu...">
+                                <option value="">-- Tidak Dihubungkan / Belum Terdaftar --</option>
+                                <?php foreach($ortu_list as $o): ?>
+                                    <option value="<?= $o['id_ortu'] ?>"><?= $o['nik_ortu'] ?> - Ayah: <?= htmlspecialchars($o['nama_ayah']) ?> | Ibu: <?= htmlspecialchars($o['nama_ibu']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label class="<?= $label_class ?>">Nama Ayah *</label>
@@ -403,7 +441,18 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         </p>
                     </div>
                     <div class="sm:col-span-2 pt-4 border-t border-[#E2E8F0]">
-                        <h4 class="text-sm font-bold text-slate-800 mb-4">Informasi Orang Tua / Wali</h4>
+                        <h4 class="text-sm font-bold text-slate-800 mb-2">Informasi Orang Tua / Wali</h4>
+                        <p class="text-xs text-slate-500 mb-4">Ikat siswa ini dengan akun login Portal Orang Tua.</p>
+                        
+                        <div class="mb-4">
+                            <label class="<?= $label_class ?>">Akun Login Orang Tua Terhubung</label>
+                            <select name="id_ortu" id="select-ortu-edit" placeholder="Cari NIK atau Nama Ayah/Ibu...">
+                                <option value="">-- Belum Terhubung (Kosong) --</option>
+                                <?php foreach($ortu_list as $o): ?>
+                                    <option value="<?= $o['id_ortu'] ?>"><?= $o['nik_ortu'] ?> - Ayah: <?= htmlspecialchars($o['nama_ayah']) ?> | Ibu: <?= htmlspecialchars($o['nama_ibu']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label class="<?= $label_class ?>">Nama Ayah *</label>
@@ -427,11 +476,23 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
 <script>
+// Init TomSelect
+let tsTambah, tsEdit;
+document.addEventListener("DOMContentLoaded", function() {
+    tsTambah = new TomSelect("#select-ortu-tambah", { create: false, sortField: { field: "text", direction: "asc" } });
+    tsEdit = new TomSelect("#select-ortu-edit", { create: false, sortField: { field: "text", direction: "asc" } });
+});
+
 // Modal Logic Toggle
 function openModalImport() { document.getElementById('modal-import').classList.remove('hidden'); }
 function closeModalImport() { document.getElementById('modal-import').classList.add('hidden'); }
-function openModalTambah() { document.getElementById('modal-tambah').classList.remove('hidden'); }
+function openModalTambah() { 
+    document.getElementById('modal-tambah').classList.remove('hidden');
+    if(tsTambah) tsTambah.clear(); // Reset pilihan ortu
+}
 function closeModalTambah() { document.getElementById('modal-tambah').classList.add('hidden'); }
 function closeModalEdit() { document.getElementById('modal-edit').classList.add('hidden'); }
 
@@ -446,6 +507,16 @@ function editSiswa(data) {
     document.getElementById('edit-nama-ibu').value = data.nama_ibu;
     document.getElementById('edit-no-hp-ortu').value = data.no_hp_ortu;
     document.getElementById('edit-id-kelas').value = data.id_kelas || '';
+    
+    // Set Nilai TomSelect Ortu
+    if(tsEdit) {
+        if(data.id_ortu) {
+            tsEdit.setValue(data.id_ortu);
+        } else {
+            tsEdit.clear();
+        }
+    }
+    
     document.getElementById('modal-edit').classList.remove('hidden');
 }
 

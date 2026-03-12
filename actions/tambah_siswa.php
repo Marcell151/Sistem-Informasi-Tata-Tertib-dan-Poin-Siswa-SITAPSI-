@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Tambah Siswa Manual
+ * PENYESUAIAN: Penambahan tangkapan data id_ortu
  */
 
 session_start();
@@ -28,6 +29,9 @@ try {
     $nama_ibu = trim($_POST['nama_ibu']);
     $no_hp_ortu = trim($_POST['no_hp_ortu']);
     
+    // [BARU] Tangkap id_ortu dari form, set null jika tidak dipilih
+    $id_ortu = !empty($_POST['id_ortu']) ? $_POST['id_ortu'] : null;
+    
     // Validasi
     if (empty($no_induk) || empty($nama_siswa) || empty($jenis_kelamin) || empty($id_kelas)) {
         throw new Exception('Data wajib belum lengkap');
@@ -41,17 +45,18 @@ try {
     
     $pdo->beginTransaction();
     
-    // Insert siswa
+    // Insert siswa (Ditambahkan kolom id_ortu)
     executeQuery("
-        INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, nama_ayah, nama_ibu, no_hp_ortu, status_aktif)
-        VALUES (:no_induk, :nama_siswa, :jk, :nama_ayah, :nama_ibu, :no_hp_ortu, 'Aktif')
+        INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, nama_ayah, nama_ibu, no_hp_ortu, id_ortu, status_aktif)
+        VALUES (:no_induk, :nama_siswa, :jk, :nama_ayah, :nama_ibu, :no_hp_ortu, :id_ortu, 'Aktif')
     ", [
         'no_induk' => $no_induk,
         'nama_siswa' => $nama_siswa,
         'jk' => $jenis_kelamin,
         'nama_ayah' => $nama_ayah,
         'nama_ibu' => $nama_ibu,
-        'no_hp_ortu' => $no_hp_ortu
+        'no_hp_ortu' => $no_hp_ortu,
+        'id_ortu' => $id_ortu // <--- Variabel id_ortu masuk ke sini
     ]);
     
     // Insert anggota kelas

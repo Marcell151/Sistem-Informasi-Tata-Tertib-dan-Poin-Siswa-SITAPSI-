@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Action Import Siswa
  * Dilengkapi dengan Validasi Ekstensi File & Notifikasi UI
+ * PENYESUAIAN: Autocreate Akun Orang Tua berdasarkan NIK dari Excel
  */
 session_start();
 require_once '../config/database.php';
@@ -73,7 +74,8 @@ if (isset($_POST) && isset($_FILES['file_excel'])) {
             elseif (strpos($col_name, 'pekerjaan ayah') !== false) $map['pekerjaan_ayah'] = $index;
             elseif (strpos($col_name, 'ibu') !== false && strpos($col_name, 'pekerjaan') === false) $map['nama_ibu'] = $index;
             elseif (strpos($col_name, 'pekerjaan ibu') !== false) $map['pekerjaan_ibu'] = $index;
-            elseif (strpos($col_name, 'hp') !== false) $map['no_hp'] = $index;
+            elseif (strpos($col_name, 'hp') !== false && strpos($col_name, 'ortu') === false) $map['no_hp'] = $index; // Fix regex HP
+            elseif (strpos($col_name, 'nik') !== false) $map['nik_ortu'] = $index; // Kolom NIK BARU
             elseif (strpos($col_name, 'kelas') !== false) $map['kelas'] = $index;
         }
 
@@ -117,20 +119,45 @@ if (isset($_POST) && isset($_FILES['file_excel'])) {
                 $nama_ibu       = isset($map['nama_ibu']) && isset($row[$map['nama_ibu']]) ? trim($row[$map['nama_ibu']]) : null;
                 $pekerjaan_ibu  = isset($map['pekerjaan_ibu']) && isset($row[$map['pekerjaan_ibu']]) ? trim($row[$map['pekerjaan_ibu']]) : null;
                 $no_hp          = isset($map['no_hp']) && isset($row[$map['no_hp']]) ? trim($row[$map['no_hp']]) : null;
+                $nik_ortu_xls   = isset($map['nik_ortu']) && isset($row[$map['nik_ortu']]) ? preg_replace('/[^0-9]/', '', trim($row[$map['nik_ortu']])) : null;
                 $nama_kelas_xls = isset($map['kelas']) && isset($row[$map['kelas']]) ? trim($row[$map['kelas']]) : null;
 
-                // A. Simpan ke tb_siswa
+                // LOGIKA AUTO-CREATE AKUN ORANG TUA
+                $id_ortu = null;
+                if (!empty($nik_ortu_xls)) {
+                    // Cek apakah NIK sudah ada di tb_orang_tua
+                    $stmt_cek_ortu = $db_import->prepare("SELECT id_ortu FROM tb_orang_tua WHERE nik_ortu = ? LIMIT 1");
+                    $stmt_cek_ortu->execute([$nik_ortu_xls]);
+                    $ortu_db = $stmt_cek_ortu->fetch(PDO::FETCH_ASSOC);
+
+                    if ($ortu_db) {
+                        // Jika sudah ada (mungkin anak kedua/adiknya), ambil ID nya
+                        $id_ortu = $ortu_db['id_ortu'];
+                    } else {
+                        // Jika belum ada, buatan Akun Baru!
+                        // Password default = MD5 dari 123456 (e10adc3949ba59abbe56e057f20f883e)
+                        $pass_default = 'e10adc3949ba59abbe56e057f20f883e';
+                        $stmt_ins_ortu = $db_import->prepare("
+                            INSERT INTO tb_orang_tua (nik_ortu, password, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu, alamat)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        $stmt_ins_ortu->execute([$nik_ortu_xls, $pass_default, $nama_ayah, $pekerjaan_ayah, $nama_ibu, $pekerjaan_ibu, $no_hp, $alamat]);
+                        $id_ortu = $db_import->lastInsertId(); // Ambil ID yang baru saja dibuat
+                    }
+                }
+
+                // A. Simpan ke tb_siswa (Tambahkan ikatan id_ortu)
                 $stmt = $db_import->prepare("
                     INSERT INTO tb_siswa 
-                    (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu, status_aktif) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Aktif')
+                    (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu, id_ortu, status_aktif) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Aktif')
                     ON DUPLICATE KEY UPDATE 
                     nama_siswa = VALUES(nama_siswa), jenis_kelamin = VALUES(jenis_kelamin), kota = VALUES(kota),
                     tanggal_lahir = VALUES(tanggal_lahir), alamat = VALUES(alamat), nama_ayah = VALUES(nama_ayah),
                     pekerjaan_ayah = VALUES(pekerjaan_ayah), nama_ibu = VALUES(nama_ibu), pekerjaan_ibu = VALUES(pekerjaan_ibu),
-                    no_hp_ortu = VALUES(no_hp_ortu), status_aktif = 'Aktif'
+                    no_hp_ortu = VALUES(no_hp_ortu), id_ortu = VALUES(id_ortu), status_aktif = 'Aktif'
                 ");
-                $stmt->execute([$no_induk, $nama, $jk, $kota, $tgl_lahir, $alamat, $nama_ayah, $pekerjaan_ayah, $nama_ibu, $pekerjaan_ibu, $no_hp]);
+                $stmt->execute([$no_induk, $nama, $jk, $kota, $tgl_lahir, $alamat, $nama_ayah, $pekerjaan_ayah, $nama_ibu, $pekerjaan_ibu, $no_hp, $id_ortu]);
 
                 // B. Simpan ke tb_anggota_kelas
                 if (!empty($nama_kelas_xls)) {
@@ -158,7 +185,7 @@ if (isset($_POST) && isset($_FILES['file_excel'])) {
             fclose($handle);
             
             // PESAN SUKSES
-            $_SESSION['success_message'] = "Berhasil memproses $sukses data siswa!";
+            $_SESSION['success_message'] = "Berhasil memproses $sukses data siswa & sinkronisasi akun Wali Murid!";
             header("Location: ../views/admin/data_siswa.php");
             exit;
 

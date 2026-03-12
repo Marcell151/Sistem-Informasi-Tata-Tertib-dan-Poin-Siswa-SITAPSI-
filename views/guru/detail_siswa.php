@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Detail Siswa untuk Guru (MANUAL REPORT SYSTEM - UI GLOBAL)
  * FIX LOGIKA: Spanduk Kandidat Reward dinamis + Smart Modal Lampiran Bukti
+ * PENYESUAIAN: Algoritma Sanksi Pintar (Irisan) + UI Kolom Sanksi Terpisah
  */
 
 session_start();
@@ -92,7 +93,14 @@ $list_pelanggaran_dropdown = fetchAll("
     ORDER BY h.tanggal DESC
 ", [$id_anggota, $tahun_aktif['id_tahun']]);
 
-// Helper query pelanggaran per kategori (Untuk Tabel) PENYESUAIAN: panggil lampiran_link
+// [BARU] Ambil Master Data Sanksi untuk dicocokkan nanti
+$ref_sanksi = fetchAll("SELECT kode_sanksi, deskripsi FROM tb_sanksi_ref");
+$map_sanksi = [];
+foreach($ref_sanksi as $rs) {
+    $map_sanksi[$rs['kode_sanksi']] = $rs['deskripsi'];
+}
+
+// Helper query pelanggaran per kategori (Untuk Tabel) PENYESUAIAN: Logika Kode Sanksi
 function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
     $sql = "
         SELECT 
@@ -105,8 +113,9 @@ function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_
             h.bukti_foto,
             h.lampiran_link,
             jp.nama_pelanggaran,
+            jp.sanksi_default, -- Ambil aturan default sanksi dari DB
             d.poin_saat_itu,
-            GROUP_CONCAT(DISTINCT sr.deskripsi SEPARATOR '; ') as sanksi,
+            GROUP_CONCAT(DISTINCT sr.kode_sanksi SEPARATOR ',') as sanksi_aktual_kode,
             g.nama_guru
         FROM tb_pelanggaran_header h
         JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
@@ -319,11 +328,12 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                             <thead class="bg-slate-50 text-xs text-slate-500 uppercase border-b border-[#E2E8F0] whitespace-nowrap">
                                 <tr>
                                     <th class="p-4 font-bold w-1/6">Tanggal</th>
-                                    <th class="p-4 font-bold w-2/5">Pelanggaran</th>
+                                    <th class="p-4 font-bold w-1/4">Pelanggaran</th>
+                                    <th class="p-4 font-bold w-1/4">Sanksi</th>
                                     <th class="p-4 font-bold text-center">Poin</th>
                                     <th class="p-4 font-bold text-center">Lampiran</th>
                                     <th class="p-4 font-bold">Pelapor</th>
-                                    <th class="p-4 font-bold text-center">Status Laporan</th>
+                                    <th class="p-4 font-bold text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[#E2E8F0]">
@@ -332,9 +342,31 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <td class="p-4 whitespace-nowrap align-top">
                                         <p class="font-bold text-slate-700 text-xs"><?= date('d/m/Y', strtotime($p['tanggal'])) ?></p>
                                     </td>
-                                    <td class="p-4 whitespace-normal min-w-[200px] align-top">
+                                    <td class="p-4 align-top">
                                         <p class="text-xs font-bold text-slate-800 leading-relaxed"><?= htmlspecialchars($p['nama_pelanggaran']) ?></p>
                                     </td>
+                                    
+                                    <td class="p-4 align-top text-xs font-medium text-slate-600 leading-relaxed">
+                                        <?php 
+                                        $aktual_kodes = array_filter(explode(',', $p['sanksi_aktual_kode'] ?? ''));
+                                        $default_kodes = array_filter(explode(',', $p['sanksi_default'] ?? ''));
+                                        $irisan_kodes = array_intersect($aktual_kodes, $default_kodes);
+                                        $kodes_tampil = !empty($irisan_kodes) ? $irisan_kodes : $aktual_kodes;
+
+                                        if(!empty($kodes_tampil)): 
+                                        ?>
+                                            <ul class="list-disc pl-3 space-y-1 marker:text-slate-400">
+                                                <?php foreach($kodes_tampil as $kode): ?>
+                                                    <?php if(isset($map_sanksi[$kode])): ?>
+                                                        <li><?= htmlspecialchars($map_sanksi[$kode]) ?></li>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php else: ?>
+                                            <span class="text-slate-400 italic text-[10px]">Tidak ada catatan sanksi</span>
+                                        <?php endif; ?>
+                                    </td>
+
                                     <td class="p-4 text-center whitespace-nowrap align-top">
                                         <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-<?= $color ?>-50 text-<?= $color ?>-600 border border-<?= $color ?>-200">+<?= $p['poin_saat_itu'] ?></span>
                                     </td>
@@ -452,7 +484,6 @@ function lihatBukti(jsonString, lampiranLink) {
     const container = document.getElementById('bukti-container');
     container.innerHTML = '';
     
-    // Prioritas 1: Jika ada Lampiran Link Eksternal
     if (lampiranLink && lampiranLink !== 'null' && lampiranLink !== '') {
         container.innerHTML += `
             <a href="${lampiranLink}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-4 mb-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors shadow-sm group">
@@ -470,7 +501,6 @@ function lihatBukti(jsonString, lampiranLink) {
         `;
     }
     
-    // Prioritas 2: Jika ada File Upload (Gambar, PDF, Word)
     if (jsonString && jsonString !== 'null' && jsonString !== '') {
         try {
             const fotos = JSON.parse(jsonString);

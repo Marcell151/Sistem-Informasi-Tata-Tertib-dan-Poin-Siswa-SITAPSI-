@@ -1,6 +1,7 @@
 <?php
 /**
  * SITAPSI - Halaman Login (UI GLOBAL PORTAL)
+ * PENYESUAIAN: Shortcut Link ke Portal Wali Murid
  */
 session_start();
 require_once '../config/database.php';
@@ -35,12 +36,12 @@ $guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Ak
         .tab-active { color: #000080; border-bottom: 2px solid #000080; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden">
+<body class="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 py-10 relative overflow-x-hidden">
     
     <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-900/5 rounded-full blur-3xl animate-pulse"></div>
     <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-blue-900/5 rounded-full blur-3xl"></div>
 
-    <div class="w-full max-w-md bg-white border border-slate-200 shadow-xl shadow-blue-900/5 rounded-2xl relative z-10 transition-all duration-300 overflow-hidden">
+    <div class="w-full max-w-md bg-white border border-slate-200 shadow-xl shadow-blue-900/5 rounded-2xl relative z-10 transition-all duration-300 overflow-hidden mb-6">
         
         <div class="p-8 text-center space-y-4 pb-4">
             <div class="mx-auto w-16 h-16 bg-[#000080] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20">
@@ -120,8 +121,14 @@ $guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Ak
         </div>
     </div>
 
+    <div class="w-full max-w-md text-center relative z-10">
+        <a href="ortu/login.php" class="inline-flex items-center justify-center px-6 py-2.5 bg-white border border-slate-200 text-slate-600 hover:text-[#000080] hover:border-[#000080] rounded-full text-sm font-bold shadow-sm transition-all group">
+            <svg class="w-4 h-4 mr-2 text-slate-400 group-hover:text-[#000080] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Masuk sebagai Wali Murid
+        </a>
+    </div>
+
     <script>
-        // Fungsi ganti Tab Role
         function switchRole(role) {
             const typeInput = document.getElementById('login_type');
             const guruFields = document.getElementById('guru-fields');
@@ -148,7 +155,6 @@ $guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Ak
             }
         }
 
-        // Fungsi Tampilkan/Sembunyikan Password
         function togglePass() {
             const input = document.getElementById('pass-admin');
             const icon = document.getElementById('eye-icon');
@@ -161,7 +167,6 @@ $guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Ak
             }
         }
 
-        // Animasi Submit
         document.getElementById('form-login').addEventListener('submit', function() {
             document.getElementById('text-submit').innerText = 'Memverifikasi...';
             document.getElementById('spinner').classList.remove('hidden');

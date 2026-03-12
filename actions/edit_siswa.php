@@ -25,11 +25,14 @@ try {
     $no_hp_ortu = trim($_POST['no_hp_ortu'] ?? '');
     $id_kelas_baru = $_POST['id_kelas'] ?? null;
     
+    // [PENYESUAIAN] Tangkap lemparan id_ortu dari TomSelect
+    $id_ortu = !empty($_POST['id_ortu']) ? $_POST['id_ortu'] : null;
+    
     if (empty($no_induk) || empty($nama_siswa)) {
         throw new Exception('Data wajib belum lengkap');
     }
     
-    // 1. Update data siswa
+    // 1. Update data siswa (Ditambahkan id_ortu)
     executeQuery("
         UPDATE tb_siswa 
         SET nama_siswa = :nama_siswa,
@@ -37,7 +40,8 @@ try {
             status_aktif = :status_aktif,
             nama_ayah = :nama_ayah,
             nama_ibu = :nama_ibu,
-            no_hp_ortu = :no_hp_ortu
+            no_hp_ortu = :no_hp_ortu,
+            id_ortu = :id_ortu
         WHERE no_induk = :no_induk
     ", [
         'nama_siswa' => $nama_siswa,
@@ -46,6 +50,7 @@ try {
         'nama_ayah' => $nama_ayah,
         'nama_ibu' => $nama_ibu,
         'no_hp_ortu' => $no_hp_ortu,
+        'id_ortu' => $id_ortu,
         'no_induk' => $no_induk
     ]);
     

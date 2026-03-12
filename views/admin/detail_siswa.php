@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Detail Siswa (FIX TABLE WRAP + UI GLOBAL)
  * FIX LOGIKA: Spanduk Kandidat Reward dinamis (Semester / Sertifikat Tahunan)
+ * PENYESUAIAN: UI Sanksi Kolom Mandiri (List) & Algoritma Irisan
  */
 
 session_start();
@@ -88,14 +89,21 @@ $poin_genap = fetchOne("
     WHERE h.id_anggota = :id AND h.id_tahun = :id_tahun AND h.semester = 'Genap'
 ", ['id' => $id_anggota, 'id_tahun' => $tahun_aktif['id_tahun']]);
 
-// Helper query pelanggaran
+// [BARU] Ambil Master Data Sanksi untuk dicocokkan nanti
+$ref_sanksi = fetchAll("SELECT kode_sanksi, deskripsi FROM tb_sanksi_ref");
+$map_sanksi = [];
+foreach($ref_sanksi as $rs) {
+    $map_sanksi[$rs['kode_sanksi']] = $rs['deskripsi'];
+}
+
+// Helper query pelanggaran (MODIFIKASI PENGAMBILAN KODE SANKSI)
 function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
     global $pdo;
     $sql = "
         SELECT 
             h.id_transaksi, h.tanggal, h.waktu, h.semester,
-            jp.nama_pelanggaran, d.poin_saat_itu,
-            GROUP_CONCAT(DISTINCT sr.deskripsi SEPARATOR '; ') as sanksi,
+            jp.nama_pelanggaran, jp.sanksi_default, d.poin_saat_itu,
+            GROUP_CONCAT(DISTINCT sr.kode_sanksi SEPARATOR ',') as sanksi_aktual_kode,
             g.nama_guru
         FROM tb_pelanggaran_header h
         JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
@@ -364,11 +372,12 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                         <table class="w-full text-left text-sm">
                             <thead class="bg-white text-xs text-slate-500 uppercase border-b border-[#E2E8F0] whitespace-nowrap">
                                 <tr>
-                                    <th class="p-4 font-bold w-1/6">Tanggal</th>
-                                    <th class="p-4 font-bold w-2/5">Pelanggaran</th>
-                                    <th class="p-4 font-bold text-center w-1/6">Poin</th>
+                                    <th class="p-4 font-bold w-1/6">Waktu</th>
+                                    <th class="p-4 font-bold w-1/4">Jenis Pelanggaran</th>
+                                    <th class="p-4 font-bold w-1/4">Sanksi & Tindakan</th>
+                                    <th class="p-4 font-bold text-center w-1/12">Poin</th>
                                     <th class="p-4 font-bold w-1/6">Pelapor</th>
-                                    <th class="p-4 font-bold text-center w-1/6">Aksi</th>
+                                    <th class="p-4 font-bold text-center w-1/12">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[#E2E8F0]">
@@ -378,12 +387,32 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                         <p class="font-bold text-slate-700 text-xs"><?= date('d M Y', strtotime($p['tanggal'])) ?></p>
                                         <p class="text-[10px] text-slate-400 mt-0.5"><?= substr($p['waktu'], 0, 5) ?> WIB</p>
                                     </td>
-                                    <td class="p-4 whitespace-normal min-w-[250px] align-top">
+                                    
+                                    <td class="p-4 whitespace-normal align-top">
                                         <p class="text-xs font-bold text-slate-800 leading-relaxed"><?= htmlspecialchars($p['nama_pelanggaran']) ?></p>
-                                        <?php if($p['sanksi']): ?>
-                                            <p class="text-[10px] text-slate-500 mt-1.5 flex items-start"><svg class="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span class="leading-tight">Sanksi: <?= htmlspecialchars($p['sanksi']) ?></span></p>
+                                    </td>
+                                    
+                                    <td class="p-4 align-top text-xs font-medium text-slate-600 leading-relaxed">
+                                        <?php 
+                                        $aktual_kodes = array_filter(explode(',', $p['sanksi_aktual_kode'] ?? ''));
+                                        $default_kodes = array_filter(explode(',', $p['sanksi_default'] ?? ''));
+                                        $irisan_kodes = array_intersect($aktual_kodes, $default_kodes);
+                                        $kodes_tampil = !empty($irisan_kodes) ? $irisan_kodes : $aktual_kodes;
+
+                                        if(!empty($kodes_tampil)): 
+                                        ?>
+                                            <ul class="list-disc pl-3 space-y-1 marker:text-slate-400">
+                                                <?php foreach($kodes_tampil as $kode): ?>
+                                                    <?php if(isset($map_sanksi[$kode])): ?>
+                                                        <li><?= htmlspecialchars($map_sanksi[$kode]) ?></li>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php else: ?>
+                                            <span class="text-slate-400 italic text-[10px]">Tidak ada sanksi tercatat</span>
                                         <?php endif; ?>
                                     </td>
+
                                     <td class="p-4 text-center whitespace-nowrap align-top">
                                         <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-<?= $kat['color'] ?>-50 text-<?= $kat['color'] ?>-600 border border-<?= $kat['color'] ?>-200">
                                             +<?= $p['poin_saat_itu'] ?>
@@ -393,7 +422,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <td class="p-4 text-center whitespace-nowrap align-top">
                                         <div class="flex items-center justify-center space-x-2">
                                             <button onclick="viewDetail(<?= $p['id_transaksi'] ?>)" 
-                                                    class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Lihat Bukti Foto">
+                                                    class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Lihat Bukti/Detail">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             </button>
                                             <button onclick="editPelanggaran(<?= $p['id_transaksi'] ?>)" 
@@ -472,7 +501,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
         <div class="p-5 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center justify-between flex-shrink-0">
             <h3 class="font-extrabold text-slate-800 flex items-center text-sm">
                 <svg class="w-5 h-5 mr-2 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                Detail Pelanggaran & Bukti Foto
+                Detail Pelanggaran & Bukti
             </h3>
             <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
