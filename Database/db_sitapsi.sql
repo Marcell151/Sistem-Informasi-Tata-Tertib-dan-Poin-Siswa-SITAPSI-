@@ -61,6 +61,7 @@ CREATE TABLE tb_siswa (
     nama_ibu VARCHAR(150),
     pekerjaan_ibu VARCHAR(100),
     no_hp_ortu VARCHAR(15), -- Notifikasi WA
+    id_ortu INT NULL, -- [PENAMBAHAN BARU: Untuk tempat ikatan Relasi Orang Tua]
     status_aktif ENUM('Aktif', 'Lulus', 'Keluar', 'Dikeluarkan') DEFAULT 'Aktif'
 );
 
@@ -82,12 +83,12 @@ CREATE TABLE tb_anggota_kelas (
     
     total_poin_umum INT DEFAULT 0, -- Total Gabungan Tahunan
     
-    -- 3 Silo Status SP Independen [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+    -- 3 Silo Status SP Independen
     status_sp_kelakuan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     status_sp_kerajinan ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     status_sp_kerapian ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     
-    -- Summary Status Tertinggi [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+    -- Summary Status Tertinggi
     status_sp_terakhir ENUM('Aman', 'SP1', 'SP2', 'SP3', 'Sanksi oleh Sekolah') DEFAULT 'Aman',
     
     -- Penanda Reward
@@ -127,7 +128,7 @@ CREATE TABLE tb_jenis_pelanggaran (
     FOREIGN KEY (id_kategori) REFERENCES tb_kategori_pelanggaran(id_kategori)
 );
 
--- Aturan Ambang Batas SP [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+-- Aturan Ambang Batas SP
 CREATE TABLE tb_aturan_sp (
     id_aturan_sp INT AUTO_INCREMENT PRIMARY KEY,
     id_kategori INT NOT NULL, 
@@ -164,7 +165,7 @@ CREATE TABLE tb_pelanggaran_header (
     semester ENUM('Ganjil', 'Genap') NOT NULL, 
     tipe_form ENUM('Piket', 'Kelas') NOT NULL,
     bukti_foto VARCHAR(255),
-    lampiran_link TEXT NULL, -- [PENAMBAHAN BARU: Opsi lampiran berupa URL (Google Drive, dll)]
+    lampiran_link TEXT NULL, 
     
     -- Fitur Laporan/Revisi Wali Kelas
     status_revisi ENUM('None', 'Pending', 'Disetujui', 'Ditolak') DEFAULT 'None',
@@ -200,7 +201,7 @@ CREATE TABLE tb_pelanggaran_sanksi (
 -- 6. GROUP: MANAJEMEN SP
 -- ================================================================
 
--- Riwayat SP [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+-- Riwayat SP
 CREATE TABLE tb_riwayat_sp (
     id_sp INT AUTO_INCREMENT PRIMARY KEY,
     id_anggota BIGINT NOT NULL,
@@ -237,7 +238,6 @@ INSERT INTO tb_sanksi_ref (kode_sanksi, deskripsi) VALUES
 ('10', 'Diserahkan kembali pendidikannya kepada orang tua (Dikeluarkan)');
 
 -- 3. INSERT JENIS PELANGGARAN
--- A. ASPEK KELAKUAN (ID: 1)
 INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, poin_default, sanksi_default) VALUES 
 (1, '01. Kegiatan Sekolah', 'Tidak mengikuti kegiatan wajib sekolah / upacara tanpa keterangan.', 100, '5'),
 (1, '01. Kegiatan Sekolah', 'Bergurau/tidak tertib saat kegiatan berlangsung', 100, '5'),
@@ -275,10 +275,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (1, '10. Ketertiban PBM', 'Mengambil alat PBM teman tanpa izin', 50, '1,2'),
 (1, '10. Ketertiban PBM', 'Penyalahgunaan HP saat PBM', 50, '1,2'),
 (1, '11. 10 K', 'Tidak mendukung 10 K', 50, '1,2,6'),
-(1, '12. Kendaraan', 'Mengendarai kendaraan bermotor sendiri', 300, '1,7,8,9');
-
--- B. ASPEK KERAJINAN (ID: 2)
-INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, poin_default, sanksi_default) VALUES 
+(1, '12. Kendaraan', 'Mengendarai kendaraan bermotor sendiri', 300, '1,7,8,9'),
 (2, '01. Kehadiran', 'Terlambat sekolah/tambahan/ekstra', 25, '2,5,7,8'),
 (2, '02. Efektif Sekolah', 'Tidak hadir tanpa keterangan (Alpa)', 75, '7,8'),
 (2, '02. Efektif Sekolah', 'Meninggalkan sekolah saat PBM (Bolos)', 75, '7,8'),
@@ -293,10 +290,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (2, '05. Tugas', 'Tidak mengumpulkan PR/Tugas', 50, '2'),
 (2, '06. Ekstrakurikuler', 'Tidak ikut ekstra tanpa izin', 50, '7,8'),
 (2, '06. Ekstrakurikuler', 'Ramai saat kegiatan ekstra', 50, '2'),
-(2, '06. Ekstrakurikuler', 'Tidak ikut tambahan pelajaran', 50, '7');
-
--- C. ASPEK KERAPIAN (ID: 3)
-INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, poin_default, sanksi_default) VALUES 
+(2, '06. Ekstrakurikuler', 'Tidak ikut tambahan pelajaran', 50, '7'),
 (3, '01. Seragam', 'Seragam tidak sesuai ketentuan', 75, '1,2,5,7'),
 (3, '01. Seragam', 'Pakai rompi/jaket hanya aksesoris', 75, '1,2,5,7'),
 (3, '01. Seragam', 'Seragam olahraga dari rumah/saat pulang', 50, '1'),
@@ -316,7 +310,7 @@ INSERT INTO tb_jenis_pelanggaran (id_kategori, sub_kategori, nama_pelanggaran, p
 (3, '04. Kegiatan', 'Tidak rapi/bersepatu saat ekstra/tambahan', 50, '1'),
 (3, '05. Sepeda', 'Parkir sepeda tidak teratur/tidak dikunci', 25, '1');
 
--- 4. INSERT ATURAN SP [DISESUAIKAN: Dikeluarkan -> Sanksi oleh Sekolah]
+-- 4. INSERT ATURAN SP
 INSERT INTO tb_aturan_sp (id_kategori, level_sp, batas_bawah_poin) VALUES 
 (1, 'SP1', 250), (1, 'SP2', 750), (1, 'SP3', 1500), (1, 'Sanksi oleh Sekolah', 2000),
 (2, 'SP1', 75), (2, 'SP2', 300), (2, 'SP3', 450), (2, 'Sanksi oleh Sekolah', 600),
@@ -336,10 +330,10 @@ INSERT INTO tb_admin (username, password, nama_lengkap, role) VALUES
 INSERT INTO tb_tahun_ajaran (nama_tahun, status, semester_aktif) VALUES 
 ('2025/2026', 'Aktif', 'Ganjil');
 
--- [PENYESUAIAN 1: FORMAT ROMAWI UNTUK KELAS]
+-- INSERT KELAS
 INSERT INTO tb_kelas (nama_kelas, tingkat) VALUES ('VII A', 7), ('VII B', 7), ('VII C', 7), ('VII D', 7), ('VII E', 7), ('VIII A', 8), ('VIII B', 8), ('VIII C', 8), ('VIII D', 8), ('VIII E', 8), ('IX A', 9), ('IX B', 9), ('IX C', 9), ('IX D', 9), ('IX E', 9);
 
--- [PENYESUAIAN 2: INSERT GURU DENGAN KOLOM 'kode_guru' SESUAI FOTO PAPAN JADWAL]
+-- INSERT GURU
 INSERT INTO tb_guru (nama_guru, nip, kode_guru, id_kelas, pin_validasi) VALUES 
 ('Sr. M. Elfrida Suhartati, SPM, S.Psi.,MM', '10001', '1', NULL, '123456'),
 ('Antonetta Maria Kuntodiati, S.Pd', '10002', '2', NULL, '123456'),
@@ -369,9 +363,9 @@ INSERT INTO tb_guru (nama_guru, nip, kode_guru, id_kelas, pin_validasi) VALUES
 ('Brigita Natalia Setyaningrum, S.Pd.', '10027', '27', NULL, '123456'),
 ('Amelia Rangel Da Silva, S.Pd', '10028', '28', NULL, '123456');
 
--- DISESUAIKAN DENGAN STRUKTUR SISWA BARU
-INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu) VALUES 
-('2024001', 'Ahmad Roland', 'L', 'Malang', '2010-05-15', 'Jl. Merdeka No. 1', 'Bpk. Dani', 'Swasta', 'Ibu Dani', 'Ibu Rumah Tangga', '081234567890');
+-- INSERT SISWA (Data awal)
+INSERT INTO tb_siswa (no_induk, nama_siswa, jenis_kelamin, kota, tanggal_lahir, alamat, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_hp_ortu, id_ortu) VALUES 
+('2024001', 'Ahmad Roland', 'L', 'Malang', '2010-05-15', 'Jl. Merdeka No. 1', 'Bpk. Dani', 'Swasta', 'Ibu Dani', 'Ibu Rumah Tangga', '081234567890', NULL);
 
--- DISESUAIKAN NIS MENJADI NO INDUK
+-- INSERT ANGGOTA KELAS
 INSERT INTO tb_anggota_kelas (no_induk, id_kelas, id_tahun) VALUES ('2024001', 1, 1);
