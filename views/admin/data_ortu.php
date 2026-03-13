@@ -31,8 +31,10 @@ $sql = "
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " WHERE o.nik_ortu LIKE :search OR o.nama_ayah LIKE :search OR o.nama_ibu LIKE :search";
-    $params['search'] = "%$search%";
+    $sql .= " WHERE o.nik_ortu LIKE :search1 OR o.nama_ayah LIKE :search2 OR o.nama_ibu LIKE :search3";
+    $params['search1'] = "%$search%";
+    $params['search2'] = "%$search%";
+    $params['search3'] = "%$search%";
 }
 
 $sql .= " GROUP BY o.id_ortu ORDER BY o.nama_ayah ASC";
