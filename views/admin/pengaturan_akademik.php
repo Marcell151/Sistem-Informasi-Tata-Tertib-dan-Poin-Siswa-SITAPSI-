@@ -208,22 +208,6 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                     </a>
                 </div>
 
-                <div class="<?= $card_class ?> p-6 flex flex-col h-full group hover:border-slate-400 transition-colors">
-                    <div class="flex items-center mb-4">
-                        <div class="bg-slate-100 text-slate-600 rounded-xl p-3 mr-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-800">Arsip Historis</h3>
-                            <p class="text-[11px] font-bold text-slate-400 uppercase">Lihat Data Lampau</p>
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-500 leading-relaxed flex-1 mb-4">Akses data pelanggaran pada tahun ajaran yang sudah ditutup (Read Only).</p>
-                    <a href="arsip_tahun.php" class="block w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-center font-bold rounded-lg transition-colors text-sm">
-                        Buka Folder Arsip
-                    </a>
-                </div>
-
             </div>
 
             <div class="<?= $card_class ?> overflow-hidden mt-8">

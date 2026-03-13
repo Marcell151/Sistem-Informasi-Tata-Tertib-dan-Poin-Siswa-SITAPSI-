@@ -2,7 +2,7 @@
 /**
  * SITAPSI - Sidebar Admin (Versi Standalone / Belum Integrasi)
  * Menggunakan UI Modern (Translasi dari React/Next.js ke PHP Native)
- * PENYESUAIAN: Tambah Menu Data Wali Murid (Orang Tua)
+ * PENYESUAIAN: Tambah Menu Data Wali Murid (Orang Tua) & Arsip Global
  */
 
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
@@ -159,10 +159,21 @@ function getNavClass($isActive) {
             <p class="px-4 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Sistem Akademik</p>
         </div>
 
-        <a href="pengaturan_akademik.php" class="<?= getNavClass(in_array($current_page, ['pengaturan_akademik', 'arsip_tahun', 'kenaikan_kelas'])) ?>">
+        <a href="pengaturan_akademik.php" class="<?= getNavClass(in_array($current_page, ['pengaturan_akademik', 'kenaikan_kelas'])) ?>">
             <div class="flex items-center gap-3">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                 Pengaturan Akademik
+            </div>
+        </a>
+
+        <div class="pt-4 pb-1">
+            <p class="px-4 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Pusat Data Lampau</p>
+        </div>
+
+        <a href="arsip_tahun.php" class="<?= getNavClass($current_page === 'arsip_tahun') ?>">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+                Arsip Global
             </div>
         </a>
 
