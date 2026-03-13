@@ -183,8 +183,9 @@ if ($filter_kelas !== 'all') {
     $params['kelas'] = $filter_kelas;
 }
 if (!empty($filter_search)) {
-    $sql .= " AND (s.nama_siswa LIKE :search OR s.no_induk LIKE :search)";
-    $params['search'] = "%$filter_search%";
+    $sql .= " AND (s.nama_siswa LIKE :search1 OR s.no_induk LIKE :search2)";
+    $params['search1'] = "%$filter_search%";
+    $params['search2'] = "%$filter_search%";
 }
 if ($filter_kategori !== 'all') {
     $sql .= " AND jp.id_kategori = :kategori";
