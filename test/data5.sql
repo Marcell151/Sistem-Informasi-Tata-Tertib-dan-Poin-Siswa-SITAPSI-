@@ -1,0 +1,1040 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Waktu pembuatan: 16 Mar 2026 pada 06.28
+-- Versi server: 10.4.32-MariaDB
+-- Versi PHP: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `db_sitapsi`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_admin`
+--
+
+CREATE TABLE `tb_admin` (
+  `id_admin` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `nama_lengkap` varchar(100) NOT NULL,
+  `role` enum('SuperAdmin','Admin') DEFAULT 'SuperAdmin',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_admin`
+--
+
+INSERT INTO `tb_admin` (`id_admin`, `username`, `password`, `nama_lengkap`, `role`, `created_at`) VALUES
+(1, 'admin', 'admin123', 'Super Admin Tatib', 'SuperAdmin', '2026-03-12 05:08:25');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_anggota_kelas`
+--
+
+CREATE TABLE `tb_anggota_kelas` (
+  `id_anggota` bigint(20) NOT NULL,
+  `no_induk` varchar(50) NOT NULL,
+  `id_kelas` int(11) NOT NULL,
+  `id_tahun` int(11) NOT NULL,
+  `poin_kelakuan` int(11) DEFAULT 0,
+  `poin_kerajinan` int(11) DEFAULT 0,
+  `poin_kerapian` int(11) DEFAULT 0,
+  `total_poin_umum` int(11) DEFAULT 0,
+  `status_sp_kelakuan` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
+  `status_sp_kerajinan` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
+  `status_sp_kerapian` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
+  `status_sp_terakhir` enum('Aman','SP1','SP2','SP3','Sanksi oleh Sekolah') DEFAULT 'Aman',
+  `status_reward` enum('None','Kandidat Reward Semester','Kandidat Sertifikat') DEFAULT 'None'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_anggota_kelas`
+--
+
+INSERT INTO `tb_anggota_kelas` (`id_anggota`, `no_induk`, `id_kelas`, `id_tahun`, `poin_kelakuan`, `poin_kerajinan`, `poin_kerapian`, `total_poin_umum`, `status_sp_kelakuan`, `status_sp_kerajinan`, `status_sp_kerapian`, `status_sp_terakhir`, `status_reward`) VALUES
+(1, '2024001', 2, 1, 0, 175, 150, 325, 'Aman', 'SP1', 'SP1', 'SP1', 'None'),
+(2, '2025002', 2, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(4, '11225', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(5, '11237', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(6, '11248', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(7, '11256', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(8, '11261', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(9, '11272', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(10, '11273', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(11, '11275', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(12, '11276', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(13, '11278', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(14, '11284', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(15, '11285', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(16, '11287', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(17, '11288', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(18, '11294', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(19, '11296', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(20, '11305', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(21, '11307', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(22, '11312', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(23, '11313', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(24, '11317', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(25, '11319', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(26, '11320', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(27, '11323', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(28, '11348', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(29, '11356', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(30, '11360', 1, 1, 600, 0, 0, 600, 'SP1', 'Aman', 'Aman', 'SP1', 'None'),
+(31, '11223', 1, 1, 200, 100, 100, 400, 'Aman', 'SP1', 'SP1', 'SP1', 'None'),
+(32, '2024001', 2, 2, 9999, 25, 50, 10074, 'Sanksi oleh Sekolah', 'Aman', 'Aman', 'Sanksi oleh Sekolah', 'None'),
+(33, '2025002', 2, 2, 0, 375, 450, 825, 'Aman', 'SP2', 'SP3', 'SP3', 'None'),
+(34, '11225', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(35, '11237', 1, 2, 400, 100, 275, 775, 'SP1', 'SP1', 'SP1', 'SP1', 'None'),
+(36, '11248', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(37, '11256', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(38, '11261', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(39, '11272', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(40, '11273', 1, 2, 0, 25, 125, 150, 'Aman', 'Aman', 'SP1', 'SP1', 'None'),
+(41, '11275', 1, 2, 0, 25, 0, 25, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(42, '11276', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(43, '11278', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(44, '11284', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(45, '11285', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(46, '11287', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(47, '11288', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(48, '11294', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(49, '11296', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(50, '11305', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(51, '11307', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(52, '11312', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(53, '11313', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(54, '11317', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(55, '11319', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(56, '11320', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(57, '11323', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(58, '11348', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(59, '11356', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
+(60, '11360', 1, 2, 300, 0, 0, 300, 'SP1', 'Aman', 'Aman', 'SP1', 'None'),
+(61, '11223', 1, 2, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_aturan_sp`
+--
+
+CREATE TABLE `tb_aturan_sp` (
+  `id_aturan_sp` int(11) NOT NULL,
+  `id_kategori` int(11) NOT NULL,
+  `level_sp` enum('SP1','SP2','SP3','Sanksi oleh Sekolah') NOT NULL,
+  `batas_bawah_poin` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_aturan_sp`
+--
+
+INSERT INTO `tb_aturan_sp` (`id_aturan_sp`, `id_kategori`, `level_sp`, `batas_bawah_poin`) VALUES
+(1, 1, 'SP1', 250),
+(2, 1, 'SP2', 750),
+(3, 1, 'SP3', 1500),
+(4, 1, 'Sanksi oleh Sekolah', 2000),
+(5, 2, 'SP1', 75),
+(6, 2, 'SP2', 300),
+(7, 2, 'SP3', 450),
+(8, 2, 'Sanksi oleh Sekolah', 600),
+(9, 3, 'SP1', 100),
+(10, 3, 'SP2', 300),
+(11, 3, 'SP3', 450),
+(12, 3, 'Sanksi oleh Sekolah', 600);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_guru`
+--
+
+CREATE TABLE `tb_guru` (
+  `id_guru` int(11) NOT NULL,
+  `nama_guru` varchar(100) NOT NULL,
+  `nip` varchar(30) DEFAULT NULL,
+  `kode_guru` varchar(10) DEFAULT NULL,
+  `id_kelas` int(11) DEFAULT NULL,
+  `pin_validasi` varchar(6) NOT NULL,
+  `status` enum('Aktif','Non-Aktif') DEFAULT 'Aktif'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_guru`
+--
+
+INSERT INTO `tb_guru` (`id_guru`, `nama_guru`, `nip`, `kode_guru`, `id_kelas`, `pin_validasi`, `status`) VALUES
+(1, 'Sr. M. Elfrida Suhartati, SPM, S.Psi.,MM', '10001', '1', NULL, '123456', 'Aktif'),
+(2, 'Antonetta Maria Kuntodiati, S.Pd', '10002', '2', NULL, '123456', 'Aktif'),
+(3, 'Dra. Maria Marsiti', '10003', '3', NULL, '123456', 'Aktif'),
+(4, 'Trianto Thomas, S.Pd', '10004', '4', NULL, '123456', 'Aktif'),
+(5, 'Agustina Peni Sarasati, S.Pd', '10005', '5', 1, '123456', 'Aktif'),
+(6, 'Y. Pamungkas, S.Pd', '10006', '6', NULL, '123456', 'Aktif'),
+(7, 'Joseph Andiek Kristian, S.Pd, S.Kom', '10007', '7', NULL, '123456', 'Aktif'),
+(8, 'Albertha Yulanti Susetyo, M.Pd', '10008', '8', NULL, '123456', 'Aktif'),
+(9, 'Galang Bagus Afridianto, M.Pd', '10009', '9', NULL, '123456', 'Aktif'),
+(10, 'Hendrik Kiswanto, S.Pd.', '10010', '10', NULL, '123456', 'Aktif'),
+(11, 'Margareta Esti Wulan, S.Pd.', '10011', '11', NULL, '123456', 'Aktif'),
+(12, 'Theresia Sri Wahyuni, S.Pd, M.M.', '10012', '12', NULL, '123456', 'Aktif'),
+(13, 'Yosua Beni Setiawan, S.Pd.', '10014', '14', NULL, '123456', 'Aktif'),
+(14, 'God Life Endob Mesak, S.Pd', '10015', '15', NULL, '123456', 'Aktif'),
+(15, 'Agnes Herawaty Sinurat, S.E., M.M.', '10016', '16', NULL, '123456', 'Aktif'),
+(16, 'Deka Nanda Kurniawati, S.Pd.', '10017', '17', NULL, '123456', 'Aktif'),
+(17, 'Agatha Novenia Bintang Prieska, S.Pd.', '10018', '18', NULL, '123456', 'Aktif'),
+(18, 'Bernadetha Devia Tindy Noveyra, S.Pd.', '10019', '19', NULL, '123456', 'Aktif'),
+(19, 'Drs. Albertus Magnus Meo Depa', '10020', '20', NULL, '123456', 'Aktif'),
+(20, 'Giovani Bimby Dwiantonio, S.Pd', '10021', '21', NULL, '123456', 'Aktif'),
+(21, 'Arnoldus Kobe Tegar Felix Sai, S.Pd.', '10022', '22', NULL, '123456', 'Aktif'),
+(22, 'Haniar Mey Sila Kinanti, S.Pd.', '10023', '23', NULL, '123456', 'Aktif'),
+(23, 'Anjelina Wulandari Sitina De Sareng, S.Pd', '10024', '24', NULL, '123456', 'Aktif'),
+(24, 'Lydia Uli Permatasari, S.Pd.', '10025', '25', NULL, '123456', 'Aktif'),
+(25, 'Albertus Bayu Seto, S.Pd', '10026', '26', NULL, '123456', 'Aktif'),
+(26, 'Brigita Natalia Setyaningrum, S.Pd.', '10027', '27', NULL, '123456', 'Aktif'),
+(27, 'Amelia Rangel Da Silva, S.Pd', '10028', '28', NULL, '123456', 'Aktif');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_jenis_pelanggaran`
+--
+
+CREATE TABLE `tb_jenis_pelanggaran` (
+  `id_jenis` int(11) NOT NULL,
+  `id_kategori` int(11) NOT NULL,
+  `sub_kategori` varchar(100) DEFAULT NULL,
+  `nama_pelanggaran` text NOT NULL,
+  `poin_default` int(11) NOT NULL,
+  `sanksi_default` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_jenis_pelanggaran`
+--
+
+INSERT INTO `tb_jenis_pelanggaran` (`id_jenis`, `id_kategori`, `sub_kategori`, `nama_pelanggaran`, `poin_default`, `sanksi_default`) VALUES
+(1, 1, '01. Kegiatan Sekolah', 'Tidak mengikuti kegiatan wajib sekolah / upacara tanpa keterangan.', 100, '5'),
+(2, 1, '01. Kegiatan Sekolah', 'Bergurau/tidak tertib saat kegiatan berlangsung', 100, '5'),
+(3, 1, '02. Sikap & Moral', 'Berkata tidak sopan/kasar/jorok', 100, '1'),
+(4, 1, '02. Sikap & Moral', 'Mencuri/memalak/meminta paksa', 500, '1,4,7'),
+(5, 1, '02. Sikap & Moral', 'Berbohong', 100, '1'),
+(6, 1, '02. Sikap & Moral', 'Menghina/mengejek Guru/Karyawan', 200, '1,5'),
+(7, 1, '02. Sikap & Moral', 'Menghina/mengejek Siswa/Teman', 100, '1'),
+(8, 1, '02. Sikap & Moral', 'Perundungan (Bullying)', 100, '1,5,7,8,9'),
+(9, 1, '02. Sikap & Moral', 'Membanting pintu/melempar benda', 100, '1'),
+(10, 1, '02. Sikap & Moral', 'Memanggil ortu dengan sebutan tidak sopan', 100, '1,2,5,8'),
+(11, 1, '02. Sikap & Moral', 'Bersikap tidak sopan (duduk di meja dll)', 100, '1,2'),
+(12, 1, '02. Sikap & Moral', 'Merayakan HUT teman secara negatif', 100, '1,5'),
+(13, 1, '02. Sikap & Moral', 'Memicu keributan di medsos/sekolah', 100, '1,2,7,8'),
+(14, 1, '02. Sikap & Moral', 'Membiarkan/mendorong kerusakan fasilitas', 100, '1,3'),
+(15, 1, '02. Sikap & Moral', 'Membiarkan teman celaka/sakit', 100, '1,2,7,8'),
+(16, 1, '03. Dokumen', 'Memalsukan surat/tanda tangan', 300, '7'),
+(17, 1, '04. Rokok & Miras', 'Membawa rokok', 300, '7,8'),
+(18, 1, '04. Rokok & Miras', 'Merokok (langsung/medsos)', 500, '7,8,9,10'),
+(19, 1, '04. Rokok & Miras', 'Membawa minuman keras', 300, '7,8'),
+(20, 1, '04. Rokok & Miras', 'Meminum minuman keras', 500, '7,8,9,10'),
+(21, 1, '05. NAPZA', 'Membawa/mengedarkan/menggunakan NAPZA', 9999, '10'),
+(22, 1, '06. Pelecehan Seksual', 'Membawa/akses/sebar konten porno', 300, '1,7'),
+(23, 1, '06. Pelecehan Seksual', 'Melakukan tindakan Pelecehan Seksual', 500, '1,7,8,9'),
+(24, 1, '07. Kekerasan', 'Terlibat perkelahian/main hakim sendiri', 300, '1,2,7,8,9'),
+(25, 1, '07. Kekerasan', 'Mengancam Kepala Sekolah/Guru/Karyawan', 300, '10'),
+(26, 1, '07. Kekerasan', 'Tindak kriminal terbukti hukum', 9999, '10'),
+(27, 1, '08. Gank', 'Terlibat Gank negatif', 300, '1,7,8'),
+(28, 1, '09. Sarana Prasarana', 'Mencorat-coret/merusak sarana sekolah', 75, '1,3'),
+(29, 1, '09. Sarana Prasarana', 'Bermain alat PBM/sapu di kelas', 75, '1,3'),
+(30, 1, '09. Sarana Prasarana', 'Makan dan minum di dalam kelas', 50, '1,2'),
+(31, 1, '10. Ketertiban PBM', 'Ramai/tidak memperhatikan saat PBM', 50, '1,2'),
+(32, 1, '10. Ketertiban PBM', 'Keluar kelas saat PBM tanpa izin', 50, '1,2'),
+(33, 1, '10. Ketertiban PBM', 'Menyontek saat ulangan', 300, '1,5'),
+(34, 1, '10. Ketertiban PBM', 'Mengambil alat PBM teman tanpa izin', 50, '1,2'),
+(35, 1, '10. Ketertiban PBM', 'Penyalahgunaan HP saat PBM', 50, '1,2'),
+(36, 1, '11. 10 K', 'Tidak mendukung 10 K', 50, '1,2,6'),
+(37, 1, '12. Kendaraan', 'Mengendarai kendaraan bermotor sendiri', 300, '1,7,8,9'),
+(38, 2, '01. Kehadiran', 'Terlambat sekolah/tambahan/ekstra', 25, '2,5,7,8'),
+(39, 2, '02. Efektif Sekolah', 'Tidak hadir tanpa keterangan (Alpa)', 75, '7,8'),
+(40, 2, '02. Efektif Sekolah', 'Meninggalkan sekolah saat PBM (Bolos)', 75, '7,8'),
+(41, 2, '03. PBM', 'Tidak masuk kelas jam pertama', 300, '1,7'),
+(42, 2, '03. PBM', 'Tidak ikut olahraga/praktikum tanpa izin', 500, '1,7,8,9'),
+(43, 2, '04. Perlengkapan', 'Tidak bawa buku pelajaran', 50, '1,2'),
+(44, 2, '04. Perlengkapan', 'Buku catatan campur/tidak rapi', 50, '1,2'),
+(45, 2, '04. Perlengkapan', 'Tidak bawa LKS/PR/Tugas', 50, '1,2'),
+(46, 2, '04. Perlengkapan', 'Membawa barang non-PBM', 75, '7,8'),
+(47, 2, '04. Perlengkapan', 'Tidak membawa buku tatib/literasi', 25, '1'),
+(48, 2, '05. Tugas', 'Mencontoh PR/Tugas', 50, '2'),
+(49, 2, '05. Tugas', 'Tidak mengumpulkan PR/Tugas', 50, '2'),
+(50, 2, '06. Ekstrakurikuler', 'Tidak ikut ekstra tanpa izin', 50, '7,8'),
+(51, 2, '06. Ekstrakurikuler', 'Ramai saat kegiatan ekstra', 50, '2'),
+(52, 2, '06. Ekstrakurikuler', 'Tidak ikut tambahan pelajaran', 50, '7'),
+(53, 3, '01. Seragam', 'Seragam tidak sesuai ketentuan', 75, '1,2,5,7'),
+(54, 3, '01. Seragam', 'Pakai rompi/jaket hanya aksesoris', 75, '1,2,5,7'),
+(55, 3, '01. Seragam', 'Seragam olahraga dari rumah/saat pulang', 50, '1'),
+(56, 3, '01. Seragam', 'Tidak pakai kaos dalam', 50, '1'),
+(57, 3, '01. Seragam', 'Atribut tidak lengkap (topi/dasi/sabuk/dll)', 50, '1'),
+(58, 3, '01. Seragam', 'Kaos kaki pendek/warna-warni/sepatu non-hitam', 50, '5'),
+(59, 3, '01. Seragam', 'Seragam dicoret-coret', 100, '1'),
+(60, 3, '01. Seragam', 'Mencoret anggota tubuh', 100, '1'),
+(61, 3, '01. Seragam', 'Baju tidak dimasukkan/rok-celana tidak standar', 50, '1,2,5,7'),
+(62, 3, '02. Aksesoris', 'Perhiasan/aksesoris berlebihan', 50, '1'),
+(63, 3, '02. Aksesoris', 'Putra memakai gelang/anting/kalung', 50, '1'),
+(64, 3, '02. Aksesoris', 'Putri memakai gelang/double anting', 50, '1'),
+(65, 3, '02. Aksesoris', 'Kuku panjang/dicat', 50, '1'),
+(66, 3, '03. Rambut', 'Rambut dicat', 100, '1,7'),
+(67, 3, '03. Rambut', 'Putra rambut panjang/gundul', 50, '1'),
+(68, 3, '03. Rambut', 'Rambut menutupi wajah/tidak rapi', 50, '1'),
+(69, 3, '04. Kegiatan', 'Tidak rapi/bersepatu saat ekstra/tambahan', 50, '1'),
+(70, 3, '05. Sepeda', 'Parkir sepeda tidak teratur/tidak dikunci', 25, '1');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_kategori_pelanggaran`
+--
+
+CREATE TABLE `tb_kategori_pelanggaran` (
+  `id_kategori` int(11) NOT NULL,
+  `nama_kategori` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_kategori_pelanggaran`
+--
+
+INSERT INTO `tb_kategori_pelanggaran` (`id_kategori`, `nama_kategori`) VALUES
+(1, 'KELAKUAN'),
+(2, 'KERAJINAN'),
+(3, 'KERAPIAN');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_kelas`
+--
+
+CREATE TABLE `tb_kelas` (
+  `id_kelas` int(11) NOT NULL,
+  `nama_kelas` varchar(10) NOT NULL,
+  `tingkat` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_kelas`
+--
+
+INSERT INTO `tb_kelas` (`id_kelas`, `nama_kelas`, `tingkat`) VALUES
+(1, 'VII A', 7),
+(2, 'VII B', 7),
+(3, 'VII C', 7),
+(4, 'VII D', 7),
+(5, 'VII E', 7),
+(6, 'VIII A', 8),
+(7, 'VIII B', 8),
+(8, 'VIII C', 8),
+(9, 'VIII D', 8),
+(10, 'VIII E', 8),
+(11, 'IX A', 9),
+(12, 'IX B', 9),
+(13, 'IX C', 9),
+(14, 'IX D', 9),
+(15, 'IX E', 9);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_orang_tua`
+--
+
+CREATE TABLE `tb_orang_tua` (
+  `id_ortu` int(11) NOT NULL,
+  `nik_ortu` varchar(20) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `nama_ayah` varchar(150) DEFAULT NULL,
+  `pekerjaan_ayah` varchar(100) DEFAULT NULL,
+  `nama_ibu` varchar(150) DEFAULT NULL,
+  `pekerjaan_ibu` varchar(100) DEFAULT NULL,
+  `no_hp_ortu` varchar(15) DEFAULT NULL,
+  `alamat` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_orang_tua`
+--
+
+INSERT INTO `tb_orang_tua` (`id_ortu`, `nik_ortu`, `password`, `nama_ayah`, `pekerjaan_ayah`, `nama_ibu`, `pekerjaan_ibu`, `no_hp_ortu`, `alamat`, `created_at`) VALUES
+(1, '3573012345678901', 'e10adc3949ba59abbe56e057f20f883e', 'Bpk. Dani', 'Swasta', 'Ibu Dani', 'Ibu Rumah Tangga', '081234567890', 'Jl. Merdeka No. 1, Malang', '2026-03-12 05:09:49');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_pelanggaran_detail`
+--
+
+CREATE TABLE `tb_pelanggaran_detail` (
+  `id_detail` bigint(20) NOT NULL,
+  `id_transaksi` bigint(20) NOT NULL,
+  `id_jenis` int(11) NOT NULL,
+  `poin_saat_itu` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_pelanggaran_detail`
+--
+
+INSERT INTO `tb_pelanggaran_detail` (`id_detail`, `id_transaksi`, `id_jenis`, `poin_saat_itu`) VALUES
+(12, 2, 38, 25),
+(13, 2, 40, 75),
+(14, 2, 39, 75),
+(15, 2, 57, 50),
+(16, 2, 61, 50),
+(17, 2, 58, 50),
+(18, 3, 38, 25),
+(19, 3, 40, 75),
+(20, 3, 57, 50),
+(21, 3, 61, 50),
+(22, 4, 2, 100),
+(23, 4, 1, 100),
+(24, 5, 2, 100),
+(25, 5, 1, 100),
+(26, 5, 5, 100),
+(27, 5, 3, 100),
+(28, 5, 11, 100),
+(29, 5, 10, 100),
+(30, 6, 38, 25),
+(31, 6, 40, 75),
+(32, 6, 57, 50),
+(36, 8, 2, 100),
+(37, 8, 3, 100),
+(38, 8, 11, 100),
+(39, 7, 38, 25),
+(40, 7, 58, 50),
+(41, 7, 54, 75),
+(42, 9, 58, 50),
+(43, 9, 60, 100),
+(44, 9, 54, 75),
+(45, 10, 2, 100),
+(46, 10, 1, 100),
+(47, 10, 5, 100),
+(48, 10, 3, 100),
+(49, 11, 21, 9999),
+(50, 12, 38, 25),
+(51, 12, 40, 75),
+(52, 12, 39, 75),
+(53, 12, 57, 50),
+(54, 12, 61, 50),
+(55, 12, 58, 50),
+(56, 12, 60, 100),
+(87, 14, 38, 25),
+(88, 14, 40, 75),
+(89, 14, 39, 75),
+(90, 14, 57, 50),
+(91, 14, 61, 50),
+(92, 14, 58, 50),
+(93, 15, 38, 25),
+(94, 16, 38, 25),
+(95, 16, 57, 50),
+(96, 17, 38, 25),
+(97, 17, 57, 50);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_pelanggaran_header`
+--
+
+CREATE TABLE `tb_pelanggaran_header` (
+  `id_transaksi` bigint(20) NOT NULL,
+  `id_anggota` bigint(20) NOT NULL,
+  `id_guru` int(11) NOT NULL,
+  `id_tahun` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `waktu` time NOT NULL,
+  `semester` enum('Ganjil','Genap') NOT NULL,
+  `tipe_form` enum('Piket','Kelas') NOT NULL,
+  `bukti_foto` varchar(255) DEFAULT NULL,
+  `lampiran_link` text DEFAULT NULL,
+  `status_revisi` enum('None','Pending','Disetujui','Ditolak') DEFAULT 'None',
+  `alasan_revisi` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_pelanggaran_header`
+--
+
+INSERT INTO `tb_pelanggaran_header` (`id_transaksi`, `id_anggota`, `id_guru`, `id_tahun`, `tanggal`, `waktu`, `semester`, `tipe_form`, `bukti_foto`, `lampiran_link`, `status_revisi`, `alasan_revisi`) VALUES
+(2, 1, 17, 1, '2026-03-12', '13:26:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(3, 31, 5, 1, '2026-03-16', '08:45:00', 'Genap', 'Piket', '[\"1773625522_2501.jpeg\"]', NULL, 'None', NULL),
+(4, 31, 5, 1, '2026-03-16', '08:45:00', 'Genap', 'Kelas', NULL, NULL, 'None', NULL),
+(5, 30, 5, 1, '2026-03-16', '08:46:00', 'Genap', 'Kelas', NULL, 'https://machungac-my.sharepoint.com/:f:/g/personal/322310015_student_machung_ac_id/IgAmp3G_NhV1S7hf2LP8Bnu5AXLb-KDyySWP78Qh4w9yY7g?e=HV0yeV', 'None', NULL),
+(6, 35, 5, 2, '2026-03-16', '11:58:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(7, 40, 5, 2, '2026-03-16', '11:59:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(8, 60, 5, 2, '2026-03-16', '11:59:00', 'Genap', 'Kelas', NULL, NULL, 'None', NULL),
+(9, 35, 5, 2, '2026-03-16', '12:01:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(10, 35, 5, 2, '2026-03-16', '12:02:00', 'Genap', 'Kelas', NULL, NULL, 'None', NULL),
+(11, 32, 5, 2, '2026-03-16', '12:04:00', 'Genap', 'Kelas', NULL, NULL, 'None', NULL),
+(12, 33, 5, 2, '2026-03-16', '12:04:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(14, 33, 5, 2, '2026-03-16', '12:08:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(15, 41, 5, 2, '2026-03-16', '12:17:00', 'Genap', 'Piket', '[\"1773638254_6633.jpeg\"]', NULL, 'None', NULL),
+(16, 32, 5, 2, '2026-03-16', '12:18:00', 'Genap', 'Piket', '[\"1773638299_2249.jpeg\"]', NULL, 'None', NULL),
+(17, 33, 5, 2, '2026-03-16', '12:18:00', 'Genap', 'Piket', NULL, 'https://machungac-my.sharepoint.com/:f:/g/personal/322310015_student_machung_ac_id/IgAmp3G_NhV1S7hf2LP8Bnu5AXLb-KDyySWP78Qh4w9yY7g?e=HV0yeV', 'None', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_pelanggaran_sanksi`
+--
+
+CREATE TABLE `tb_pelanggaran_sanksi` (
+  `id_trans_sanksi` bigint(20) NOT NULL,
+  `id_transaksi` bigint(20) NOT NULL,
+  `id_sanksi_ref` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_pelanggaran_sanksi`
+--
+
+INSERT INTO `tb_pelanggaran_sanksi` (`id_trans_sanksi`, `id_transaksi`, `id_sanksi_ref`) VALUES
+(7, 2, 1),
+(8, 2, 2),
+(9, 2, 5),
+(10, 2, 7),
+(11, 2, 8),
+(12, 3, 1),
+(13, 3, 2),
+(14, 3, 5),
+(15, 3, 7),
+(16, 3, 8),
+(17, 4, 5),
+(18, 5, 1),
+(19, 5, 2),
+(20, 5, 5),
+(21, 5, 8),
+(22, 6, 1),
+(23, 6, 2),
+(24, 6, 5),
+(25, 6, 7),
+(26, 6, 8),
+(33, 8, 1),
+(34, 8, 2),
+(35, 8, 5),
+(36, 7, 1),
+(37, 7, 2),
+(38, 7, 5),
+(39, 7, 7),
+(40, 7, 8),
+(41, 9, 1),
+(42, 9, 2),
+(43, 9, 5),
+(44, 9, 7),
+(45, 10, 1),
+(46, 10, 5),
+(47, 11, 10),
+(48, 12, 1),
+(49, 12, 2),
+(50, 12, 5),
+(51, 12, 7),
+(52, 12, 8),
+(73, 14, 1),
+(74, 14, 2),
+(75, 14, 5),
+(76, 14, 7),
+(77, 14, 8),
+(78, 15, 2),
+(79, 15, 5),
+(80, 15, 7),
+(81, 15, 8),
+(82, 16, 1),
+(83, 16, 2),
+(84, 16, 5),
+(85, 16, 7),
+(86, 16, 8),
+(87, 17, 1),
+(88, 17, 2),
+(89, 17, 5),
+(90, 17, 7),
+(91, 17, 8);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_predikat_nilai`
+--
+
+CREATE TABLE `tb_predikat_nilai` (
+  `id_predikat` int(11) NOT NULL,
+  `id_kategori` int(11) NOT NULL,
+  `huruf_mutu` char(1) NOT NULL,
+  `batas_bawah` int(11) NOT NULL,
+  `batas_atas` int(11) NOT NULL,
+  `keterangan` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_predikat_nilai`
+--
+
+INSERT INTO `tb_predikat_nilai` (`id_predikat`, `id_kategori`, `huruf_mutu`, `batas_bawah`, `batas_atas`, `keterangan`) VALUES
+(1, 1, 'A', 0, 49, 'Sangat Baik'),
+(2, 1, 'B', 50, 249, 'Baik'),
+(3, 1, 'C', 250, 1499, 'Cukup (SP1/SP2)'),
+(4, 1, 'D', 1500, 9999, 'Kurang (SP3/Berat)'),
+(5, 2, 'A', 0, 24, 'Sangat Baik'),
+(6, 2, 'B', 25, 74, 'Baik'),
+(7, 2, 'C', 75, 449, 'Cukup (SP1/SP2)'),
+(8, 2, 'D', 450, 9999, 'Kurang (SP3/Berat)'),
+(9, 3, 'A', 0, 49, 'Sangat Baik'),
+(10, 3, 'B', 50, 99, 'Baik'),
+(11, 3, 'C', 100, 449, 'Cukup (SP1/SP2)'),
+(12, 3, 'D', 450, 9999, 'Kurang (SP3/Berat)');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_riwayat_sp`
+--
+
+CREATE TABLE `tb_riwayat_sp` (
+  `id_sp` int(11) NOT NULL,
+  `id_anggota` bigint(20) NOT NULL,
+  `tingkat_sp` enum('SP1','SP2','SP3','Sanksi oleh Sekolah') NOT NULL,
+  `kategori_pemicu` varchar(50) DEFAULT NULL,
+  `tanggal_terbit` date NOT NULL,
+  `tanggal_validasi` date DEFAULT NULL,
+  `status` enum('Pending','Selesai') DEFAULT 'Pending',
+  `id_admin` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_riwayat_sp`
+--
+
+INSERT INTO `tb_riwayat_sp` (`id_sp`, `id_anggota`, `tingkat_sp`, `kategori_pemicu`, `tanggal_terbit`, `tanggal_validasi`, `status`, `id_admin`) VALUES
+(3, 1, 'SP1', 'KERAJINAN', '2026-03-12', NULL, 'Pending', NULL),
+(4, 1, 'SP1', 'KERAPIAN', '2026-03-12', NULL, 'Pending', NULL),
+(5, 31, 'SP1', 'KERAJINAN', '2026-03-16', NULL, 'Pending', NULL),
+(6, 31, 'SP1', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL),
+(7, 30, 'SP1', 'KELAKUAN', '2026-03-16', NULL, 'Pending', NULL),
+(8, 35, 'SP1', 'KERAJINAN', '2026-03-16', NULL, 'Pending', NULL),
+(10, 40, 'SP1', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL),
+(11, 60, 'SP1', 'KELAKUAN', '2026-03-16', NULL, 'Pending', NULL),
+(12, 35, 'SP1', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL),
+(13, 35, 'SP1', 'KELAKUAN', '2026-03-16', NULL, 'Pending', NULL),
+(14, 32, 'Sanksi oleh Sekolah', 'KELAKUAN', '2026-03-16', NULL, 'Pending', NULL),
+(15, 33, 'SP1', 'KERAJINAN', '2026-03-16', NULL, 'Pending', NULL),
+(16, 33, 'SP1', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL),
+(20, 33, 'SP2', 'KERAJINAN', '2026-03-16', NULL, 'Pending', NULL),
+(21, 33, 'SP2', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL),
+(22, 33, 'SP3', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_sanksi_ref`
+--
+
+CREATE TABLE `tb_sanksi_ref` (
+  `id_sanksi_ref` int(11) NOT NULL,
+  `kode_sanksi` varchar(5) NOT NULL,
+  `deskripsi` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_sanksi_ref`
+--
+
+INSERT INTO `tb_sanksi_ref` (`id_sanksi_ref`, `kode_sanksi`, `deskripsi`) VALUES
+(1, '1', 'Meminta maaf dan berjanji tidak mengulang'),
+(2, '2', 'Dikeluarkan saat PBM (Proses Belajar Mengajar)'),
+(3, '3', 'Mengganti/memperbaiki fasilitas sekolah yang rusak'),
+(4, '4', 'Mengganti/mengembalikan uang atau barang yang dipinjam/diambil'),
+(5, '5', 'Menjalani pembinaan oleh Wali Kelas'),
+(6, '6', 'Membersihkan lingkungan sekolah'),
+(7, '7', 'Pemanggilan orang tua/wali siswa'),
+(8, '8', 'Menjalani pembinaan oleh BK'),
+(9, '9', 'Menjalani pembinaan khusus oleh Tim Tatib'),
+(10, '10', 'Diserahkan kembali pendidikannya kepada orang tua (Dikeluarkan)');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_siswa`
+--
+
+CREATE TABLE `tb_siswa` (
+  `no_induk` varchar(50) NOT NULL,
+  `nama_siswa` varchar(100) NOT NULL,
+  `jenis_kelamin` enum('L','P') NOT NULL,
+  `kota` varchar(100) DEFAULT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
+  `alamat` text DEFAULT NULL,
+  `nama_ayah` varchar(150) DEFAULT NULL,
+  `pekerjaan_ayah` varchar(100) DEFAULT NULL,
+  `nama_ibu` varchar(150) DEFAULT NULL,
+  `pekerjaan_ibu` varchar(100) DEFAULT NULL,
+  `no_hp_ortu` varchar(15) DEFAULT NULL,
+  `id_ortu` int(11) DEFAULT NULL,
+  `status_aktif` enum('Aktif','Lulus','Keluar','Dikeluarkan') DEFAULT 'Aktif'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_siswa`
+--
+
+INSERT INTO `tb_siswa` (`no_induk`, `nama_siswa`, `jenis_kelamin`, `kota`, `tanggal_lahir`, `alamat`, `nama_ayah`, `pekerjaan_ayah`, `nama_ibu`, `pekerjaan_ibu`, `no_hp_ortu`, `id_ortu`, `status_aktif`) VALUES
+('11223', 'Adeline Alexandra', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11225', 'Aeron Christian Nurdianto', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11237', 'Archangelo Estevo Handojo SA', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11248', 'Cinta Felicia Jalmav', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11256', 'Dyvans Edgar Zaydan Satria', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11261', 'Eugenia Phoebe Renata', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11272', 'Gabriel Neville Hidayat', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11273', 'Gabriel Saberlicht Edsel P.', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11275', 'Ganendra Immanuello Christanto', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11276', 'Gavrilla Candra Kirana', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11278', 'Greta Chandira Levyka', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11284', 'Jennifer Olivia Feranda', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11285', 'Jessica Meliana', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11287', 'Jocelyn Kaianna', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11288', 'Josephine Athalia Mittakalyani', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11294', 'Kenzo Christiano Tansrijata P.', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11296', 'Kimberly Prayugo', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11305', 'Madeline Graciella Wijaya', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11307', 'Marcello Benlie Hartono', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11312', 'Michael Caesario Christian P.', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11313', 'Michael Raindra Bayu Bimantoro', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11317', 'Nathanael Valentino', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11319', 'Nicolaus Alden Gavriel Luditra', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11320', 'Nikita Kumala Devi', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11323', 'Owen Willem Utama', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11348', 'Vanessa Angelin Darmawan', 'P', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11356', 'Yoseph Bimo Wibisono', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('11360', 'Felix Giorgi', 'L', '-', '0000-00-00', '-', '-', '-', '-', '-', '-', NULL, 'Aktif'),
+('2024001', 'Ahmad Roland', 'L', 'Malang', '2010-05-15', 'Jl. Merdeka No. 1', 'Bpk. Dani', 'Swasta', 'Ibu Dani', 'Ibu Rumah Tangga', '081234567890', 1, 'Aktif'),
+('2025002', 'Budi Roland', 'L', 'Malang', '2012-08-20', 'Jl. Merdeka No. 1', NULL, NULL, NULL, NULL, NULL, 1, 'Aktif');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `tb_tahun_ajaran`
+--
+
+CREATE TABLE `tb_tahun_ajaran` (
+  `id_tahun` int(11) NOT NULL,
+  `nama_tahun` varchar(20) NOT NULL,
+  `status` enum('Aktif','Arsip') DEFAULT 'Aktif',
+  `semester_aktif` enum('Ganjil','Genap') DEFAULT 'Ganjil'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `tb_tahun_ajaran`
+--
+
+INSERT INTO `tb_tahun_ajaran` (`id_tahun`, `nama_tahun`, `status`, `semester_aktif`) VALUES
+(1, '2025/2026', 'Arsip', 'Genap'),
+(2, '2026/2027', 'Aktif', 'Genap');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indeks untuk tabel `tb_admin`
+--
+ALTER TABLE `tb_admin`
+  ADD PRIMARY KEY (`id_admin`);
+
+--
+-- Indeks untuk tabel `tb_anggota_kelas`
+--
+ALTER TABLE `tb_anggota_kelas`
+  ADD PRIMARY KEY (`id_anggota`),
+  ADD KEY `no_induk` (`no_induk`),
+  ADD KEY `id_kelas` (`id_kelas`),
+  ADD KEY `id_tahun` (`id_tahun`);
+
+--
+-- Indeks untuk tabel `tb_aturan_sp`
+--
+ALTER TABLE `tb_aturan_sp`
+  ADD PRIMARY KEY (`id_aturan_sp`),
+  ADD KEY `id_kategori` (`id_kategori`);
+
+--
+-- Indeks untuk tabel `tb_guru`
+--
+ALTER TABLE `tb_guru`
+  ADD PRIMARY KEY (`id_guru`),
+  ADD KEY `id_kelas` (`id_kelas`);
+
+--
+-- Indeks untuk tabel `tb_jenis_pelanggaran`
+--
+ALTER TABLE `tb_jenis_pelanggaran`
+  ADD PRIMARY KEY (`id_jenis`),
+  ADD KEY `id_kategori` (`id_kategori`);
+
+--
+-- Indeks untuk tabel `tb_kategori_pelanggaran`
+--
+ALTER TABLE `tb_kategori_pelanggaran`
+  ADD PRIMARY KEY (`id_kategori`);
+
+--
+-- Indeks untuk tabel `tb_kelas`
+--
+ALTER TABLE `tb_kelas`
+  ADD PRIMARY KEY (`id_kelas`);
+
+--
+-- Indeks untuk tabel `tb_orang_tua`
+--
+ALTER TABLE `tb_orang_tua`
+  ADD PRIMARY KEY (`id_ortu`),
+  ADD UNIQUE KEY `nik_ortu` (`nik_ortu`);
+
+--
+-- Indeks untuk tabel `tb_pelanggaran_detail`
+--
+ALTER TABLE `tb_pelanggaran_detail`
+  ADD PRIMARY KEY (`id_detail`),
+  ADD KEY `id_transaksi` (`id_transaksi`),
+  ADD KEY `id_jenis` (`id_jenis`);
+
+--
+-- Indeks untuk tabel `tb_pelanggaran_header`
+--
+ALTER TABLE `tb_pelanggaran_header`
+  ADD PRIMARY KEY (`id_transaksi`),
+  ADD KEY `id_anggota` (`id_anggota`),
+  ADD KEY `id_guru` (`id_guru`),
+  ADD KEY `id_tahun` (`id_tahun`);
+
+--
+-- Indeks untuk tabel `tb_pelanggaran_sanksi`
+--
+ALTER TABLE `tb_pelanggaran_sanksi`
+  ADD PRIMARY KEY (`id_trans_sanksi`),
+  ADD KEY `id_transaksi` (`id_transaksi`),
+  ADD KEY `id_sanksi_ref` (`id_sanksi_ref`);
+
+--
+-- Indeks untuk tabel `tb_predikat_nilai`
+--
+ALTER TABLE `tb_predikat_nilai`
+  ADD PRIMARY KEY (`id_predikat`),
+  ADD KEY `id_kategori` (`id_kategori`);
+
+--
+-- Indeks untuk tabel `tb_riwayat_sp`
+--
+ALTER TABLE `tb_riwayat_sp`
+  ADD PRIMARY KEY (`id_sp`),
+  ADD KEY `id_anggota` (`id_anggota`),
+  ADD KEY `id_admin` (`id_admin`);
+
+--
+-- Indeks untuk tabel `tb_sanksi_ref`
+--
+ALTER TABLE `tb_sanksi_ref`
+  ADD PRIMARY KEY (`id_sanksi_ref`);
+
+--
+-- Indeks untuk tabel `tb_siswa`
+--
+ALTER TABLE `tb_siswa`
+  ADD PRIMARY KEY (`no_induk`),
+  ADD KEY `fk_ortu_siswa` (`id_ortu`);
+
+--
+-- Indeks untuk tabel `tb_tahun_ajaran`
+--
+ALTER TABLE `tb_tahun_ajaran`
+  ADD PRIMARY KEY (`id_tahun`);
+
+--
+-- AUTO_INCREMENT untuk tabel yang dibuang
+--
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_admin`
+--
+ALTER TABLE `tb_admin`
+  MODIFY `id_admin` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_anggota_kelas`
+--
+ALTER TABLE `tb_anggota_kelas`
+  MODIFY `id_anggota` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_aturan_sp`
+--
+ALTER TABLE `tb_aturan_sp`
+  MODIFY `id_aturan_sp` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_guru`
+--
+ALTER TABLE `tb_guru`
+  MODIFY `id_guru` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_jenis_pelanggaran`
+--
+ALTER TABLE `tb_jenis_pelanggaran`
+  MODIFY `id_jenis` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_kategori_pelanggaran`
+--
+ALTER TABLE `tb_kategori_pelanggaran`
+  MODIFY `id_kategori` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_kelas`
+--
+ALTER TABLE `tb_kelas`
+  MODIFY `id_kelas` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_orang_tua`
+--
+ALTER TABLE `tb_orang_tua`
+  MODIFY `id_ortu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_pelanggaran_detail`
+--
+ALTER TABLE `tb_pelanggaran_detail`
+  MODIFY `id_detail` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_pelanggaran_header`
+--
+ALTER TABLE `tb_pelanggaran_header`
+  MODIFY `id_transaksi` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_pelanggaran_sanksi`
+--
+ALTER TABLE `tb_pelanggaran_sanksi`
+  MODIFY `id_trans_sanksi` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_predikat_nilai`
+--
+ALTER TABLE `tb_predikat_nilai`
+  MODIFY `id_predikat` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_riwayat_sp`
+--
+ALTER TABLE `tb_riwayat_sp`
+  MODIFY `id_sp` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_sanksi_ref`
+--
+ALTER TABLE `tb_sanksi_ref`
+  MODIFY `id_sanksi_ref` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT untuk tabel `tb_tahun_ajaran`
+--
+ALTER TABLE `tb_tahun_ajaran`
+  MODIFY `id_tahun` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
+--
+
+--
+-- Ketidakleluasaan untuk tabel `tb_anggota_kelas`
+--
+ALTER TABLE `tb_anggota_kelas`
+  ADD CONSTRAINT `tb_anggota_kelas_ibfk_1` FOREIGN KEY (`no_induk`) REFERENCES `tb_siswa` (`no_induk`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tb_anggota_kelas_ibfk_2` FOREIGN KEY (`id_kelas`) REFERENCES `tb_kelas` (`id_kelas`),
+  ADD CONSTRAINT `tb_anggota_kelas_ibfk_3` FOREIGN KEY (`id_tahun`) REFERENCES `tb_tahun_ajaran` (`id_tahun`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_aturan_sp`
+--
+ALTER TABLE `tb_aturan_sp`
+  ADD CONSTRAINT `tb_aturan_sp_ibfk_1` FOREIGN KEY (`id_kategori`) REFERENCES `tb_kategori_pelanggaran` (`id_kategori`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_guru`
+--
+ALTER TABLE `tb_guru`
+  ADD CONSTRAINT `tb_guru_ibfk_1` FOREIGN KEY (`id_kelas`) REFERENCES `tb_kelas` (`id_kelas`) ON DELETE SET NULL;
+
+--
+-- Ketidakleluasaan untuk tabel `tb_jenis_pelanggaran`
+--
+ALTER TABLE `tb_jenis_pelanggaran`
+  ADD CONSTRAINT `tb_jenis_pelanggaran_ibfk_1` FOREIGN KEY (`id_kategori`) REFERENCES `tb_kategori_pelanggaran` (`id_kategori`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_pelanggaran_detail`
+--
+ALTER TABLE `tb_pelanggaran_detail`
+  ADD CONSTRAINT `tb_pelanggaran_detail_ibfk_1` FOREIGN KEY (`id_transaksi`) REFERENCES `tb_pelanggaran_header` (`id_transaksi`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tb_pelanggaran_detail_ibfk_2` FOREIGN KEY (`id_jenis`) REFERENCES `tb_jenis_pelanggaran` (`id_jenis`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_pelanggaran_header`
+--
+ALTER TABLE `tb_pelanggaran_header`
+  ADD CONSTRAINT `tb_pelanggaran_header_ibfk_1` FOREIGN KEY (`id_anggota`) REFERENCES `tb_anggota_kelas` (`id_anggota`),
+  ADD CONSTRAINT `tb_pelanggaran_header_ibfk_2` FOREIGN KEY (`id_guru`) REFERENCES `tb_guru` (`id_guru`),
+  ADD CONSTRAINT `tb_pelanggaran_header_ibfk_3` FOREIGN KEY (`id_tahun`) REFERENCES `tb_tahun_ajaran` (`id_tahun`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_pelanggaran_sanksi`
+--
+ALTER TABLE `tb_pelanggaran_sanksi`
+  ADD CONSTRAINT `tb_pelanggaran_sanksi_ibfk_1` FOREIGN KEY (`id_transaksi`) REFERENCES `tb_pelanggaran_header` (`id_transaksi`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tb_pelanggaran_sanksi_ibfk_2` FOREIGN KEY (`id_sanksi_ref`) REFERENCES `tb_sanksi_ref` (`id_sanksi_ref`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_predikat_nilai`
+--
+ALTER TABLE `tb_predikat_nilai`
+  ADD CONSTRAINT `tb_predikat_nilai_ibfk_1` FOREIGN KEY (`id_kategori`) REFERENCES `tb_kategori_pelanggaran` (`id_kategori`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_riwayat_sp`
+--
+ALTER TABLE `tb_riwayat_sp`
+  ADD CONSTRAINT `tb_riwayat_sp_ibfk_1` FOREIGN KEY (`id_anggota`) REFERENCES `tb_anggota_kelas` (`id_anggota`),
+  ADD CONSTRAINT `tb_riwayat_sp_ibfk_2` FOREIGN KEY (`id_admin`) REFERENCES `tb_admin` (`id_admin`);
+
+--
+-- Ketidakleluasaan untuk tabel `tb_siswa`
+--
+ALTER TABLE `tb_siswa`
+  ADD CONSTRAINT `fk_ortu_siswa` FOREIGN KEY (`id_ortu`) REFERENCES `tb_orang_tua` (`id_ortu`) ON DELETE SET NULL;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
