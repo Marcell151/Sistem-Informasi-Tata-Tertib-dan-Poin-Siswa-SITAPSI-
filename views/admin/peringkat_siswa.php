@@ -2,6 +2,7 @@
 /**
  * SITAPSI - Peringkat & Statistik Kedisiplinan (Leaderboard)
  * Penyesuaian: Menghapus Filter "Semua (1 Tahun)" karena poin di-reset per semester.
+ * PENYESUAIAN BARU: Modal Konsistensi Kedisiplinan mengikuti Filter Kelas/Tingkat di halaman utama.
  */
 
 session_start();
@@ -103,16 +104,36 @@ if (!$is_future_semester) {
 
 
 // C. Kueri Konsistensi Kedisiplinan (0 Poin selama > 1 tahun ajaran)
-// Ini tidak terpengaruh filter karena sifatnya historis multi-tahun
+// PENYESUAIAN: Dibatasi berdasarkan filter Kelas/Tingkat di tahun yang sedang dipilih di dropdown utama
 $sql_abadi = "
-    SELECT s.no_induk, s.nama_siswa, COUNT(a.id_tahun) as total_tahun 
+    SELECT s.no_induk, s.nama_siswa, k.nama_kelas, COUNT(a_all.id_tahun) as total_tahun 
     FROM tb_siswa s 
-    JOIN tb_anggota_kelas a ON s.no_induk = a.no_induk 
-    GROUP BY s.no_induk, s.nama_siswa 
-    HAVING SUM(a.total_poin_umum) = 0 AND COUNT(a.id_tahun) > 1
+    JOIN tb_anggota_kelas a_all ON s.no_induk = a_all.no_induk 
+    JOIN tb_anggota_kelas a_curr ON s.no_induk = a_curr.no_induk AND a_curr.id_tahun = :tahun_curr
+    JOIN tb_kelas k ON a_curr.id_kelas = k.id_kelas
+";
+$params_abadi = ['tahun_curr' => $filter_tahun];
+
+$where_abadi = [];
+if ($filter_tingkat !== 'all') {
+    $where_abadi[] = "k.tingkat = :tingkat";
+    $params_abadi['tingkat'] = $filter_tingkat;
+}
+if ($filter_kelas !== 'all') {
+    $where_abadi[] = "k.id_kelas = :kelas";
+    $params_abadi['kelas'] = $filter_kelas;
+}
+
+if (!empty($where_abadi)) {
+    $sql_abadi .= " WHERE " . implode(" AND ", $where_abadi);
+}
+
+$sql_abadi .= " 
+    GROUP BY s.no_induk, s.nama_siswa, k.nama_kelas 
+    HAVING SUM(a_all.total_poin_umum) = 0 AND COUNT(a_all.id_tahun) > 1
     ORDER BY total_tahun DESC, s.nama_siswa ASC
 ";
-$teladan_abadi = fetchAll($sql_abadi);
+$teladan_abadi = fetchAll($sql_abadi, $params_abadi);
 
 
 // UI Config
@@ -329,29 +350,46 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
             <button onclick="document.getElementById('modal-abadi').classList.add('hidden')" class="text-amber-500 hover:text-amber-700 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="p-5 bg-amber-50/30 border-b border-amber-100">
-            <p class="text-sm text-slate-600 leading-relaxed">
-                Ini adalah daftar eksklusif siswa yang memiliki rekam jejak <strong>0 Poin Pelanggaran</strong> secara berturut-turut selama <span class="font-bold text-amber-600">lebih dari 1 tahun ajaran</span>. Sangat cocok untuk nominasi Siswa Berprestasi Akhir Tahun.
+            <?php
+            // Membangun teks filter untuk modal
+            $filter_teks = "Semua Kelas / Angkatan";
+            if ($filter_kelas !== 'all') {
+                foreach ($list_kelas as $lk) {
+                    if ($lk['id_kelas'] == $filter_kelas) {
+                        $filter_teks = "Kelas " . htmlspecialchars($lk['nama_kelas']);
+                        break;
+                    }
+                }
+            } elseif ($filter_tingkat !== 'all') {
+                $filter_teks = "Semua Kelas " . htmlspecialchars($filter_tingkat);
+            }
+            ?>
+            <p class="text-sm text-slate-600 leading-relaxed mb-2">
+                Ini adalah daftar eksklusif siswa yang memiliki rekam jejak <strong>0 Poin Pelanggaran</strong> secara berturut-turut selama <span class="font-bold text-amber-600">lebih dari 1 tahun ajaran</span>.
             </p>
+            <div class="inline-block bg-white border border-amber-200 px-3 py-1 rounded-md text-xs font-bold text-amber-800 shadow-sm">
+                Filter Aktif: <?= $filter_teks ?>
+            </div>
         </div>
         <div class="overflow-y-auto p-0">
             <table class="w-full text-sm text-left">
                 <thead class="bg-slate-50 sticky top-0 border-b border-slate-200 text-xs text-slate-500 uppercase">
                     <tr>
                         <th class="p-4 font-bold w-16 text-center">No</th>
-                        <th class="p-4 font-bold">Nama Siswa</th>
+                        <th class="p-4 font-bold">Nama Siswa & Kelas Saat Ini</th>
                         <th class="p-4 font-bold text-center">Konsistensi (Tahun)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     <?php if (empty($teladan_abadi)): ?>
-                    <tr><td colspan="3" class="p-10 text-center text-slate-400 italic">Belum ada siswa yang memenuhi kriteria ini.</td></tr>
+                    <tr><td colspan="3" class="p-10 text-center text-slate-400 italic">Belum ada siswa yang memenuhi kriteria filter ini.</td></tr>
                     <?php else: ?>
                         <?php $no=1; foreach ($teladan_abadi as $abadi): ?>
                         <tr class="hover:bg-amber-50/30 transition-colors">
                             <td class="p-4 text-center font-bold text-slate-400"><?= $no++ ?></td>
                             <td class="p-4">
                                 <p class="font-bold text-slate-800 text-[14px]"><?= htmlspecialchars($abadi['nama_siswa']) ?></p>
-                                <p class="text-[11px] text-slate-500">No Induk: <?= $abadi['no_induk'] ?></p>
+                                <p class="text-[11px] text-slate-500 font-medium"><?= $abadi['nama_kelas'] ?> • No Induk: <?= $abadi['no_induk'] ?></p>
                             </td>
                             <td class="p-4 text-center">
                                 <span class="px-3 py-1 bg-amber-100 text-amber-700 border border-amber-300 rounded-full text-xs font-extrabold shadow-sm">
