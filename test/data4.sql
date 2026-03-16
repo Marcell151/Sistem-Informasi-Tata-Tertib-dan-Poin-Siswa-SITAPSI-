@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 12 Mar 2026 pada 14.44
+-- Waktu pembuatan: 16 Mar 2026 pada 02.54
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -98,8 +98,8 @@ INSERT INTO `tb_anggota_kelas` (`id_anggota`, `no_induk`, `id_kelas`, `id_tahun`
 (27, '11323', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
 (28, '11348', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
 (29, '11356', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
-(30, '11360', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None'),
-(31, '11223', 1, 1, 0, 0, 0, 0, 'Aman', 'Aman', 'Aman', 'Aman', 'None');
+(30, '11360', 1, 1, 600, 0, 0, 600, 'SP1', 'Aman', 'Aman', 'SP1', 'None'),
+(31, '11223', 1, 1, 200, 100, 100, 400, 'Aman', 'SP1', 'SP1', 'SP1', 'None');
 
 -- --------------------------------------------------------
 
@@ -169,7 +169,7 @@ INSERT INTO `tb_guru` (`id_guru`, `nama_guru`, `nip`, `kode_guru`, `id_kelas`, `
 (14, 'God Life Endob Mesak, S.Pd', '10015', '15', NULL, '123456', 'Aktif'),
 (15, 'Agnes Herawaty Sinurat, S.E., M.M.', '10016', '16', NULL, '123456', 'Aktif'),
 (16, 'Deka Nanda Kurniawati, S.Pd.', '10017', '17', NULL, '123456', 'Aktif'),
-(17, 'Agatha Novenia Bintang Prieska, S.Pd.', '10018', '18', 2, '123456', 'Aktif'),
+(17, 'Agatha Novenia Bintang Prieska, S.Pd.', '10018', '18', NULL, '123456', 'Aktif'),
 (18, 'Bernadetha Devia Tindy Noveyra, S.Pd.', '10019', '19', NULL, '123456', 'Aktif'),
 (19, 'Drs. Albertus Magnus Meo Depa', '10020', '20', NULL, '123456', 'Aktif'),
 (20, 'Giovani Bimby Dwiantonio, S.Pd', '10021', '21', NULL, '123456', 'Aktif'),
@@ -374,7 +374,19 @@ INSERT INTO `tb_pelanggaran_detail` (`id_detail`, `id_transaksi`, `id_jenis`, `p
 (14, 2, 39, 75),
 (15, 2, 57, 50),
 (16, 2, 61, 50),
-(17, 2, 58, 50);
+(17, 2, 58, 50),
+(18, 3, 38, 25),
+(19, 3, 40, 75),
+(20, 3, 57, 50),
+(21, 3, 61, 50),
+(22, 4, 2, 100),
+(23, 4, 1, 100),
+(24, 5, 2, 100),
+(25, 5, 1, 100),
+(26, 5, 5, 100),
+(27, 5, 3, 100),
+(28, 5, 11, 100),
+(29, 5, 10, 100);
 
 -- --------------------------------------------------------
 
@@ -402,7 +414,10 @@ CREATE TABLE `tb_pelanggaran_header` (
 --
 
 INSERT INTO `tb_pelanggaran_header` (`id_transaksi`, `id_anggota`, `id_guru`, `id_tahun`, `tanggal`, `waktu`, `semester`, `tipe_form`, `bukti_foto`, `lampiran_link`, `status_revisi`, `alasan_revisi`) VALUES
-(2, 1, 17, 1, '2026-03-12', '13:26:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL);
+(2, 1, 17, 1, '2026-03-12', '13:26:00', 'Genap', 'Piket', NULL, NULL, 'None', NULL),
+(3, 31, 5, 1, '2026-03-16', '08:45:00', 'Genap', 'Piket', '[\"1773625522_2501.jpeg\"]', NULL, 'None', NULL),
+(4, 31, 5, 1, '2026-03-16', '08:45:00', 'Genap', 'Kelas', NULL, NULL, 'None', NULL),
+(5, 30, 5, 1, '2026-03-16', '08:46:00', 'Genap', 'Kelas', NULL, 'https://machungac-my.sharepoint.com/:f:/g/personal/322310015_student_machung_ac_id/IgAmp3G_NhV1S7hf2LP8Bnu5AXLb-KDyySWP78Qh4w9yY7g?e=HV0yeV', 'None', NULL);
 
 -- --------------------------------------------------------
 
@@ -425,7 +440,17 @@ INSERT INTO `tb_pelanggaran_sanksi` (`id_trans_sanksi`, `id_transaksi`, `id_sank
 (8, 2, 2),
 (9, 2, 5),
 (10, 2, 7),
-(11, 2, 8);
+(11, 2, 8),
+(12, 3, 1),
+(13, 3, 2),
+(14, 3, 5),
+(15, 3, 7),
+(16, 3, 8),
+(17, 4, 5),
+(18, 5, 1),
+(19, 5, 2),
+(20, 5, 5),
+(21, 5, 8);
 
 -- --------------------------------------------------------
 
@@ -483,7 +508,10 @@ CREATE TABLE `tb_riwayat_sp` (
 
 INSERT INTO `tb_riwayat_sp` (`id_sp`, `id_anggota`, `tingkat_sp`, `kategori_pemicu`, `tanggal_terbit`, `tanggal_validasi`, `status`, `id_admin`) VALUES
 (3, 1, 'SP1', 'KERAJINAN', '2026-03-12', NULL, 'Pending', NULL),
-(4, 1, 'SP1', 'KERAPIAN', '2026-03-12', NULL, 'Pending', NULL);
+(4, 1, 'SP1', 'KERAPIAN', '2026-03-12', NULL, 'Pending', NULL),
+(5, 31, 'SP1', 'KERAJINAN', '2026-03-16', NULL, 'Pending', NULL),
+(6, 31, 'SP1', 'KERAPIAN', '2026-03-16', NULL, 'Pending', NULL),
+(7, 30, 'SP1', 'KELAKUAN', '2026-03-16', NULL, 'Pending', NULL);
 
 -- --------------------------------------------------------
 
@@ -765,19 +793,19 @@ ALTER TABLE `tb_orang_tua`
 -- AUTO_INCREMENT untuk tabel `tb_pelanggaran_detail`
 --
 ALTER TABLE `tb_pelanggaran_detail`
-  MODIFY `id_detail` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id_detail` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT untuk tabel `tb_pelanggaran_header`
 --
 ALTER TABLE `tb_pelanggaran_header`
-  MODIFY `id_transaksi` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_transaksi` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT untuk tabel `tb_pelanggaran_sanksi`
 --
 ALTER TABLE `tb_pelanggaran_sanksi`
-  MODIFY `id_trans_sanksi` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id_trans_sanksi` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT untuk tabel `tb_predikat_nilai`
@@ -789,7 +817,7 @@ ALTER TABLE `tb_predikat_nilai`
 -- AUTO_INCREMENT untuk tabel `tb_riwayat_sp`
 --
 ALTER TABLE `tb_riwayat_sp`
-  MODIFY `id_sp` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_sp` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT untuk tabel `tb_sanksi_ref`

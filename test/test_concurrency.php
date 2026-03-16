@@ -3,7 +3,7 @@
  * SITAPSI - Uji Konkurensi / Race Condition
  * Mensimulasikan 50 Guru menginput pelanggaran untuk 1 siswa yang sama di detik yang sama!
  */
-require_once '../config/database.php';
+require_once '../../config/database.php';
 
 echo "<h3>Memulai Serangan 50 Guru Bersamaan...</h3>";
 
