@@ -3,6 +3,7 @@
  * SITAPSI - Input Pelanggaran (UI GLOBAL PORTAL)
  * FIX: Filter 2 Tahap (Pilih Kelas -> Pilih Siswa), Waktu Live
  * PENYESUAIAN: Fitur Upload diperluas (Gambar, PDF, Word, atau Link Eksternal)
+ * PENAMBAHAN: System Initialization Barrier khusus Guru
  */
 
 session_start();
@@ -14,16 +15,45 @@ requireGuru();
 $user = getCurrentUser();
 $mode = $_GET['mode'] ?? 'piket';
 
+// ===================================================================================
+// 1. SYSTEM INITIALIZATION BARRIER (Pengecekan Tahun Ajaran Kosong)
+// ===================================================================================
 $tahun_aktif = fetchOne("SELECT id_tahun, nama_tahun, semester_aktif FROM tb_tahun_ajaran WHERE status = 'Aktif' LIMIT 1");
 
 if (!$tahun_aktif) {
-    die("Error: Tidak ada tahun ajaran aktif. Hubungi admin.");
+    // Tampilkan Halaman Peringatan (Blocker UI)
+    ?>
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sistem Belum Siap</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&display=swap" rel="stylesheet">
+        <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    </head>
+    <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center border-t-4 border-amber-500">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Sistem Belum Dikonfigurasi</h2>
+            <p class="text-slate-500 mb-8">Mohon maaf, sistem SITAPSI saat ini belum memiliki Tahun Ajaran yang aktif. Silakan hubungi <b>Admin Pusat</b> untuk melakukan konfigurasi awal.</p>
+            <a href="../../actions/logout.php" class="inline-block bg-slate-800 text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-900 transition-colors w-full">Keluar dari Sistem</a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit; // Menghentikan seluruh eksekusi kodingan di bawahnya
 }
+// ===================================================================================
 
+// Jika lolos (Tahun ajaran ada), kodingan berlanjut memuat data normal...
 // 1. Ambil daftar kelas
 $kelas_list = fetchAll("SELECT id_kelas, nama_kelas, tingkat FROM tb_kelas ORDER BY tingkat, nama_kelas");
 
-// 2. Ambil daftar siswa dan kelompokkan berdasarkan id_kelas menggunakan PHP Array (nis diubah ke no_induk)
+// 2. Ambil daftar siswa dan kelompokkan berdasarkan id_kelas menggunakan PHP Array
 $siswa_raw = fetchAll("
     SELECT s.no_induk, s.nama_siswa, a.id_kelas, a.id_anggota
     FROM tb_siswa s
@@ -87,7 +117,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-2xl shadow-sm";
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Input Pelanggaran</h1>
-                <p class="text-sm font-medium text-slate-500">Tahun Ajaran <?= $tahun_aktif['nama_tahun'] ?> - Semester <?= $tahun_aktif['semester_aktif'] ?></p>
+                <p class="text-sm font-medium text-slate-500">Tahun Ajaran <?= htmlspecialchars($tahun_aktif['nama_tahun']) ?> - Semester <?= htmlspecialchars($tahun_aktif['semester_aktif']) ?></p>
             </div>
             
             <div class="bg-white p-1 rounded-xl border border-[#E2E8F0] shadow-sm flex inline-flex w-full md:w-auto">

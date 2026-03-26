@@ -1,15 +1,20 @@
 <?php
 /**
- * SITAPSI - Dashboard Admin (UI ALIGNED WITH GLOBAL PORTAL)
+ * SITAPSI - Dashboard Admin (STANDALONE VERSION)
  * FIX LOGIKA: Menyesuaikan Grafik & Aktivitas berdasarkan Semester Aktif
+ * PENAMBAHAN: System Initialization Barrier di baris paling atas
  */
 
 session_start();
 require_once '../../config/database.php';
 require_once '../../includes/session_check.php';
 
+// Pastikan hanya Admin yang bisa mengakses halaman ini
 requireAdmin();
 
+// ===================================================================================
+// 1. SYSTEM INITIALIZATION BARRIER (Pengecekan Tahun Ajaran Kosong)
+// ===================================================================================
 $tahun_aktif = fetchOne("
     SELECT id_tahun, nama_tahun, semester_aktif 
     FROM tb_tahun_ajaran 
@@ -17,7 +22,17 @@ $tahun_aktif = fetchOne("
     LIMIT 1
 ");
 
-// Statistik umum (Memanfaatkan total poin yang sudah difilter oleh sistem semester)
+// Jika Tahun Ajaran belum di-setup sama sekali (Database kosong)
+if (!$tahun_aktif) {
+    // Karena ini halaman Admin, kita paksa langsung pindah ke form setup awal.
+    // Pastikan file setup_tahun_ajaran.php berada di folder yang sama (views/admin/)
+    header("Location: setup_tahun_ajaran.php");
+    exit;
+}
+// ===================================================================================
+
+// Jika lolos pengecekan (Tahun Ajaran ada), lanjutkan tarik data statistik
+// Statistik umum
 $stats = fetchOne("
     SELECT 
         COUNT(DISTINCT a.no_induk) as total_siswa,
@@ -37,7 +52,7 @@ $stats_sp = fetchOne("
     WHERE id_tahun = :id_tahun
 ", ['id_tahun' => $tahun_aktif['id_tahun']]);
 
-// LOGIKA BARU: Aktivitas 30 hari terakhir HANYA PADA SEMESTER AKTIF
+// Aktivitas 30 hari terakhir HANYA PADA SEMESTER AKTIF
 $aktivitas_30_hari = fetchAll("
     SELECT 
         DATE(h.tanggal) as tanggal,
@@ -54,7 +69,7 @@ $aktivitas_30_hari = fetchAll("
     'semester' => $tahun_aktif['semester_aktif']
 ]);
 
-// Top 5 siswa poin tertinggi (Total poin umum sudah mewakili semester aktif berkat Ganti Semester Smart Sync)
+// Top 5 siswa poin tertinggi
 $top_siswa = fetchAll("
     SELECT 
         s.nama_siswa,
@@ -98,9 +113,20 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
 
     <div class="flex-1 overflow-auto lg:ml-64">
         
-        <div class="bg-white border-b border-[#E2E8F0] px-6 py-4 sticky top-0 z-30">
-            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Dashboard</h1>
-            <p class="text-sm font-medium text-slate-500">Tahun Ajaran: <?= $tahun_aktif['nama_tahun'] ?> (<?= $tahun_aktif['semester_aktif'] ?>)</p>
+        <div class="bg-white border-b border-[#E2E8F0] px-6 py-4 sticky top-0 z-30 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Dashboard</h1>
+                <p class="text-sm font-medium text-slate-500">Tahun Ajaran: <?= htmlspecialchars($tahun_aktif['nama_tahun']) ?> (<?= htmlspecialchars($tahun_aktif['semester_aktif']) ?>)</p>
+            </div>
+            <div class="hidden sm:flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                <div class="w-8 h-8 rounded-full bg-[#000080] text-white flex items-center justify-center font-bold text-sm">
+                    <?= substr($_SESSION['nama_lengkap'] ?? 'A', 0, 1) ?>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs font-bold text-slate-800 leading-tight"><?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Admin') ?></p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase"><?= htmlspecialchars($_SESSION['role'] ?? '') ?></p>
+                </div>
+            </div>
         </div>
 
         <div class="p-6 space-y-6 max-w-7xl mx-auto">
@@ -128,7 +154,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
                         </div>
                         <div class="text-right">
                             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Siswa</p>
-                            <p class="text-3xl font-extrabold text-slate-800"><?= $stats['total_siswa'] ?></p>
+                            <p class="text-3xl font-extrabold text-slate-800"><?= number_format($stats['total_siswa'] ?? 0) ?></p>
                         </div>
                     </div>
                 </div>
@@ -140,21 +166,21 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
                         </div>
                         <div class="text-right">
                             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Siswa SP</p>
-                            <p class="text-3xl font-extrabold text-red-600"><?= $stats['siswa_sp'] ?></p>
+                            <p class="text-3xl font-extrabold text-red-600"><?= number_format($stats['siswa_sp'] ?? 0) ?></p>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 pt-3 border-t border-[#E2E8F0]">
                         <div class="text-center">
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Kelakuan</p>
-                            <p class="text-sm font-bold text-slate-700"><?= $stats_sp['sp_kelakuan'] ?></p>
+                            <p class="text-sm font-bold text-slate-700"><?= $stats_sp['sp_kelakuan'] ?? 0 ?></p>
                         </div>
                         <div class="text-center">
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Kerajinan</p>
-                            <p class="text-sm font-bold text-slate-700"><?= $stats_sp['sp_kerajinan'] ?></p>
+                            <p class="text-sm font-bold text-slate-700"><?= $stats_sp['sp_kerajinan'] ?? 0 ?></p>
                         </div>
                         <div class="text-center">
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Kerapian</p>
-                            <p class="text-sm font-bold text-slate-700"><?= $stats_sp['sp_kerapian'] ?></p>
+                            <p class="text-sm font-bold text-slate-700"><?= $stats_sp['sp_kerapian'] ?? 0 ?></p>
                         </div>
                     </div>
                 </div>
@@ -178,7 +204,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
                         </div>
                         <div class="text-right">
                             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Semester</p>
-                            <p class="text-2xl font-extrabold text-emerald-600"><?= $tahun_aktif['semester_aktif'] ?></p>
+                            <p class="text-2xl font-extrabold text-emerald-600"><?= htmlspecialchars($tahun_aktif['semester_aktif']) ?></p>
                         </div>
                     </div>
                 </div>
@@ -234,7 +260,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6";
                                     <p class="font-bold text-slate-800 text-[13px]"><?= htmlspecialchars($siswa['nama_siswa']) ?></p>
                                     <p class="text-[10px] font-medium text-slate-400"><?= htmlspecialchars($siswa['no_induk']) ?></p>
                                 </td>
-                                <td class="p-4 text-slate-600 font-medium"><?= $siswa['nama_kelas'] ?></td>
+                                <td class="p-4 text-slate-600 font-medium"><?= htmlspecialchars($siswa['nama_kelas']) ?></td>
                                 <td class="p-4 text-center">
                                     <span class="px-2.5 py-1 bg-[#000080]/10 text-[#000080] rounded-md font-bold text-xs border border-[#000080]/20">
                                         <?= $siswa['total_poin_umum'] ?>
