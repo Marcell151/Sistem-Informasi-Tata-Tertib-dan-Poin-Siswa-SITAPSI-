@@ -171,8 +171,8 @@ $btn_outline = "px-5 py-2 bg-white border border-[#E2E8F0] text-slate-700 text-s
     <div id="dokumen-sp" class="print-container bg-white shadow-xl rounded-none sm:rounded-xl border border-[#E2E8F0] px-8 py-8 sm:px-12 sm:py-8 font-surat mx-auto" style="width: 210mm; height: 296mm; max-height: 296mm; overflow: hidden; box-sizing: border-box;">
         
         <div class="flex items-center justify-between mb-4">
-            <div class="w-24 text-center">
-                <div class="w-16 h-20 border border-black mx-auto flex items-center justify-center text-[10px]">Logo Yayasan</div>
+            <div class="w-28 shrink-0 flex justify-center items-center">
+                <img src="../../assets/img/logo_sekolah.png" alt="Logo Yayasan" class="w-20 h-auto object-contain grayscale-print">
             </div>
             
             <div class="flex-1 text-center px-4">
@@ -194,13 +194,12 @@ $btn_outline = "px-5 py-2 bg-white border border-[#E2E8F0] text-slate-700 text-s
                 </div>
             </div>
             
-            <div class="w-24 text-center">
-                <div class="w-16 h-16 border border-black rounded-full mx-auto flex items-center justify-center text-[10px]">Logo ISO</div>
-                <p class="text-[8px] mt-1">CN 40664/A/0001/UK/En</p>
+            <div class="w-28 shrink-0 flex justify-center items-center">
+                <img src="../../assets/img/logo_iso.png" alt="Logo ISO" class="w-30 h-auto object-contain grayscale-print">
             </div>
         </div>
 
-        <div class="bg-black text-white text-center py-1 text-[11px] mb-6 w-full font-sans" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+        <div class="bg-black text-white text-center py-1 text-[11px] mb-6 w-[65%] mx-auto font-sans" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
             Jl. Panderman 7A Telp.(0341) 551 871 Fax.(0341) 576430 MALANG 65115
         </div>
 

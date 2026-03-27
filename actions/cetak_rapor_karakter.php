@@ -126,8 +126,8 @@ $btn_outline = "px-5 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 text
     <div id="dokumen-rapor" class="print-container bg-white shadow-xl rounded-none sm:rounded-xl border border-[#E2E8F0] px-8 py-6 mx-auto w-full">
         
         <div class="flex items-center justify-between mb-2">
-            <div class="w-20 text-center">
-                <div class="w-14 h-16 border border-black mx-auto flex items-center justify-center text-[10px]">Logo<br>Yayasan</div>
+            <div class="w-28 shrink-0 flex justify-center">
+                <img src="../assets/img/logo_sekolah.png" alt="Logo Yayasan" class="w-20 h-auto object-contain">
             </div>
             
             <div class="flex-1 text-center px-2">
@@ -148,14 +148,13 @@ $btn_outline = "px-5 py-2.5 bg-white border border-[#E2E8F0] text-slate-700 text
                 </div>
             </div>
             
-            <div class="w-20 text-center">
-                <div class="w-14 h-14 border border-black rounded-full mx-auto flex items-center justify-center text-[9px]">Logo ISO</div>
-                <p class="text-[7px] mt-1">CN 40664/A/0001/UK/En</p>
+            <div class="w-28 shrink-0 flex flex-col items-center justify-center">
+                <img src="../assets/img/logo_iso.png" alt="Logo ISO" class="w-30 h-auto object-contain">
             </div>
         </div>
 
-        <div class="bg-[#1a1a1a] text-white text-center py-0.5 text-[10px] mb-3 w-full font-bold" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
-            Jl. Panderman 7A Malang Telp. 0341 - 551871
+        <div class="bg-[#1a1a1a] text-white text-center py-0.5 text-[10px] mb-3 w-[65%] mx-auto font-bold" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+        Jl. Panderman 7A Malang Telp. 0341 - 551871
         </div>
 
         <div class="text-center mb-4">
