@@ -155,7 +155,7 @@ $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
             </div>
             <a href="../../../actions/cetak_detail_siswa.php?id=<?= $id_anggota ?>" target="_blank" class="px-5 py-2.5 bg-[#000080] text-white hover:bg-blue-900 text-sm font-bold rounded-xl shadow-md transition-colors flex items-center justify-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                Unduh PDF Rapor
+                Unduh PDF
             </a>
         </div>
 
