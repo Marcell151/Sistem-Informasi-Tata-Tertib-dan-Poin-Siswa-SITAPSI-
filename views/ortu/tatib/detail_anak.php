@@ -1,8 +1,7 @@
 <?php
 /**
  * SITAPSI - Detail Siswa untuk Orang Tua (READ ONLY)
- * Keamanan: Pengecekan Relasi id_ortu & no_induk
- * PENYESUAIAN: Algoritma Filter Sanksi Cerdas (Array Intersect)
+ * FITUR BARU: Komunikasi 2 Arah (Buku Penghubung Digital via SP)
  */
 
 session_start();
@@ -73,44 +72,36 @@ $cek_history = fetchOne("
 $is_kandidat_sertifikat = ($cek_history['total_tahunan'] == 0);
 $is_kandidat_semester = (!$is_kandidat_sertifikat && $cek_history['total_semester'] == 0);
 
-// [BARU] Ambil Master Data Sanksi untuk dicocokkan nanti
 $ref_sanksi = fetchAll("SELECT kode_sanksi, deskripsi FROM tb_sanksi_ref");
 $map_sanksi = [];
 foreach($ref_sanksi as $rs) {
     $map_sanksi[$rs['kode_sanksi']] = $rs['deskripsi'];
 }
 
-// 4. Helper query pelanggaran per kategori (MODIFIKASI PENGAMBILAN KODE SANKSI)
+// [MODIFIKASI] Ambil Riwayat SP beserta "Catatan Admin"
+$riwayat_sp = fetchAll("
+    SELECT id_sp, tingkat_sp, kategori_pemicu, tanggal_terbit, status, catatan_admin 
+    FROM tb_riwayat_sp 
+    WHERE id_anggota = :id_anggota AND status = 'Pending'
+", ['id_anggota' => $id_anggota]);
+
+// Helper query pelanggaran per kategori
 function getPelanggaranOrtu($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
     $sql = "
         SELECT 
-            h.id_transaksi,
-            h.tanggal,
-            h.waktu,
-            h.bukti_foto,
-            h.lampiran_link,
-            jp.nama_pelanggaran,
-            jp.sanksi_default, -- Ambil aturan default sanksi dari DB
-            d.poin_saat_itu,
+            h.id_transaksi, h.tanggal, h.waktu, h.bukti_foto, h.lampiran_link,
+            jp.nama_pelanggaran, jp.sanksi_default, d.poin_saat_itu,
             GROUP_CONCAT(DISTINCT sr.kode_sanksi SEPARATOR ',') as sanksi_aktual_kode
         FROM tb_pelanggaran_header h
         JOIN tb_pelanggaran_detail d ON h.id_transaksi = d.id_transaksi
         JOIN tb_jenis_pelanggaran jp ON d.id_jenis = jp.id_jenis
         LEFT JOIN tb_pelanggaran_sanksi ps ON h.id_transaksi = ps.id_transaksi
         LEFT JOIN tb_sanksi_ref sr ON ps.id_sanksi_ref = sr.id_sanksi_ref
-        WHERE h.id_anggota = :id
-        AND jp.id_kategori = :id_kategori
-        AND h.id_tahun = :id_tahun
-        AND h.semester = :semester
+        WHERE h.id_anggota = :id AND jp.id_kategori = :id_kategori AND h.id_tahun = :id_tahun AND h.semester = :semester
         GROUP BY h.id_transaksi, d.id_detail
         ORDER BY h.tanggal DESC, h.waktu DESC
     ";
-    return fetchAll($sql, [
-        'id' => $id_anggota,
-        'id_kategori' => $id_kategori,
-        'id_tahun' => $id_tahun,
-        'semester' => $filter_semester
-    ]);
+    return fetchAll($sql, ['id' => $id_anggota, 'id_kategori' => $id_kategori, 'id_tahun' => $id_tahun, 'semester' => $filter_semester]);
 }
 
 $pelanggaran_kelakuan = getPelanggaranOrtu($id_anggota, 1, $tahun_aktif['id_tahun'], $filter_semester);
@@ -118,6 +109,11 @@ $pelanggaran_kerajinan = getPelanggaranOrtu($id_anggota, 2, $tahun_aktif['id_tah
 $pelanggaran_kerapian = getPelanggaranOrtu($id_anggota, 3, $tahun_aktif['id_tahun'], $filter_semester);
 
 $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
+
+// Notifikasi Feedback
+$fb_success = $_SESSION['feedback_success'] ?? '';
+$fb_error = $_SESSION['feedback_error'] ?? '';
+unset($_SESSION['feedback_success'], $_SESSION['feedback_error']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -131,7 +127,7 @@ $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
 </head>
 <body class="bg-slate-50 pb-24 md:pb-12">
 
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="../dashboard.php" class="flex items-center text-slate-500 hover:text-[#000080] font-bold transition-colors">
@@ -161,6 +157,19 @@ $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
 
         <div class="space-y-6">
 
+            <?php if ($fb_success): ?>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <p class="font-bold text-sm"><?= htmlspecialchars($fb_success) ?></p>
+            </div>
+            <?php endif; ?>
+            <?php if ($fb_error): ?>
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                <p class="font-bold text-sm"><?= htmlspecialchars($fb_error) ?></p>
+            </div>
+            <?php endif; ?>
+
             <?php if ($is_kandidat_sertifikat): ?>
             <div class="bg-amber-100 border border-amber-300 rounded-2xl p-5 shadow-sm flex items-center">
                 <div class="flex-shrink-0 bg-white p-3 rounded-full mr-5 shadow-sm border border-amber-200 text-amber-500">
@@ -179,6 +188,74 @@ $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
                 <div>
                     <h4 class="font-extrabold text-emerald-800 text-lg mb-1">🏅 Pertahankan Disiplin</h4>
                     <p class="text-sm text-emerald-700 font-medium">Putra/putri Anda memiliki <strong>0 Poin Pelanggaran di Semester ini</strong>.</p>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($riwayat_sp)): ?>
+            <div class="bg-red-50 border-2 border-red-400 rounded-2xl p-5 sm:p-6 shadow-md relative overflow-hidden">
+                <svg class="absolute -right-4 -bottom-4 w-32 h-32 text-red-500 opacity-10" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 13v-2h2v2H9zm0-8h2v5H9V5z"></path></svg>
+                
+                <div class="relative z-10">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="flex-shrink-0 bg-red-100 p-3 rounded-full shadow-sm text-red-600">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                                <div>
+                                    <h4 class="font-black text-red-800 text-lg sm:text-xl mb-1 uppercase tracking-wider">Perhatian Wali Murid!</h4>
+                                    <p class="text-sm text-red-700 font-medium mb-3">Terdapat <strong class="font-extrabold"><?= count($riwayat_sp) ?> Surat Peringatan (SP)</strong> aktif yang membutuhkan perhatian Anda.</p>
+                                </div>
+                                <button onclick="bukaModalFeedback()" class="flex-shrink-0 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-xl shadow-md transition-transform transform active:scale-95 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                    Balas / Tanggapi
+                                </button>
+                            </div>
+
+                            <div class="space-y-3 mt-2">
+                                <?php foreach($riwayat_sp as $sp): ?>
+                                    <div class="bg-white/60 border border-red-200 rounded-xl p-4">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 bg-red-100 text-red-700 text-xs font-extrabold rounded-md uppercase">
+                                                <?= $sp['tingkat_sp'] ?>
+                                            </span>
+                                            <span class="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                                                Kategori <?= $sp['kategori_pemicu'] ?>
+                                            </span>
+                                            <span class="text-xs text-slate-500 ml-auto font-medium">
+                                                Terbit: <?= date('d M Y', strtotime($sp['tanggal_terbit'])) ?>
+                                            </span>
+                                        </div>
+                                        
+                                        <?php if (!empty($sp['catatan_admin'])): ?>
+                                            <div class="mt-3 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                                                <p class="text-[10px] font-extrabold text-red-800 uppercase tracking-wider mb-1 flex items-center">
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                                    Pesan dari Admin Tatib:
+                                                </p>
+                                                <p class="text-sm text-slate-700 font-medium italic">"<?= nl2br(htmlspecialchars($sp['catatan_admin'])) ?>"</p>
+                                            </div>
+                                        <?php else: ?>
+                                            <p class="text-xs text-slate-500 italic mt-2 mb-2">Silakan cek detail pelanggaran di tabel bawah. Tunggu pesan dari Admin atau klik tombol "Balas" untuk konfirmasi.</p>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($sp['balasan_ortu'])): ?>
+                                            <div class="mt-2 p-3 bg-blue-50 border-r-4 border-blue-500 rounded-l-lg text-right ml-8 shadow-sm">
+                                                <p class="text-[10px] font-extrabold text-blue-800 uppercase tracking-wider mb-1 flex items-center justify-end">
+                                                    Balasan Anda:
+                                                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                </p>
+                                                <p class="text-sm text-slate-800 font-medium">"<?= nl2br(htmlspecialchars($sp['balasan_ortu'])) ?>"</p>
+                                                <p class="text-[9px] text-slate-400 mt-1"><?= date('d M Y H:i', strtotime($sp['waktu_balasan'])) ?> WIB</p>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
             </div>
             <?php endif; ?>
@@ -309,16 +386,9 @@ $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
                                     
                                     <td class="p-4 align-top text-sm font-medium text-slate-700 leading-relaxed">
                                         <?php 
-                                        // 1. Ambil array kode sanksi yang ditekan guru pada kejadian ini
                                         $aktual_kodes = array_filter(explode(',', $p['sanksi_aktual_kode'] ?? ''));
-                                        
-                                        // 2. Ambil array kode sanksi baku dari jenis pelanggaran ini (di db)
                                         $default_kodes = array_filter(explode(',', $p['sanksi_default'] ?? ''));
-
-                                        // 3. Irisan: Hanya ambil sanksi aktual yang memang cocok/terkait dengan pelanggaran ini
                                         $irisan_kodes = array_intersect($aktual_kodes, $default_kodes);
-
-                                        // Jika ada irisannya, gunakan itu. Jika kosong (mungkin guru beri sanksi lain), gunakan semua sanksi aktual.
                                         $kodes_tampil = !empty($irisan_kodes) ? $irisan_kodes : $aktual_kodes;
 
                                         if(!empty($kodes_tampil)): 
@@ -377,6 +447,54 @@ $card_class = "bg-white border border-slate-200 rounded-2xl shadow-sm";
     </div>
 </div>
 
+<?php if (!empty($riwayat_sp)): ?>
+<div id="modal-feedback" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="tutupModalFeedback()"></div>
+    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full relative z-10 overflow-hidden">
+        
+        <div class="bg-red-600 p-6 flex justify-between items-center text-white">
+            <div>
+                <h3 class="font-black text-xl mb-1">Tanggapan Wali Murid</h3>
+                <p class="text-red-100 text-sm font-medium">Buku Penghubung Digital Kedisiplinan</p>
+            </div>
+            <button onclick="tutupModalFeedback()" class="text-red-200 hover:text-white transition-colors bg-red-700/50 p-2 rounded-xl border border-red-500/50 hover:bg-red-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <form action="../../../actions/submit_feedback_ortu.php" method="POST" class="p-6 space-y-5">
+            <input type="hidden" name="id_ortu" value="<?= $id_ortu ?>">
+            <input type="hidden" name="no_induk" value="<?= htmlspecialchars($no_induk) ?>">
+            
+            <div>
+                <label class="block text-xs font-extrabold text-slate-500 mb-2 uppercase tracking-wide">Surat Peringatan <span class="text-red-500">*</span></label>
+                <select name="id_sp" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 font-semibold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors">
+                    <option value="">-- Pilih SP yang akan ditanggapi --</option>
+                    <?php foreach($riwayat_sp as $sp): ?>
+                        <option value="<?= $sp['id_sp'] ?>">SP: <?= $sp['tingkat_sp'] ?> - <?= $sp['kategori_pemicu'] ?> (Tgl: <?= date('d/m/Y', strtotime($sp['tanggal_terbit'])) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-extrabold text-slate-500 mb-2 uppercase tracking-wide">Pesan / Balasan Anda <span class="text-red-500">*</span></label>
+                <textarea name="isi_feedback" required rows="4" placeholder="Contoh: Baik Pak/Bu, besok saya akan menghadap ke sekolah jam 09.00 WIB..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors resize-none"></textarea>
+                <p class="text-[10px] text-slate-400 mt-2 font-medium">*Pesan ini akan langsung dibaca oleh Admin Tata Tertib Sekolah.</p>
+            </div>
+
+            <div class="pt-4 flex gap-3">
+                <button type="button" onclick="tutupModalFeedback()" class="flex-1 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm">Batal</button>
+                <button type="submit" class="flex-1 py-3 bg-red-600 text-white font-extrabold rounded-xl shadow-md hover:bg-red-700 transition-colors shadow-red-500/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    Kirim Pesan
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+<?php endif; ?>
+
 <script>
 function switchTab(tab) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -396,7 +514,6 @@ function switchTab(tab) {
     else activeTab.classList.add('bg-yellow-500', 'border-yellow-600');
 }
 
-// LOGIKA BACA LAMPIRAN MULTI-FORMAT (Menyesuaikan Path Folder)
 function lihatBukti(jsonString, lampiranLink) {
     const container = document.getElementById('bukti-container');
     container.innerHTML = '';
@@ -461,6 +578,14 @@ function lihatBukti(jsonString, lampiranLink) {
     }
 
     document.getElementById('modal-bukti').classList.remove('hidden');
+}
+
+// BUKA TUTUP MODAL FEEDBACK
+function bukaModalFeedback() {
+    document.getElementById('modal-feedback').classList.remove('hidden');
+}
+function tutupModalFeedback() {
+    document.getElementById('modal-feedback').classList.add('hidden');
 }
 </script>
 </body>

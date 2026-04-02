@@ -211,6 +211,7 @@ CREATE TABLE tb_riwayat_sp (
     tanggal_validasi DATE, 
     status ENUM('Pending', 'Selesai') DEFAULT 'Pending',
     id_admin INT, 
+    catatan_admin TEXT NULL COMMENT 'Pesan spesifik dari Admin untuk Orang Tua';
     
     FOREIGN KEY (id_anggota) REFERENCES tb_anggota_kelas(id_anggota),
     FOREIGN KEY (id_admin) REFERENCES tb_admin(id_admin)
