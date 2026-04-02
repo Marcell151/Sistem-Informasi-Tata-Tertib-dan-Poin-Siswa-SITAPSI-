@@ -44,8 +44,8 @@ $guru_list = fetchAll("SELECT id_guru, nama_guru FROM tb_guru WHERE status = 'Ak
     <div class="w-full max-w-md bg-white border border-slate-200 shadow-xl shadow-blue-900/5 rounded-2xl relative z-10 transition-all duration-300 overflow-hidden mb-6">
         
         <div class="p-8 text-center space-y-4 pb-4">
-            <div class="mx-auto w-16 h-16 bg-[#000080] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+            <div class="mx-auto w-20 h-20 flex items-center justify-center">
+                <img src="../assets/img/logo.png" alt="Logo Santa Maria" class="w-full h-full object-contain">
             </div>
             <div>
                 <h1 class="text-2xl font-extrabold text-[#000080] tracking-tight">SITAPSI</h1>

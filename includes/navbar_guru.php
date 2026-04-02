@@ -20,11 +20,8 @@ unset($_SESSION['pin_success_message'], $_SESSION['pin_error_message']);
         <div class="flex justify-between items-center h-16">
             
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-[#000080] shadow-md shadow-blue-900/10 flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                    </svg>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <img src="../../assets/img/logo.png" alt="Logo Santa Maria" class="w-full h-full object-contain">
                 </div>
                 <div class="flex flex-col justify-center">
                     <h1 class="text-sm font-extrabold text-[#000080] tracking-tight leading-tight">SITAPSI</h1>

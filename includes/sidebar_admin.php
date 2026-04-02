@@ -43,11 +43,8 @@ function getNavClass($isActive) {
     <div class="p-6 border-b border-[#F1F5F9]">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-md bg-[#000080] shadow-blue-900/10 flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                    </svg>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white p-1">
+                    <img src="../../assets/img/logo.png" alt="Logo Santa Maria" class="w-full h-full object-contain">
                 </div>
                 <div>
                     <h1 class="text-sm font-extrabold text-[#000080] tracking-tight">SITAPSI</h1>
