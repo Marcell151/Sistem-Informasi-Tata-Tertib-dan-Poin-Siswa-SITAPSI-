@@ -2,7 +2,7 @@
 /**
  * SITAPSI - Detail Siswa untuk Guru (MANUAL REPORT SYSTEM - UI GLOBAL)
  * FIX LOGIKA: Spanduk Kandidat Reward dinamis + Smart Modal Lampiran Bukti
- * PENYESUAIAN: Algoritma Sanksi Pintar (Irisan) + UI Kolom Sanksi Terpisah
+ * PENYESUAIAN: Algoritma Sanksi Pintar (Irisan) + UI Kolom Sanksi Terpisah + FITUR LIHAT KITIR
  */
 
 session_start();
@@ -100,7 +100,7 @@ foreach($ref_sanksi as $rs) {
     $map_sanksi[$rs['kode_sanksi']] = $rs['deskripsi'];
 }
 
-// Helper query pelanggaran per kategori (Untuk Tabel) PENYESUAIAN: Logika Kode Sanksi
+// Helper query pelanggaran per kategori
 function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
     $sql = "
         SELECT 
@@ -113,7 +113,7 @@ function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_
             h.bukti_foto,
             h.lampiran_link,
             jp.nama_pelanggaran,
-            jp.sanksi_default, -- Ambil aturan default sanksi dari DB
+            jp.sanksi_default,
             d.poin_saat_itu,
             GROUP_CONCAT(DISTINCT sr.kode_sanksi SEPARATOR ',') as sanksi_aktual_kode,
             g.nama_guru
@@ -157,7 +157,8 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
     <title>Detail <?= htmlspecialchars($siswa['nama_siswa']) ?> - SITAPSI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#F8FAFC] pb-24 md:pb-8"> <?php 
+<body class="bg-[#F8FAFC] pb-24 md:pb-8"> 
+    <?php 
     $navbar_path = __DIR__ . '/../../includes/navbar_guru.php';
     if (file_exists($navbar_path)) include $navbar_path; 
     ?>
@@ -334,6 +335,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <th class="p-4 font-bold text-center">Lampiran</th>
                                     <th class="p-4 font-bold">Pelapor</th>
                                     <th class="p-4 font-bold text-center">Status</th>
+                                    <th class="p-4 font-bold text-center">Kitir</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-[#E2E8F0]">
@@ -390,6 +392,15 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                         <?php else: ?>
                                             <span class="text-slate-400 font-bold text-lg">-</span>
                                         <?php endif; ?>
+                                    </td>
+                                    
+                                    <td class="p-4 text-center whitespace-nowrap align-top">
+                                        <a href="../../actions/cetak_kitir_kuning.php?id=<?= $p['id_transaksi'] ?>" target="_blank"
+                                           class="inline-flex items-center justify-center p-1.5 bg-yellow-50 border border-yellow-200 text-yellow-600 rounded-md hover:bg-yellow-100 transition-colors shadow-sm" title="Lihat Kitir Kuning">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path d="M15 21a2 2 0 0 1-2-2 2 2 0 1 0-4 0 2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4 2 2 0 0 0 0-4v-3a2 2 0 0 1 2-2h3a2 2 0 1 0 4 0 2 2 0 0 1 2 2h3a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4 2 2 0 0 0 0 4v3a2 2 0 0 1-2 2z"></path>
+                                            </svg>
+                                        </a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -479,7 +490,6 @@ function switchTab(tab) {
 function openReportModal() { document.getElementById('modal-report').classList.remove('hidden'); }
 function closeReportModal() { document.getElementById('modal-report').classList.add('hidden'); }
 
-// MODIFIKASI FUNGSI LIHAT BUKTI (LINK & MULTI-TYPE FILES)
 function lihatBukti(jsonString, lampiranLink) {
     const container = document.getElementById('bukti-container');
     container.innerHTML = '';

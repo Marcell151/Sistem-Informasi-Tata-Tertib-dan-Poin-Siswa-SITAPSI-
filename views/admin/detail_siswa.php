@@ -2,7 +2,7 @@
 /**
  * SITAPSI - Detail Siswa (FIX TABLE WRAP + UI GLOBAL)
  * FIX LOGIKA: Spanduk Kandidat Reward dinamis (Semester / Sertifikat Tahunan)
- * PENYESUAIAN: UI Sanksi Kolom Mandiri (List) & Algoritma Irisan
+ * PENYESUAIAN: UI Sanksi Kolom Mandiri & Tambah Tombol Lihat Kitir Kuning
  */
 
 session_start();
@@ -96,7 +96,7 @@ foreach($ref_sanksi as $rs) {
     $map_sanksi[$rs['kode_sanksi']] = $rs['deskripsi'];
 }
 
-// Helper query pelanggaran (MODIFIKASI PENGAMBILAN KODE SANKSI)
+// Helper query pelanggaran
 function getPelanggaranByKategori($id_anggota, $id_kategori, $id_tahun, $filter_semester) {
     global $pdo;
     $sql = "
@@ -166,7 +166,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
         </div>
 
         <div class="p-6 space-y-6 max-w-6xl mx-auto">
-
+            
             <?php if ($success): ?>
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg shadow-sm flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -188,9 +188,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 </div>
                 <div>
                     <h4 class="font-extrabold text-amber-800 text-lg mb-1">🌟 Kandidat Sertifikat Teladan 🌟</h4>
-                    <p class="text-sm text-amber-700 font-medium">
-                        Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong>. Kandidat kuat penerima Sertifikat Bebas Pelanggaran! 🎓
-                    </p>
+                    <p class="text-sm text-amber-700 font-medium">Siswa ini memiliki <strong>0 Poin Pelanggaran selama 1 Tahun Ajaran penuh</strong>. Kandidat kuat penerima Sertifikat Bebas Pelanggaran! 🎓</p>
                 </div>
             </div>
             <?php elseif ($is_kandidat_semester): ?>
@@ -200,9 +198,7 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                 </div>
                 <div>
                     <h4 class="font-extrabold text-emerald-800 text-lg mb-1">🏅 Kandidat Reward Semester</h4>
-                    <p class="text-sm text-emerald-700 font-medium">
-                        Siswa ini memiliki <strong>0 Poin Pelanggaran di Semester ini</strong>. Pertahankan kedisiplinan ini hingga akhir semester! ✨
-                    </p>
+                    <p class="text-sm text-emerald-700 font-medium">Siswa ini memiliki <strong>0 Poin Pelanggaran di Semester ini</strong>. Pertahankan kedisiplinan ini hingga akhir semester! ✨</p>
                 </div>
             </div>
             <?php endif; ?>
@@ -338,18 +334,9 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
 
             <div class="<?= $card_class ?> overflow-hidden">
                 <div class="flex border-b border-[#E2E8F0] overflow-x-auto bg-slate-50/50">
-                    <button onclick="switchTab('kelakuan')" id="tab-kelakuan" 
-                            class="tab-button flex-1 py-4 px-4 font-extrabold text-sm text-center transition-colors bg-red-600 text-white border-b-2 border-red-700">
-                        🚨 KELAKUAN (<?= count($pelanggaran_kelakuan) ?>)
-                    </button>
-                    <button onclick="switchTab('kerajinan')" id="tab-kerajinan" 
-                            class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent">
-                        📘 KERAJINAN (<?= count($pelanggaran_kerajinan) ?>)
-                    </button>
-                    <button onclick="switchTab('kerapian')" id="tab-kerapian" 
-                            class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent">
-                        👔 KERAPIAN (<?= count($pelanggaran_kerapian) ?>)
-                    </button>
+                    <button onclick="switchTab('kelakuan')" id="tab-kelakuan" class="tab-button flex-1 py-4 px-4 font-extrabold text-sm text-center transition-colors bg-red-600 text-white border-b-2 border-red-700">🚨 KELAKUAN (<?= count($pelanggaran_kelakuan) ?>)</button>
+                    <button onclick="switchTab('kerajinan')" id="tab-kerajinan" class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent">📘 KERAJINAN (<?= count($pelanggaran_kerajinan) ?>)</button>
+                    <button onclick="switchTab('kerapian')" id="tab-kerapian" class="tab-button flex-1 py-4 px-4 font-bold text-sm text-center transition-colors text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent">👔 KERAPIAN (<?= count($pelanggaran_kerapian) ?>)</button>
                 </div>
 
                 <?php 
@@ -421,6 +408,12 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                     <td class="p-4 text-xs font-medium text-slate-700 whitespace-nowrap align-top"><?= htmlspecialchars($p['nama_guru']) ?></td>
                                     <td class="p-4 text-center whitespace-nowrap align-top">
                                         <div class="flex items-center justify-center space-x-2">
+                                            
+                                            <a href="../../actions/cetak_kitir_kuning.php?id=<?= $p['id_transaksi'] ?>" target="_blank"
+                                               class="p-1.5 bg-yellow-50 border border-yellow-200 text-yellow-600 rounded-md hover:bg-yellow-100 transition-colors shadow-sm" title="Lihat Kitir Kuning">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M15 21a2 2 0 0 1-2-2 2 2 0 1 0-4 0 2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4 2 2 0 0 0 0-4v-3a2 2 0 0 1 2-2h3a2 2 0 1 0 4 0 2 2 0 0 1 2 2h3a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4 2 2 0 0 0 0 4v3a2 2 0 0 1-2 2z"></path></svg>
+                                            </a>
+
                                             <button onclick="viewDetail(<?= $p['id_transaksi'] ?>)" 
                                                     class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Lihat Bukti/Detail">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>

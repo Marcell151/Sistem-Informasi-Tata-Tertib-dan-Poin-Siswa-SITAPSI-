@@ -1,7 +1,7 @@
 <?php
 /**
  * SITAPSI - Audit Harian (LOGIKA ASLI + UI GLOBAL + FIX LAYOUT)
- * PENYESUAIAN: Pemanggilan kolom lampiran_link
+ * PENYESUAIAN: Pemanggilan kolom lampiran_link & Tambah Tombol Lihat Kitir Kuning (Ikon Tiket)
  */
 
 session_start();
@@ -207,14 +207,24 @@ $card_class = "bg-white border border-[#E2E8F0] rounded-xl shadow-sm";
                                 </td>
                                 <td class="p-4 text-center">
                                     <div class="flex items-center justify-center space-x-2">
+                                        
+                                        <a href="../../actions/cetak_kitir_kuning.php?id=<?= $log['id_transaksi'] ?>" target="_blank"
+                                           class="p-1.5 bg-yellow-50 border border-yellow-200 text-yellow-600 rounded-md hover:bg-yellow-100 transition-colors shadow-sm" title="Lihat Kitir Kuning">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                              <path d="M15 21a2 2 0 0 1-2-2 2 2 0 1 0-4 0 2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4 2 2 0 0 0 0-4v-3a2 2 0 0 1 2-2h3a2 2 0 1 0 4 0 2 2 0 0 1 2 2h3a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4 2 2 0 0 0 0 4v3a2 2 0 0 1-2 2z"></path>
+                                            </svg>
+                                        </a>
+
                                         <button onclick="viewDetail(<?= $log['id_transaksi'] ?>)" 
-                                                class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Lihat Bukti/Detail">
+                                                class="p-1.5 bg-white border border-[#E2E8F0] text-blue-600 rounded-md hover:bg-blue-50 transition-colors shadow-sm" title="Lihat Bukti/Detail Transaksi">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         </button>
+                                        
                                         <button onclick="editTransaction(<?= $log['id_transaksi'] ?>)" 
                                                 class="p-1.5 bg-white border border-[#E2E8F0] text-amber-600 rounded-md hover:bg-amber-50 transition-colors shadow-sm" title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </button>
+                                        
                                         <button onclick="deleteTransaction(<?= $log['id_transaksi'] ?>)" 
                                                 class="p-1.5 bg-white border border-red-200 text-red-600 rounded-md hover:bg-red-50 transition-colors shadow-sm" title="Hapus">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
